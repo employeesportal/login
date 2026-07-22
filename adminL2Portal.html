@@ -26,7 +26,6 @@
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Data
             </button>
         </div>
-
     </div>
 
     <!-- Main Viewport Container -->
@@ -79,7 +78,7 @@
 
         const rawUserRoles = (currentUser && currentUser.role || "").split(",");
         const cleanUserRolesArray = rawUserRoles.map(r => String(r).trim().toUpperCase().replace(/[^A-Z0-9]/g, ""));
-        const hasL2Privileges = cleanUserRolesArray.includes("ADMINL2") || cleanUserRolesArray.includes("L2ADMIN") || cleanUserRolesArray.includes("ADMINL2");
+        const hasL2Privileges = cleanUserRolesArray.includes("ADMINL2") || cleanUserRolesArray.includes("L2ADMIN");
 
         if (!currentUser || !hasL2Privileges) {
             document.getElementById("l2-main-content-area").innerHTML = `<div class="p-12 text-center text-rose-700 font-black uppercase">Access Denied: L2 Permissions Required.</div>`;
@@ -91,13 +90,19 @@
             const contentArea = document.getElementById("l2-main-content-area");
             const analysisViewport = document.getElementById("l2-analysis-submodule-viewport");
 
+            // Update Tab Button Styles
+            document.getElementById("l2-tab-pending-btn").classList.toggle("bg-indigo-600", targetMode === "pending");
+            document.getElementById("l2-tab-pending-btn").classList.toggle("text-white", targetMode === "pending");
+            
+            document.getElementById("l2-tab-history-btn").classList.toggle("bg-indigo-600", targetMode === "history");
+            document.getElementById("l2-tab-history-btn").classList.toggle("text-white", targetMode === "history");
+
             if (targetMode === "analysis") {
                 contentArea.classList.add("hidden");
                 analysisViewport.classList.remove("hidden");
                 (async () => {
                     const res = await fetch("adminL2AttendanceAnalysis.html");
                     analysisViewport.innerHTML = await res.text();
-                    // Load scripts safely
                     analysisViewport.querySelectorAll("script").forEach(s => {
                         const sc = document.createElement("script"); sc.text = s.innerText;
                         document.head.appendChild(sc).parentNode.removeChild(sc);
@@ -112,26 +117,62 @@
         };
 
         window.syncL2LeaveMasterData = async function() {
-            try {
-                const boundRes = await fetch(`${API_URL}?action=getL2AdminProjectBoundaries&managerId=${encodeURIComponent(currentUser.employeeId)}`);
-                const boundData = await boundRes.json();
-                allowedProjectBoundaries = boundData.status ? boundData.allowedProjects : [];
-                document.getElementById("lbl-l2-allowed-scopes").innerText = allowedProjectBoundaries.length > 0 ? allowedProjectBoundaries.join(", ") : "None Configured";
+            const tbody = document.getElementById("l2-leave-table-body");
+            tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-slate-500 animate-pulse font-medium">Synchronizing Secure Data...</td></tr>`;
 
+            try {
+                // 1. Fetch Project Boundaries
+                const boundRes = await fetch(`${API_URL}?action=getL2AdminProjectBoundaries&managerId=${encodeURIComponent(currentUser.employeeId)}`);
+                const boundText = await boundRes.text();
+                
+                try {
+                    const boundData = JSON.parse(boundText);
+                    allowedProjectBoundaries = boundData.status ? boundData.allowedProjects : [];
+                    document.getElementById("lbl-l2-allowed-scopes").innerText = allowedProjectBoundaries.length > 0 ? allowedProjectBoundaries.join(", ") : "None Configured";
+                } catch (err) {
+                    console.error("Boundary parsing failed, returned HTML:", boundText);
+                    throw new Error("Backend returned an HTML error instead of JSON for boundaries.");
+                }
+
+                // 2. Fetch Master Leave Data
                 const res = await fetch(`${API_URL}?action=getAdminLeaveDataBundles`);
-                const result = await res.json();
+                const rawText = await res.text();
+
+                let result;
+                try {
+                    result = JSON.parse(rawText);
+                } catch (parseError) {
+                    console.error("Master Leave Data parsing failed, returned HTML:", rawText);
+                    alert("System Error: Backend returned an HTML error page. Please redeploy your Apps Script as a NEW VERSION.");
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-rose-600 font-bold">Failed to load data due to backend configuration error.</td></tr>`;
+                    return;
+                }
+
                 if (result.status) {
                     masterLeaveApplicationsCache = result.data;
                     window.executeL2FilterQueryPipeline();
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-rose-600 font-bold">${result.message || 'Data sync failed.'}</td></tr>`;
                 }
-            } catch (e) { console.error(e); }
+
+            } catch (e) { 
+                console.error("Network Exception:", e); 
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-rose-600 font-bold">Connection lost or backend unresponsive. Check console.</td></tr>`;
+            }
         };
 
         window.executeL2FilterQueryPipeline = function() {
             const tbody = document.getElementById("l2-leave-table-body");
+            
+            // Filters
+            const searchTerm = (document.getElementById("l2-filter-search-term")?.value || "").toLowerCase();
+            const statusFilter = document.getElementById("l2-filter-status-state")?.value || "ALL";
+
             let dataset = masterLeaveApplicationsCache.filter(item => {
                 const itemProjectClean = String(item.project || "").trim().toUpperCase();
+                // Enforce L2 Boundary
                 const matchesProject = allowedProjectBoundaries.some(ap => itemProjectClean.includes(String(ap).trim().toUpperCase()));
+                // Ensure they aren't processing their own direct reports' leaves if separated
                 const isDirectManager = String(item.managerId || "").trim().toUpperCase() === String(currentUser.employeeId).trim().toUpperCase();
                 return matchesProject && !isDirectManager;
             });
@@ -140,12 +181,136 @@
                 dataset = dataset.filter(i => i.status === "PENDING" || i.status === "MGR_RECOMMENDED");
             } else {
                 dataset = dataset.filter(i => i.status !== "PENDING" && i.status !== "MGR_RECOMMENDED");
+                
+                // Apply secondary filters for history mode
+                if (statusFilter !== "ALL") {
+                    dataset = dataset.filter(i => i.status === statusFilter);
+                }
+                if (searchTerm) {
+                    dataset = dataset.filter(i => 
+                        String(i.employeeName).toLowerCase().includes(searchTerm) || 
+                        String(i.employeeId).toLowerCase().includes(searchTerm)
+                    );
+                }
             }
 
-            // Render logic here... (use your standard rendering loop)
-            lucide.createIcons();
+            if (dataset.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-slate-500 font-medium">No records matching your criteria.</td></tr>`;
+                return;
+            }
+
+            // Rendering Logic
+            let rowsHtml = "";
+            dataset.forEach((item, index) => {
+                const isPending = (activeL2TabMode === "pending");
+                
+                let mgrStatusBadge = `<span class="text-slate-400 italic text-[10px]">Pending</span>`;
+                if(item.managerStatus === "APPROVED" || item.managerStatus === "RECOMMENDED") mgrStatusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-black uppercase">Recommended</span>`;
+                if(item.managerStatus === "REJECTED") mgrStatusBadge = `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[9px] font-black uppercase">Rejected</span>`;
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100 align-top">
+                        <td class="px-3 py-4">
+                            <strong class="text-slate-900 block">${item.employeeName}</strong>
+                            <span class="font-mono text-[10px] text-slate-500">ID: ${item.employeeId}</span>
+                            <div class="mt-1 text-[10px] text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded inline-block">
+                                ${item.project || 'No Project'}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4">
+                            <span class="block font-black text-indigo-700 uppercase tracking-wider text-[10px] mb-0.5">${item.leaveType}</span>
+                            <span class="block text-slate-700 font-medium text-[11px]">${item.startDate} to ${item.endDate}</span>
+                            <span class="text-slate-500 text-[10px] italic line-clamp-2 mt-1" title="${item.reason}">${item.reason || 'No reason provided'}</span>
+                        </td>
+                        <td class="px-3 py-4">
+                            <strong class="text-slate-800 block text-[11px]">${item.managerName || 'N/A'}</strong>
+                            <div class="mt-1">${mgrStatusBadge}</div>
+                            <div class="text-[10px] text-slate-500 italic mt-1 line-clamp-2">${item.managerRemark || '-'}</div>
+                        </td>
+                        <td class="px-3 py-4">
+                            ${isPending ? `
+                                <div class="space-y-2">
+                                    <select id="l2-status-${item.rowIdx}" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold focus:ring-1 focus:ring-indigo-500">
+                                        <option value="APPROVED">APPROVE LEAVE</option>
+                                        <option value="REJECTED">REJECT LEAVE</option>
+                                    </select>
+                                    <input type="text" id="l2-remark-${item.rowIdx}" placeholder="Admin remarks (required for rejection)" class="w-full px-2 py-1 border border-slate-300 rounded-lg text-xs bg-white">
+                                </div>
+                            ` : `
+                                <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${item.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}">
+                                    ${item.status}
+                                </span>
+                                <div class="text-slate-600 text-[11px] font-medium mt-1">${item.adminRemark || 'No Admin Remark'}</div>
+                                <div class="text-[9px] text-slate-400 mt-0.5 font-mono">Processed by: ${item.adminName || 'System'}</div>
+                            `}
+                        </td>
+                        <td class="px-3 py-4 text-center">
+                            ${isPending ? `
+                                <button onclick="window.submitL2Decision(${item.rowIdx}, '${item.employeeId}')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] rounded-xl shadow-sm transition flex items-center justify-center gap-1 w-full">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Save
+                                </button>
+                            ` : `
+                                <span class="text-[10px] text-slate-400 font-bold"><i data-lucide="lock" class="w-3 h-3 inline"></i> Locked</span>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml;
+            if (window.lucide) lucide.createIcons();
         };
 
-        window.syncL2LeaveMasterData();
+        window.submitL2Decision = async function(rowIdx, applicantId) {
+            const statusVal = document.getElementById(`l2-status-${rowIdx}`).value;
+            const remarkVal = document.getElementById(`l2-remark-${rowIdx}`).value.trim();
+
+            if (statusVal === "REJECTED" && !remarkVal) {
+                alert("Please provide a reason for rejecting the leave.");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to ${statusVal} this leave request?`)) return;
+
+            const payload = {
+                action: "processAdminL2LeaveDecision",
+                rowIdx: rowIdx,
+                employeeId: applicantId,
+                status: statusVal,
+                adminRemark: remarkVal,
+                adminId: currentUser.employeeId,
+                adminName: currentUser.employeeName
+            };
+
+            try {
+                // Notice we also add the text-parsing safety check here
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                
+                const rawText = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(rawText);
+                } catch (e) {
+                    console.error("Save failed, returned HTML:", rawText);
+                    alert("Backend configuration error while saving. Please check your Apps Script deployment.");
+                    return;
+                }
+
+                if (result.status) {
+                    alert("Leave processed successfully.");
+                    window.syncL2LeaveMasterData(); // Refresh table
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (err) {
+                alert("Network error occurred.");
+            }
+        };
+
+        // Initialize default tab
+        window.switchL2LeaveTab('pending');
     })();
 </script>
