@@ -8,6 +8,8 @@
         </button>
     </div>
 
+    
+
     <form id="field-activity-form" onsubmit="window.submitFieldActivity(event)" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -20,7 +22,7 @@
             </div>
             <div id="fa-existing-box" class="hidden">
                 <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Select Job Activity ID</label>
-                <!-- Added onchange event here to trigger project autofill -->
+                <!-- onchange event triggers project autofill -->
                 <select id="fa-job-id-select" onchange="window.autoFillProject(this.value)" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono font-bold text-xs">
                     <option value="" disabled selected>-- Select Job ID --</option>
                 </select>
@@ -76,6 +78,12 @@
                     <option value="Flight">Flight (Requires Approval)</option>
                 </select>
                 <p id="travel-mode-notice" class="text-[10px] text-amber-600 font-bold mt-1 hidden">⚠️ Train & Flight bookings require explicit manager travel approval.</p>
+            </div>
+
+            <!-- FILE UPLOAD FIELD -->
+            <div class="md:col-span-2">
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Upload Document / Ticket <span class="text-slate-400 font-normal lowercase">(optional)</span></label>
+                <input type="file" id="fa-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer border border-slate-300 p-1.5 rounded-xl transition">
             </div>
         </div>
 
@@ -175,14 +183,12 @@
                 existingBox.classList.add("hidden");
                 jobSelect.removeAttribute("required");
                 jobSelect.value = "";
-                document.getElementById("fa-project").value = ""; // Clear project when creating new
+                document.getElementById("fa-project").value = ""; 
             }
         };
 
-        // NEW FEATURE: Auto-fill project based on selected Job ID
         window.autoFillProject = function(selectedJobId) {
             if (!selectedJobId) return;
-            // Find the matching activity from the user's cache
             const matchingActivity = myActivitiesCache.find(a => a.jobActivityId === selectedJobId);
             if (matchingActivity && matchingActivity.project) {
                 document.getElementById("fa-project").value = matchingActivity.project;
@@ -192,7 +198,6 @@
         function populateJobDropdowns() {
             const uniqueJobIds = [...new Set(myActivitiesCache.map(a => a.jobActivityId))];
             
-            // Populate form existing ID select
             const jobIdSelect = document.getElementById("fa-job-id-select");
             jobIdSelect.innerHTML = '<option value="" disabled selected>-- Select Job ID --</option>';
             uniqueJobIds.forEach(id => {
@@ -200,7 +205,6 @@
                 jobIdSelect.appendChild(opt);
             });
 
-            // Populate TA Claim select
             const taSelect = document.getElementById("ta-print-job-select");
             taSelect.innerHTML = '<option value="">-- Choose Job ID --</option>';
             uniqueJobIds.forEach(id => {
@@ -231,7 +235,6 @@
                         return;
                     }
                     
-                    // Populate dropdowns (including TA print)
                     populateJobDropdowns();
 
                     let html = "";
@@ -239,10 +242,13 @@
                         let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800");
                         let travelApprovalBadge = r.managerTravelModeApproval === "APPROVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (r.managerTravelModeApproval === "REJECTED" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200");
 
-                        // Parse combined movement type (Split by \n to separate Type and From/To)
                         let movementParts = (r.movementType || 'N/A').split('\n');
                         let mainMovement = movementParts[0];
                         let locations = movementParts.length > 1 ? movementParts[1] : '';
+                        
+                        // Check if backend returned an attachment URL for this record
+                        let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
+                            `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 underline block mt-1.5 text-[10px] font-mono flex items-center gap-1 font-black"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
 
                         html += `
                             <tr class="hover:bg-slate-50 align-top">
@@ -260,6 +266,7 @@
                                     ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
                                     <div class="text-slate-700 text-xs font-semibold mt-0.5">Mode: ${r.modeOfTravel || 'N/A'}</div>
                                     <p class="text-slate-600 italic text-[11px] mt-1.5 bg-slate-100 p-2 rounded-lg border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                                    ${docLink}
                                 </td>
                                 <td class="p-3">
                                     <div class="text-[10px] text-slate-500 mb-0.5">Auditor: <strong>${r.coordinatorName || 'Assigned'}</strong></div>
@@ -339,9 +346,29 @@
                 modeOfTravel: travelMode,
                 activityDescription: desc,
                 coordinatorId: currentUser.coordinatorId || "",
-                coordinatorName: currentUser.coordinatorName || ""
+                coordinatorName: currentUser.coordinatorName || "",
+                attachmentBase64: "", 
+                attachmentFileName: "", 
+                attachmentContentType: ""
             };
 
+            const fileInput = document.getElementById("fa-file-input");
+            if(fileInput && fileInput.files.length > 0) {
+                const targetedFile = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function(ev) {
+                    payload.attachmentBase64 = ev.target.result.split(',')[1];
+                    payload.attachmentFileName = targetedFile.name;
+                    payload.attachmentContentType = targetedFile.type;
+                    await window.executeFASubmitAjaxRequest(payload, btn);
+                };
+                reader.readAsDataURL(targetedFile);
+            } else { 
+                await window.executeFASubmitAjaxRequest(payload, btn); 
+            }
+        };
+
+        window.executeFASubmitAjaxRequest = async function(payload, btn) {
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
                 const result = await res.json();
@@ -356,13 +383,9 @@
 
                     loadMyActivities();
 
-                    // ==========================================
-                    // ROBUST WHATSAPP REDIRECT TRIGGER (NEW TAB)
-                    // ==========================================
+                    // WhatsApp Trigger via hidden link click
                     if (result.waPhone && result.waMsg) {
                         const waUrl = `https://wa.me/${result.waPhone}?text=${encodeURIComponent(result.waMsg)}`;
-                        
-                        // Force a new tab using an invisible anchor link click
                         const a = document.createElement('a');
                         a.href = waUrl;
                         a.target = '_blank';
@@ -371,14 +394,15 @@
                         a.click();
                         document.body.removeChild(a);
                     }
-
                 } else {
                     alert("Error: " + result.message);
                 }
             } catch(err) {
                 alert("Network communication failure.");
             } finally {
-                btn.disabled = false; btn.innerText = "Submit Field Activity Entry";
+                if (btn) {
+                    btn.disabled = false; btn.innerText = "Submit Field Activity Entry";
+                }
             }
         };
 
