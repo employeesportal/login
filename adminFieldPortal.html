@@ -4,29 +4,27 @@
             <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Field Audit & Verdict Console
         </h3>
         <div class="flex items-center gap-3 w-full sm:w-auto">
-            <select id="admin-filter-job" onchange="window.filterAdminTable()"
-                class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+            <select id="admin-filter-job" onchange="window.filterAdminTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
                 <option value="">Filter by Job ID</option>
             </select>
         </div>
     </div>
 
     <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
-        <table class="w-full text-left border-collapse text-xs min-w-[1300px]">
+        <table class="w-full text-left border-collapse text-xs min-w-[1400px]">
             <thead>
                 <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
-                    <th class="p-3.5">Job & Employee</th>
-                    <th class="p-3.5">Project & Timeline</th>
-                    <th class="p-3.5">Movement & Description</th>
-                    <th class="p-3.5">Coordinator & Manager Review</th>
+                    <th class="p-3.5">Job & Entry ID</th>
+                    <th class="p-3.5">Employee & Project</th>
+                    <th class="p-3.5">Timeline, Movement & Description</th>
+                    <th class="p-3.5">Coordinator Review</th>
+                    <th class="p-3.5 bg-slate-900 border-l border-r border-slate-800">Manager Tracking Logs (All Columns)</th>
                     <th class="p-3.5">Admin Verdict & Approval</th>
                     <th class="p-3.5 text-center">Execute Control</th>
                 </tr>
             </thead>
             <tbody id="admin-tbody" class="divide-y text-slate-800 font-bold">
-                <tr>
-                    <td colspan="6" class="p-8 text-center animate-pulse">Loading admin audit logs...</td>
-                </tr>
+                <tr><td colspan="7" class="p-8 text-center animate-pulse">Loading admin audit logs...</td></tr>
             </tbody>
         </table>
     </div>
@@ -47,8 +45,9 @@
                 let year = d.getFullYear();
                 let hours = String(d.getHours()).padStart(2, '0');
                 let minutes = String(d.getMinutes()).padStart(2, '0');
-                return `${day}-${month}-${year} ${hours}:${minutes}`;
-            } catch (e) { return rawStr; }
+                let seconds = String(d.getSeconds()).padStart(2, '0');
+                return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+            } catch(e) { return rawStr; }
         }
 
         async function initAdminPortal() {
@@ -60,8 +59,8 @@
                     populateAdminJobDropdown(adminCache);
                     renderAdminTable(adminCache);
                 }
-            } catch (e) {
-                document.getElementById("admin-tbody").innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load audit records.</td></tr>`;
+            } catch(e) {
+                document.getElementById("admin-tbody").innerHTML = `<tr><td colspan="7" class="p-6 text-center text-rose-600">Failed to load audit records.</td></tr>`;
             }
         }
 
@@ -75,7 +74,7 @@
             });
         }
 
-        window.filterAdminTable = function () {
+        window.filterAdminTable = function() {
             const val = document.getElementById("admin-filter-job").value;
             const filtered = val ? adminCache.filter(d => d.jobActivityId === val) : adminCache;
             renderAdminTable(filtered);
@@ -84,7 +83,7 @@
         function renderAdminTable(data) {
             const tbody = document.getElementById("admin-tbody");
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No field activity audit records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">No field activity audit records found.</td></tr>`;
                 return;
             }
 
@@ -93,37 +92,72 @@
                 const isLocked = r.adminVerdict && r.adminVerdict !== "PENDING" && !r.adminVerdict.startsWith("PENDING");
                 let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800");
 
+                let movementParts = (r.movementType || 'N/A').split('\n');
+                let mainMovement = movementParts[0];
+                let locations = movementParts.length > 1 ? movementParts[1] : '';
+
+                let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
+                    `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 underline block mt-1.5 text-[10px] font-mono flex items-center gap-1 font-black"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
+
                 html += `
                     <tr class="hover:bg-slate-50 align-top">
                         <td class="p-3.5">
                             <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
                             <span class="font-mono text-slate-500 text-[10px]">Entry: ${r.entryId}</span>
-                            <strong class="text-slate-950 mt-1 block">${r.employeeName}</strong>
-                            <span class="text-slate-500 font-mono text-[10px]">ID: ${r.employeeId}</span>
                         </td>
                         <td class="p-3.5">
-                            <div class="font-bold text-slate-900">${r.project}</div>
-                            <span class="font-mono text-slate-500 text-[10px]">Travel: ${formatIndianDateTime(r.tentativeTravelDate)}</span>
-                            <span class="font-mono text-indigo-600 text-[10px] block">Reach: ${formatIndianDateTime(r.dateToReachDestination)}</span>
+                            <strong class="text-slate-950 block">${r.employeeName}</strong>
+                            <span class="text-xs text-slate-600">${r.project}</span>
+                            <span class="text-slate-500 font-mono text-[10px] block mt-1">ID: ${r.employeeId}</span>
                         </td>
                         <td class="p-3.5 max-w-xs">
-                            <div class="font-bold text-slate-900">${r.movementType} (${r.modeOfTravel})</div>
-                            <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-100 p-1.5 rounded">"${r.activityDescription || 'N/A'}"</p>
+                            <div class="font-bold text-slate-900">${mainMovement} (${r.modeOfTravel})</div>
+                            ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                            <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-100 p-1.5 rounded border border-slate-200">"${r.activityDescription || 'N/A'}"</p>
+                            ${docLink}
+                            <div class="font-mono text-[10px] text-slate-500 mt-1.5 space-y-0.5">
+                                <div>Travel: ${formatIndianDateTime(r.tentativeTravelDate)}</div>
+                                <div>Reach: ${formatIndianDateTime(r.dateToReachDestination)}</div>
+                                <div class="text-indigo-600">Logged: ${formatIndianDateTime(r.employeeTimestamp)}</div>
+                            </div>
                         </td>
                         <td class="p-3.5 space-y-1">
-                            <div class="text-[11px]"><strong>Mgr Status:</strong> <span class="px-1.5 py-0.5 rounded text-[9px] uppercase ${badgeClass}">${r.managerStatus}</span></div>
-                            <div class="text-[10px] text-slate-600"><strong>Manager:</strong> ${r.managerName || 'Pending'}</div>
                             <div class="text-[10px] text-slate-600"><strong>Coordinator:</strong> ${r.coordinatorName || 'Assigned'}</div>
                             <div class="text-slate-700 italic text-[10px] bg-slate-50 p-1 rounded border">Coord Note: "${r.coordinatorComment || 'None'}"</div>
                         </td>
+                        
+                        <!-- DEDICATED MANAGER COLUMNS COLUMN -->
+                        <td class="p-3.5 max-w-xs bg-slate-50 border-l border-r border-slate-200 space-y-2 font-mono text-[10px]">
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 block">Manager Status:</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${badgeClass}">${r.managerStatus || 'PENDING'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 block">Manager Travel Mode Approval:</span>
+                                <span class="font-bold text-slate-800">${r.managerTravelModeApproval || 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 block">Manager Instruction:</span>
+                                <span class="text-indigo-900 font-sans italic">${r.managerInstruction || 'None'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 block">Manager Name:</span>
+                                <span class="text-slate-900 font-bold">${r.managerName || 'Pending'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 block">Manager Timestamp:</span>
+                                <span class="text-slate-600">${formatIndianDateTime(r.managerTimestamp)}</span>
+                            </div>
+                        </td>
+
                         <td class="p-3.5 space-y-2">
                             <select id="admin-status-${r.rowIndex}" class="w-full p-1.5 border rounded-lg text-xs bg-white font-black" ${isLocked ? 'disabled bg-slate-100' : ''}>
-    <option value="APPROVED">Fully Approved</option>
-    <option value="APPROVED_AS_MANAGER_APPROVAL">Approved as Manager Approval</option>
-    <option value="MANAGER_APPROVAL_OVERRIDE">Manager Approval Override</option>
-    <option value="APPROVED_WITH_DEDUCTION">Approved with Deduction as per Policy</option>
-    <option value="REJECTED">Rejected</option>
-</select>
+                                <option value="APPROVED">Fully Approved</option>
+                                <option value="APPROVED_AS_MANAGER_APPROVAL">Approved as Manager Approval</option>
+                                <option value="MANAGER_APPROVAL_OVERRIDE">Manager Approval Override</option>
+                                <option value="APPROVED_WITH_DEDUCTION">Approved with Deduction as per Policy</option>
+                                <option value="REJECTED">Rejected</option>
+                            </select>
                             <input type="text" id="admin-comment-${r.rowIndex}" placeholder="Add audit comment..." class="w-full p-1.5 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100' : ''}>
                             <div class="text-[10px] font-mono text-slate-600 pt-1">
                                 <div><strong>Verdict Log:</strong> ${r.adminVerdict || 'PENDING'}</div>
@@ -138,12 +172,13 @@
                 `;
             });
             tbody.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
         }
 
-        window.saveAdminVerdict = async function (rowIndex) {
+        window.saveAdminVerdict = async function(rowIndex) {
             const statusVal = document.getElementById(`admin-status-${rowIndex}`).value;
             const commentVal = document.getElementById(`admin-comment-${rowIndex}`).value.trim();
-
+            
             if (!commentVal) { alert("Please provide a comment for the admin verdict."); return; }
             if (!confirm("Are you sure you want to commit and lock this admin verdict?")) return;
 
@@ -152,11 +187,11 @@
             try {
                 const res = await fetch(API_URL, {
                     method: "POST",
-                    body: JSON.stringify({
-                        action: "processAdminFieldAction",
-                        rowIndex: rowIndex,
+                    body: JSON.stringify({ 
+                        action: "processAdminFieldAction", 
+                        rowIndex: rowIndex, 
                         adminVerdict: finalVerdictString,
-                        adminName: currentUser.employeeName
+                        adminName: currentUser.employeeName 
                     })
                 });
                 const result = await res.json();
@@ -164,7 +199,7 @@
                     alert("Admin verdict committed successfully!");
                     initAdminPortal();
                 } else alert("Error: " + result.message);
-            } catch (e) { alert("Network error."); }
+            } catch(e) { alert("Network error."); }
         };
 
         initAdminPortal();
