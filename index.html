@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* Add this to allow mobile toggle functionality */
         .sidebar-hidden {
             display: none !important;
         }
@@ -26,7 +25,6 @@
 <body class="min-h-screen flex flex-col antialiased bg-slate-50">
 
     <script>
-        // Production Appscript WebApp endpoint configuration
         const API_URL = "https://script.google.com/macros/s/AKfycby7dtradPBSGMG6U3JOyfuAJdi2xRel2CJfkHW3LkPTVllaWMsh_UT26NmF33tPuT3A/exec";
         let currentUser = null;
     </script>
@@ -36,7 +34,6 @@
     
 
     <script>
-        // CORE BINDER: Restores active authentication credentials safely from local storage vectors on boot
         document.addEventListener("DOMContentLoaded", () => {
             const cachedUserString = localStorage.getItem("current_user_cache");
             if (cachedUserString) {
@@ -74,8 +71,7 @@
             const root = document.getElementById("app-root");
             root.innerHTML = `
         <div class="flex flex-1 h-screen overflow-hidden relative">
-            <!-- Sidebar: hidden on mobile by default, shown when class is toggled -->
-<!-- Sidebar: hidden on mobile by default, shown when class is toggled -->
+            <!-- Sidebar -->
             <aside id="sidebar" class="sidebar-hidden md:flex absolute md:relative w-64 h-full bg-slate-900 text-white flex-col justify-between border-r border-slate-800 z-50 shadow-2xl overflow-y-auto">
                 <div>
                     <div class="p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between sticky top-0 z-20">
@@ -83,7 +79,6 @@
                             <i data-lucide="layout-dashboard" class="text-blue-500 w-5 h-5"></i>
                             <span class="font-black text-xs tracking-wider uppercase text-slate-200">Modules</span>
                         </div>
-                        <!-- Close button for mobile -->
                         <button onclick="toggleSidebar()" class="md:hidden text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
                     <nav id="dynamic-role-nav" class="mt-4 pr-3 space-y-1 pb-4"></nav>
@@ -94,29 +89,39 @@
                     </button>
                 </div>
             </aside>
-            <!-- Main Content -->
+
+            <!-- Main Content Container -->
             <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-                <!-- Mobile Topbar Toggle -->
-                <div class="md:hidden p-4 bg-white border-b flex items-center">
-                    <button onclick="toggleSidebar()" class="text-slate-900"><i data-lucide="menu" class="w-6 h-6"></i></button>
-                    <span class="ml-3 font-bold text-sm">Dashboard</span>
+                <!-- Mobile Navigation Bar with Sidebar Menu Toggle -->
+                <div class="bg-white border-b border-slate-200 flex items-center justify-between px-4 py-3 sticky top-0 z-40 shadow-sm md:hidden">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleSidebar()" class="text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                        <span class="font-black text-xs uppercase tracking-wider text-slate-800">Employee Portal</span>
+                    </div>
+                    <div id="mobile-topbar-mount-node" class="flex items-center gap-2"></div>
                 </div>
+
+                <!-- Desktop Topbar Mount Node -->
                 <div id="topbar-mount-node" class="shrink-0 w-full hidden md:block"></div> 
-                <main id="view-port" class="flex-1 p-6 overflow-y-auto bg-slate-50 flex flex-col justify-start items-center"></main>
+
+                <!-- Scrollable Main Viewport Area -->
+                <main id="view-port" class="workspace-container flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50 flex flex-col justify-start items-center"></main>
             </div>
         </div>
     `;
 
-            // Helper to toggle sidebar on mobile
             window.toggleSidebar = () => {
                 document.getElementById('sidebar').classList.toggle('sidebar-hidden');
             };
 
             buildNavigationMenuByRole();
+            
+            // Load topbar component into both desktop and mobile slots
             loadComponentToContainer("topbar.html", "topbar-mount-node");
+            loadComponentToContainer("topbar.html", "mobile-topbar-mount-node");
+
             window.showWelcomeMessage();
         }
-
 
         window.showWelcomeMessage = function () {
             document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
@@ -129,7 +134,7 @@
             ` : '';
 
             view.innerHTML = `
-                <div class="text-center max-w-md p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up">
+                <div class="text-center max-w-md p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full">
                     <div class="inline-flex p-4 bg-slate-100 text-slate-950 border border-slate-200 rounded-2xl mb-4">
                         <i data-lucide="smile" class="w-10 h-10"></i>
                     </div>
@@ -143,25 +148,24 @@
                         Select a module from the left bar layout panel to begin managing your day.
                     </p>
                
-<br>
-                <!-- MANDATORY NOTICE BANNER -->
-    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl shadow-sm fade-in-up">
-        <div class="flex items-start gap-3">
-            <span class="text-amber-600 text-lg leading-none mt-0.5">⚠️</span>
-            <div>
-                <h4 class="text-xs font-black uppercase tracking-wider text-amber-900 mb-1">Mandatory Notice</h4>
-                <p class="text-[11px] font-bold text-amber-950 leading-relaxed mb-1.5">
-                    All field activities, travel logs, and leave requests must be processed exclusively through this portal. 
-                   <br> <strong class="bg-amber-200 px-1 rounded text-rose-700">Failure to mark your daily attendance (Log-In and Log-Out) will automatically result in being marked 'Absent' for the day.</strong>
-                </p>
-                <p class="text-[10px] font-black text-slate-700 italic border-t border-amber-200 pt-1.5 mt-1.5">
-                    Coordinator: It is your responsibility to ensure these instructions are followed.
-                </p>
-            </div>
-        </div>
-    </div>
-
-     </div>
+                    <br>
+                    <!-- MANDATORY NOTICE BANNER -->
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
+                        <div class="flex items-start gap-3">
+                            <span class="text-amber-600 text-lg leading-none mt-0.5">⚠️</span>
+                            <div>
+                                <h4 class="text-xs font-black uppercase tracking-wider text-amber-900 mb-1">Mandatory Notice</h4>
+                                <p class="text-[11px] font-bold text-amber-950 leading-relaxed mb-1.5">
+                                    All field activities, travel logs, and leave requests must be processed exclusively through this portal. 
+                                   <br> <strong class="bg-amber-200 px-1 rounded text-rose-700">Failure to mark your daily attendance (Log-In and Log-Out) will automatically result in being marked 'Absent' for the day.</strong>
+                                </p>
+                                <p class="text-[10px] font-black text-slate-700 italic border-t border-amber-200 pt-1.5 mt-1.5">
+                                    Coordinator: It is your responsibility to ensure these instructions are followed.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
             lucide.createIcons();
         }
@@ -234,21 +238,17 @@
                 `;
             }
 
-            // Field Operations Section
-            // Field Operations Section
             outputHtml += `
                 <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Operations</span></div>
                 <button onclick="loadTabModule('fieldActivityPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0"></i> Field Activity Portal</button>
             `;
 
-            // Display Coordinator Field Review if the user is a Coordinator or Admin
             if (isCoordinator) {
                 outputHtml += `
                     <button onclick="loadTabModule('coordinatorFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i> Coordinator Field Review</button>
                 `;
             }
 
-            // Display Manager Approval Console if the user is a Manager or Admin
             if (isManager) {
                 outputHtml += `
                     <button onclick="loadTabModule('managerFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="user-check" class="w-4 h-4 text-emerald-400 shrink-0"></i> Manager Approval Console</button>
@@ -271,13 +271,17 @@
         async function loadComponentToContainer(fileUrl, containerId) {
             try {
                 const res = await fetch(fileUrl);
-                document.getElementById(containerId).innerHTML = await res.text();
-                const scripts = document.getElementById(containerId).getElementsByTagName("script");
-                for (let s of scripts) {
-                    const sc = document.createElement("script"); sc.text = s.innerText;
-                    document.head.appendChild(sc).parentNode.removeChild(sc);
+                const html = await res.text();
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = html;
+                    const scripts = container.getElementsByTagName("script");
+                    for (let s of scripts) {
+                        const sc = document.createElement("script"); sc.text = s.innerText;
+                        document.head.appendChild(sc).parentNode.removeChild(sc);
+                    }
+                    lucide.createIcons();
                 }
-                lucide.createIcons();
             } catch (e) { }
         }
 
@@ -326,7 +330,6 @@
             }
         }
 
-        // UNIFIED LOGOUT & CLEANUP PIPELINE
         window.performManualLogout = function () {
             currentUser = null;
             localStorage.removeItem("current_user_cache");
