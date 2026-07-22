@@ -1,9 +1,15 @@
 <div class="w-full glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up"
     id="verification-portal-container">
-    <button onclick="window.openReportModal()"
-        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
-        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Show Daily Report
-    </button>
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button onclick="window.openReportModal()"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Show Daily Report
+        </button>
+        <button onclick="window.loadTabModule('coordinatorPastHistory.html', this)"
+            class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> View Past Days Attendance
+        </button>
+    </div>
 <br>
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-4 mb-5 gap-4">
@@ -71,30 +77,25 @@
         </table>
     </div>
 </div>
-<!-- Modal Background -->
+
+<!-- Modal Background: Daily Report -->
 <div id="report-modal"
     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
     <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-8 relative">
-        <!-- Close Button -->
         <button onclick="document.getElementById('report-modal').classList.add('hidden')"
-            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 cursor-pointer">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
-
-        <!-- Report Content Placeholder -->
         <div id="report-content">
             <h2 class="text-xl font-black mb-6">Attendance Verification Ledger</h2>
-            <!-- The table will be injected here by the script -->
             <div id="modal-report-body">Loading...</div>
         </div>
     </div>
 </div>
 
-
 <script>
     (() => {
         let activeRosterDataCache = [];
-        // Fixed to current date in YYYY-MM-DD
         const todayDate = new Date().toISOString().split('T')[0];
 
         window.recalculateRosterStatistics = () => {
@@ -165,12 +166,10 @@
                                    class="w-full px-2 py-1 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-1 focus:ring-orange-500 font-bold bg-white">
                         </div>`;
 
-                    // 🎯 RENDER GENERATION: Login Location URI / Coordinates string analysis block
                     let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
                     let locStr = String(r.location || "").trim();
 
                     if (locStr && locStr !== "--" && locStr !== "undefined") {
-                        // Shared classes for consistent button width
                         const btnClass = "w-32 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
 
                         if (locStr.includes("||")) {
@@ -188,23 +187,23 @@
                     let historyHtml = '<span class="text-slate-300 italic">No history found</span>';
                     if (r.historyObj && r.historyObj.hasHistory) {
                         historyHtml = `
-        <div class="space-y-1 bg-slate-50 border border-slate-200/60 p-3 rounded-xl shadow-inner text-[11px] leading-normal font-medium text-slate-600 min-w-[300px]">
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Date</span> 
-                    <span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span>
-                </div>
-                <div>
-                    <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Logout Time</span> 
-                    <span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span>
-                </div>
-            </div>
-            <div class="border-t border-slate-200/60 pt-1 mt-1">
-                <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Work Progress</span> 
-                <p class="italic text-slate-700 font-normal leading-tight mt-0.5">${r.historyObj.progress}</p>
-            </div>
-        </div>
-    `;
+                            <div class="space-y-1 bg-slate-50 border border-slate-200/60 p-3 rounded-xl shadow-inner text-[11px] leading-normal font-medium text-slate-600 min-w-[300px]">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Date</span> 
+                                        <span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Logout Time</span> 
+                                        <span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span>
+                                    </div>
+                                </div>
+                                <div class="border-t border-slate-200/60 pt-1 mt-1">
+                                    <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Work Progress</span> 
+                                    <p class="italic text-slate-700 font-normal leading-tight mt-0.5">${r.historyObj.progress}</p>
+                                </div>
+                            </div>
+                        `;
                     }
                     outputRows += `
                         <tr class="hover:bg-slate-50/50 transition-colors align-top">
@@ -219,9 +218,9 @@
                                 <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
                             </td>
                             <td class="w-60 px-3 py-3 text-center align-middle">${locationLink}</td> 
-                            <td class="w-70 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap "> "${r.todaysPlan || 'None'}"</td>
+                            <td class="w-70 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap"> "${r.todaysPlan || 'None'}"</td>
                             <td class="w-40 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
-                            <td class="px-4 py-3 ">${historyHtml}</td>
+                            <td class="px-4 py-3">${historyHtml}</td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <select id="remark_${idx}" class="px-2 py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs focus:ring-1" style="width:185px;">
                                     <option value="Pending" ${!r.coordinatorRemark || r.coordinatorRemark === "Pending" ? "selected" : ""}>Pending</option>
@@ -278,16 +277,13 @@
 
         window.saveSingleRowDirectly = async function (idx) {
             const r = activeRosterDataCache[idx];
-            // Define the date variable here so it is available
-            const todayDate = new Date().toISOString().split('T')[0];
+            const currentSaveDate = new Date().toISOString().split('T')[0];
 
             const selectedProj = document.getElementById(`proj_sel_${idx}`).value;
             let selectedDist = document.getElementById(`dist_sel_${idx}`).value;
             const customDistName = document.getElementById(`custom_dist_name_${idx}`).value.trim();
             const selectedRemark = document.getElementById(`remark_${idx}`).value;
             const typedComment = document.getElementById(`comment_${idx}`).value.trim();
-
-            // ... (rest of your validation logic remains the same)
 
             if (selectedDist === "OTHER") selectedDist = "OTHER-" + customDistName;
 
@@ -301,7 +297,7 @@
 
             const singleSubmitPayload = {
                 action: "processCoordinatorVerificationData",
-                date: todayDate, // Using the local constant instead of dateInput
+                date: currentSaveDate,
                 coordinatorId: currentUser.employeeId,
                 coordinatorName: currentUser.employeeName,
                 records: targetRowPayload
@@ -317,115 +313,80 @@
             } catch (e) { alert("Network transaction failure."); }
         };
 
-        window.downloadVerificationReportPDF = function () {
-            if (activeRosterDataCache.length === 0) return;
-
-            const confirmPDF = confirm("Do you want to extract and download a verified PDF report document for the selected roster summary matrix layout?");
-            if (!confirmPDF) return;
-
-            const metaHeading = document.getElementById("pdf-coordinator-heading");
-            metaHeading.innerText = `Coordinator Name: ${currentUser.employeeName || 'System Supervisor'} (ID: ${currentUser.employeeId})`;
-
-            const pdfHeader = document.getElementById("pdf-header-meta");
-            pdfHeader.classList.remove("hidden");
-
-            const elementToPrint = document.getElementById("verification-portal-container");
-
-            const opt = {
-                margin: [0.4, 0.4, 0.4, 0.4],
-                filename: `Verification_Report_${dateInput.value || 'Record'}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'in', format: 'a3', orientation: 'landscape' }
-            };
-
-            html2pdf().set(opt).from(elementToPrint).save().then(() => {
-                pdfHeader.classList.add("hidden");
-            }).catch(err => {
-                console.error("PDF engine crash", err);
-                pdfHeader.classList.add("hidden");
-            });
-        };
-
         window.openReportModal = () => {
             const modal = document.getElementById('report-modal');
             const body = document.getElementById('modal-report-body');
             const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-            // UPDATE: Use coordinatorName if available (for employees), otherwise fallback to the logged-in user's name
             const coordName = currentUser.employeeName || "Coordinator";
 
             body.innerHTML = `
-    <div id="pdf-content-area" class="p-4">
-        <div class="mb-6 border-b pb-4">
-            <h2 class="text-xl font-black text-slate-800 mb-2">Daily Attendance Verification Report</h2>
-            <div class="flex gap-8 text-xs font-bold text-slate-600">
-                <p>Report Date: <span class="text-slate-900">${today}</span></p>
-                <p>Coordinator: <span class="text-slate-900">${coordName}</span></p>
-            </div>
-        </div>
+                <div id="pdf-content-area" class="p-4">
+                    <div class="mb-6 border-b pb-4">
+                        <h2 class="text-xl font-black text-slate-800 mb-2">Daily Attendance Verification Report</h2>
+                        <div class="flex gap-8 text-xs font-bold text-slate-600">
+                            <p>Report Date: <span class="text-slate-900">${today}</span></p>
+                            <p>Coordinator: <span class="text-slate-900">${coordName}</span></p>
+                        </div>
+                    </div>
 
-        <div class="grid grid-cols-4 gap-4 mb-8">
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase">Total</p><strong class="text-lg">${activeRosterDataCache.length}</strong></div>
-            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase">Marked by Emp</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState.includes("MARKED")).length}</strong></div>
-            <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100"><p class="text-[9px] font-black text-purple-600 uppercase">Marked by Coord</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState === "MARKED_BY_COORDINATOR").length}</strong></div>
-            <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100"><p class="text-[9px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState === "NOT_MARKED").length}</strong></div>
-        </div>
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase">Total</p><strong class="text-lg">${activeRosterDataCache.length}</strong></div>
+                        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase">Marked by Emp</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState.includes("MARKED")).length}</strong></div>
+                        <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100"><p class="text-[9px] font-black text-purple-600 uppercase">Marked by Coord</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState === "MARKED_BY_COORDINATOR").length}</strong></div>
+                        <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100"><p class="text-[9px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-lg">${activeRosterDataCache.filter(r => r.trackingState === "NOT_MARKED").length}</strong></div>
+                    </div>
 
-        <table class="w-full text-left border-collapse table-fixed">
-            <thead>
-                <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200">
-                    <th class="pb-3 px-3 w-32">Employee Details</th>
-                    <th class="pb-3 px-3 w-25">Status</th>
-                    <th class="pb-3 px-3 w-30">Project / District</th>
-                    <th class="pb-3 px-3 w-50">Plan / Login / Loc</th>
-                    <th class="pb-3px-3  w-50">Last Day Progress</th>
-                    <th class="pb-3 px-3 w-50">Audit Remark</th>
-                </tr>
-            </thead>
-            <tbody class="text-xs divide-y divide-slate-100">
-                ${activeRosterDataCache.map(r => {
-                const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
-                const locLink = hasLocation
-                    ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
-                    : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
-                return `
-                    <tr class="align-top">
-                        <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
-<td class="py-4 break-words whitespace-wrap"> <span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block"> ${r.trackingState}</span>
-</td>
-
-                        <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
-                        <td class="py-4 text-slate-600 break-words">
-                            <div>${r.todaysPlan || '-'}</div>
-                            <div class="font-mono text-emerald-600 font-bold">${r.loginTime || '--:--'}</div>
-                            ${locLink}
-                        </td>
-                        <td class="py-4 text-[10px] text-slate-600">
-                            ${r.historyObj?.hasHistory ? `
-                                <div class="bg-slate-50 p-2 rounded border border-slate-100">
-                                    <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
-                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b><br>${r.historyObj.progress}<br>
-                                    <b class="text-slate-400 uppercase text-[8px]">Logout:</b> ${r.historyObj.logout}
-                                </div>
-                            ` : 'No history'}
-                        </td>
-                        <td class="py-4 font-bold text-slate-800 break-words">${r.coordinatorRemark || '-'}<br><span class="text-[10px] font-normal text-slate-500">${r.coordinatorComment || ''}</span></td>
-                    </tr>`;
-            }).join('')}
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="mt-6 border-t pt-4">
-        <button onclick="window.downloadReportPDF()" class="w-full py-3 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition">
-            Download PDF Report
-        </button>
-    </div>
-`;
+                    <table class="w-full text-left border-collapse table-fixed">
+                        <thead>
+                            <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200">
+                                <th class="pb-3 px-3 w-32">Employee Details</th>
+                                <th class="pb-3 px-3 w-25">Status</th>
+                                <th class="pb-3 px-3 w-30">Project / District</th>
+                                <th class="pb-3 px-3 w-50">Plan / Login / Loc</th>
+                                <th class="pb-3 px-3 w-50">Last Day Progress</th>
+                                <th class="pb-3 px-3 w-50">Audit Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100">
+                            ${activeRosterDataCache.map(r => {
+                                const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
+                                const locLink = hasLocation
+                                    ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
+                                    : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
+                                return `
+                                    <tr class="align-top">
+                                        <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
+                                        <td class="py-4 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block">${r.trackingState}</span></td>
+                                        <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
+                                        <td class="py-4 text-slate-600 break-words">
+                                            <div>${r.todaysPlan || '-'}</div>
+                                            <div class="font-mono text-emerald-600 font-bold">${r.loginTime || '--:--'}</div>
+                                            ${locLink}
+                                        </td>
+                                        <td class="py-4 text-[10px] text-slate-600">
+                                            ${r.historyObj?.hasHistory ? `
+                                                <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                                                    <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
+                                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b><br>${r.historyObj.progress}<br>
+                                                    <b class="text-slate-400 uppercase text-[8px]">Logout:</b> ${r.historyObj.logout}
+                                                </div>
+                                            ` : 'No history'}
+                                        </td>
+                                        <td class="py-4 font-bold text-slate-800 break-words">${r.coordinatorRemark || '-'}<br><span class="text-[10px] font-normal text-slate-500">${r.coordinatorComment || ''}</span></td>
+                                    </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 border-t pt-4">
+                    <button onclick="window.downloadReportPDF()" class="w-full py-3 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition cursor-pointer">
+                        Download PDF Report
+                    </button>
+                </div>
+            `;
 
             modal.classList.remove('hidden');
-            // Ensure icons render if needed
             if (window.lucide) window.lucide.createIcons();
         };
 
@@ -443,7 +404,4 @@
 
         window.fetchCoordinatorVerificationRoster();
     })();
-
-
-
 </script>
