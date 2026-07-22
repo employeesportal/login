@@ -30,9 +30,10 @@
         const API_URL = "https://script.google.com/macros/s/AKfycby7dtradPBSGMG6U3JOyfuAJdi2xRel2CJfkHW3LkPTVllaWMsh_UT26NmF33tPuT3A/exec";
         let currentUser = null;
     </script>
+    
 
-    <div id="app-root" class="flex-1 flex flex-col h-screen overflow-hidden">
-    </div>
+    <div id="app-root" class="flex-1 flex flex-col h-screen overflow-hidden"> </div>
+    
 
     <script>
         // CORE BINDER: Restores active authentication credentials safely from local storage vectors on boot
@@ -141,7 +142,26 @@
                     <p class="text-slate-800 text-xs font-medium mt-4 leading-relaxed border-t border-slate-200 pt-3">
                         Select a module from the left bar layout panel to begin managing your day.
                     </p>
-                </div>
+               
+<br>
+                <!-- MANDATORY NOTICE BANNER -->
+    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl shadow-sm fade-in-up">
+        <div class="flex items-start gap-3">
+            <span class="text-amber-600 text-lg leading-none mt-0.5">⚠️</span>
+            <div>
+                <h4 class="text-xs font-black uppercase tracking-wider text-amber-900 mb-1">Mandatory Notice</h4>
+                <p class="text-[11px] font-bold text-amber-950 leading-relaxed mb-1.5">
+                    All field activities, travel logs, and leave requests must be processed exclusively through this portal. 
+                   <br> <strong class="bg-amber-200 px-1 rounded text-rose-700">Failure to mark your daily attendance (Log-In and Log-Out) will automatically result in being marked 'Absent' for the day.</strong>
+                </p>
+                <p class="text-[10px] font-black text-slate-700 italic border-t border-amber-200 pt-1.5 mt-1.5">
+                    Coordinator: It is your responsibility to ensure these instructions are followed.
+                </p>
+            </div>
+        </div>
+    </div>
+
+     </div>
             `;
             lucide.createIcons();
         }
