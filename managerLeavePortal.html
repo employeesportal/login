@@ -1,0 +1,246 @@
+<div class="w-full glass-panel p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+    
+    <!-- DASHBOARD PANEL HEADER CONTROL BAR -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-300 pb-4 mb-6 gap-4">
+        <div>
+            <h3 class="text-lg font-black tracking-tight text-slate-950 flex items-center gap-2">
+                <i data-lucide="check-square" class="text-emerald-700 w-5 h-5"></i> Manager Recommendation Workspace
+            </h3>
+            <p class="text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
+                Subordinate Leave Valuations, Audits, &amp; Structural Overrides Matrix
+            </p>
+        </div>
+        <button onclick="window.refreshManagerLeaveWorkspace()" class="w-full sm:w-auto px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Workspace
+        </button>
+    </div>
+
+    <!-- DYNAMIC SUMMARY PANEL: LIST OF EMPLOYEES MANAGED -->
+    <div class="mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl">
+        <span class="block text-[10px] uppercase text-slate-600 font-black tracking-wider mb-2">Team Assignment Summary</span>
+        <div class="flex items-center gap-2 flex-wrap" id="manager-team-summary-list">
+            <span class="text-xs text-slate-500 italic font-medium">Assembling team roster information...</span>
+        </div>
+    </div>
+
+    <!-- MOBILE-FRIENDLY RESPONSIVE GRID TABLE -->
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
+        <div class="w-full max-h-[600px] overflow-y-auto">
+            <table class="w-full text-left border-collapse table-auto block lg:table min-w-0 lg:min-w-[1200px]">
+                <thead>
+                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider hidden lg:table-row sticky top-0 z-10">
+                        <th class="px-3 py-3.5 w-40">Applicant Identity</th>
+                        <th class="px-3 py-3.5 w-44">Leave Parameters</th>
+                        <th class="px-3 py-3.5 w-64">Reason Context</th>
+                        <th class="px-3 py-3.5">Operational Recommendation Action</th>
+                        <th class="px-3 py-3.5 text-center w-28">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="manager-leave-table-body" class="text-xs divide-y divide-slate-200 text-slate-900 font-bold block lg:table-row-group">
+                    <tr class="block lg:table-row">
+                        <td colspan="5" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse block lg:table-cell">
+                            Evaluating supervisor mapping filters and fetching pending leave arrays...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let pendingLeavesCache = [];
+
+        // STRICT CHARACTER PARSER: Completely bypasses timezone drops to keep dates exact
+        window.formatToISODateInput = function(dateInput) {
+            if (!dateInput) return "";
+            let s = String(dateInput).trim().split(' ')[0];
+            if (s.includes('T')) s = s.split('T')[0];
+            
+            // Extract components directly without triggering JS engine timestamp formatting rules
+            let parts = s.includes('/') ? s.split('/') : s.split('-');
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return `${parts[0]}-${parts[1]}-${parts[2]}`; // Already YYYY-MM-DD
+                return `${parts[2]}-${parts[1]}-${parts[0]}`; // Flip DD/MM/YYYY or DD-MM-YYYY to YYYY-MM-DD
+            }
+            return s;
+        };
+
+        window.convertToIndianDashDateFormat = function(dateStr) {
+            if(!dateStr) return "";
+            let s = String(dateStr).trim().split(' ')[0];
+            if (s.includes('T')) s = s.split('T')[0];
+            if (s.includes('/')) return s.replace(/\//g, '-');
+            
+            let parts = s.split('-');
+            if(parts.length === 3 && parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return s;
+        };
+
+        window.formatToIndianDateTimeStr = function(dateInput) {
+            if (!dateInput) return "--";
+            try {
+                if (typeof dateInput === 'string' && dateInput.includes('/') && !dateInput.includes(' ')) return dateInput;
+                let d = new Date(dateInput); if (isNaN(d.getTime())) return dateInput;
+                const pad = (n) => String(n).padStart(2, '0');
+                const day = pad(d.getDate()); const month = pad(d.getMonth() + 1); const year = d.getFullYear();
+                if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0 && String(dateInput).length <= 10) return `${day}/${month}/${year}`;
+                return `${day}/${month}/${year} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            } catch(e) { return dateInput; }
+        };
+
+        window.refreshManagerLeaveWorkspace = async function() {
+            const tbody = document.getElementById("manager-leave-table-body");
+            tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold block lg:table-cell">Synchronizing pending ledgers...</td></tr>`;
+            try {
+                const empRes = await fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`);
+                const empResult = await empRes.json();
+                if (empResult.status) {
+                    const matchedSubordinates = empResult.data.filter(e => String(e.managerId).trim().toUpperCase() === String(currentUser.employeeId).trim().toUpperCase());
+                    document.getElementById("manager-team-summary-list").innerHTML = matchedSubordinates.length === 0 ? 
+                        `<span class="text-xs text-slate-500 font-bold italic">No subordinates found.</span>` :
+                        matchedSubordinates.map(sub => `<span class="inline-flex items-center bg-white border border-slate-300 text-slate-950 px-2.5 py-1 rounded-xl text-[11px] font-black shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span> ${sub.employeeName} (${sub.employeeId})</span>`).join("");
+                }
+
+                const res = await fetch(`${API_URL}?action=getManagerPendingLeaves&managerId=${currentUser.employeeId}`);
+                const result = await res.json();
+                if (!result.status || !result.data || result.data.length === 0) {
+                    tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-10 text-center text-slate-700 font-bold italic bg-slate-50 block lg:table-cell">No pending leave applications require review actions.</td></tr>`;
+                    return;
+                }
+
+                pendingLeavesCache = result.data;
+                let outputRows = "";
+                pendingLeavesCache.forEach((item, idx) => {
+                    const docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline inline-block mt-1.5 text-[11px] font-black"><i data-lucide="eye" class="w-3.5 h-3.5 inline"></i> View Attachment</a>` : '<span class="text-slate-500 font-black inline-block mt-1.5 text-[11px] uppercase tracking-wider">No Attachment</span>';
+                    
+                    const parsedIsoFrom = window.formatToISODateInput(item.fromDate);
+                    const parsedIsoTo = window.formatToISODateInput(item.toDate);
+
+                    outputRows += `
+                        <tr class="block lg:table-row hover:bg-slate-50/60 transition-colors p-4 mb-4 bg-slate-50 border border-slate-300 lg:border-none rounded-2xl shadow-sm lg:shadow-none">
+                            <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
+                                <strong class="text-slate-950 block font-black text-xs">${item.employeeName}</strong>
+                                <span class="font-mono text-[11px] text-slate-600 block">${item.employeeId}</span>
+                                <span class="text-[10px] text-slate-600 block mt-0.5 font-bold">Applied: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>
+                            </td>
+                            <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
+                                <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span>
+                                <div class="text-slate-950 font-mono mt-1">${window.convertToIndianDashDateFormat(item.fromDate)} to ${window.convertToIndianDashDateFormat(item.toDate)}</div>
+                                <span class="text-[11px] text-slate-700 block">Requested: <strong>${item.leaveDays} Day(s)</strong></span>
+                                ${docLink}
+                            </td>
+                            <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
+                                <div class="text-slate-700 text-[10px] uppercase font-black">Project: ${item.project} (${item.location})</div>
+                                <p class="mt-0.5 text-slate-950 font-bold">${item.reason}</p>
+                            </td>
+                            <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-3 lg:pb-0">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[9px] uppercase text-slate-600 font-black mb-0.5">Decision Path</label>
+                                        <select id="mgr_action_${idx}" onchange="window.toggleManagerActionTypeFields(${idx}, this.value)" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded-lg font-black text-xs text-slate-900">
+                                            <option value="Recommend">Recommend as Applied</option>
+                                            <option value="Short Leave">Recommend Short Leave</option>
+                                            <option value="Do Not Recommend">Reject / Do Not Recommend</option>
+                                        </select>
+                                        <div id="short_leave_dates_container_${idx}" class="hidden mt-2 p-2 bg-white border border-slate-300 rounded-xl space-y-1.5 shadow-inner">
+                                            <div><label class="block text-[9px] uppercase text-slate-600 font-black">Rec. From</label><input type="date" id="rec_from_${idx}" value="${parsedIsoFrom}" onchange="window.calculateManagerRecommendedDaysDelta(${idx})" class="w-full px-2 py-0.5 border border-slate-300 bg-white rounded text-xs text-slate-900"></div>
+                                            <div><label class="block text-[9px] uppercase text-slate-600 font-black">Rec. To</label><input type="date" id="rec_to_${idx}" value="${parsedIsoTo}" onchange="window.calculateManagerRecommendedDaysDelta(${idx})" class="w-full px-2 py-0.5 border border-slate-300 bg-white rounded text-xs text-slate-900"></div>
+                                            <div class="text-[10px] text-slate-800 font-black pt-0.5 flex justify-between"><span>Rec. Days:</span> <span id="rec_days_lbl_${idx}" class="font-mono text-rose-700">${item.leaveDays} Days</span></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] uppercase text-slate-600 font-black mb-0.5">Manager Comments</label>
+                                        <textarea id="mgr_remark_${idx}" rows="2" placeholder="Provide operational remarks..." class="w-full px-2 py-1 border border-slate-300 bg-white font-medium rounded-lg text-xs text-slate-900 focus:ring-1 focus:ring-emerald-600"></textarea>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 text-center lg:align-middle whitespace-nowrap">
+                                <button onclick="window.commitManagerDecisionSingleRow(${idx})" class="w-full lg:w-auto px-4 py-2 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i> Submit Recommendation</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = outputRows; lucide.createIcons();
+            } catch(e) { tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-6 text-center text-rose-700 font-black block lg:table-cell">Failed transaction.</td></tr>`; }
+        };
+
+        window.toggleManagerActionTypeFields = function(index, value) {
+            document.getElementById(`short_leave_dates_container_${index}`).classList.toggle("hidden", value !== "Short Leave");
+            window.calculateManagerRecommendedDaysDelta(index);
+        };
+
+        window.calculateManagerRecommendedDaysDelta = function(index) {
+            const type = document.getElementById(`mgr_action_${index}`).value;
+            const item = pendingLeavesCache[index];
+            const lbl = document.getElementById(`rec_days_lbl_${index}`);
+            if (type !== "Short Leave") return type === "Do Not Recommend" ? 0 : parseInt(item.leaveDays);
+
+            const fVal = document.getElementById(`rec_from_${index}`).value;
+            const tVal = document.getElementById(`rec_to_${index}`).value;
+            if(!fVal || !tVal) { lbl.innerText = "0 Days"; return 0; }
+            
+            const calculatedDays = Math.ceil((new Date(tVal) - new Date(fVal)) / (1000 * 60 * 60 * 24)) + 1;
+            lbl.innerText = `${calculatedDays > 0 ? calculatedDays : 0} Day(s)`;
+            return calculatedDays > 0 ? calculatedDays : 0;
+        };
+
+        window.commitManagerDecisionSingleRow = async function(idx) {
+            const item = pendingLeavesCache[idx];
+            const actionPath = document.getElementById(`mgr_action_${idx}`).value;
+            const remarksText = document.getElementById(`mgr_remark_${idx}`).value.trim();
+            if (!remarksText) { alert("Validation Mismatch: Manager Comments are required."); return; }
+
+            let finalStatus = "MGR_RECOMMENDED";
+            let finalRecDays = parseInt(item.leaveDays) || 1;
+            let finalRecDates = `${window.convertToIndianDashDateFormat(item.fromDate)} to ${window.convertToIndianDashDateFormat(item.toDate)}`;
+            let confirmationSummaryText = "";
+
+            if (actionPath === "Recommend") {
+                finalRecDays = parseInt(item.leaveDays) || 1;
+                finalRecDates = `${window.convertToIndianDashDateFormat(item.fromDate)} to ${window.convertToIndianDashDateFormat(item.toDate)}`;
+                confirmationSummaryText = `RECOMMEND AS APPLIED (${finalRecDays} Day(s): ${finalRecDates})`;
+                
+            } else if (actionPath === "Do Not Recommend") {
+                finalStatus = "MGR_REJECTED"; finalRecDays = 0; finalRecDates = "Rejected / Cancelled";
+                confirmationSummaryText = `REJECT / DO NOT RECOMMEND application record`;
+                
+            } else if (actionPath === "Short Leave") {
+                finalRecDays = window.calculateManagerRecommendedDaysDelta(idx);
+                const fromDateInput = document.getElementById(`rec_from_${idx}`).value;
+                const toDateInput = document.getElementById(`rec_to_${idx}`).value;
+                if (finalRecDays <= 0 || isNaN(finalRecDays)) { alert("Validation Mismatch: Short Leave dates selection math error."); return; }
+                
+                finalRecDates = `${window.convertToIndianDashDateFormat(fromDateInput)} to ${window.convertToIndianDashDateFormat(toDateInput)}`;
+                confirmationSummaryText = `MODIFIED SHORT LEAVE RECOMMENDATION (${finalRecDays} Day(s): ${finalRecDates})`;
+            }
+
+            if (!confirm(`LEAVE RECOMMENDATION REVIEW\n\nApplicant: ${item.employeeName}\nDecision: ${confirmationSummaryText}\nRemarks: "${remarksText}"\n\nCommit this recommendation parameters package?`)) return;
+
+            const payload = { 
+                action: "submitManagerLeaveRecommendation", 
+                rowIndex: parseInt(item.rowIndex), 
+                applicationId: item.applicationId, 
+                status: finalStatus, 
+                managerRecommendation: actionPath, 
+                daysRecommended: parseInt(finalRecDays), 
+                datesRecommended: String(finalRecDates), 
+                managerRemark: remarksText 
+            };
+            
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await res.json();
+                if (result.status) { 
+                    alert("Recommendation logged successfully!"); 
+                    window.refreshManagerLeaveWorkspace(); 
+                } else {
+                    alert("Server Error: " + result.message);
+                }
+            } catch(e) { alert("Server connection dropped out."); }
+        };
+
+        window.refreshManagerLeaveWorkspace();
+    })();
+</script>

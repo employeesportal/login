@@ -1,0 +1,471 @@
+<div class="w-full space-y-6 fade-in-up">
+
+    <!-- Filter Configuration Matrix Card -->
+    <div class="p-5 bg-slate-100 border-2 border-slate-300 rounded-2xl text-xs font-bold text-slate-800 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-300 pb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-4 h-4"></i> Attendance Configuration Matrix
+            </span>
+            <span id="l2-analysis-current-month-lbl"
+                class="font-mono text-[11px] bg-slate-200 px-2.5 py-0.5 rounded text-slate-950 font-black"></span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Target Assessment View
+                    Mode</label>
+                <select id="l2-anly-view-mode" onchange="window.toggleL2AnalysisFilterContextLayouts()"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black">
+                    <option value="DATE">View System Logs By Specific Calendar Date</option>
+                    <option value="EMPLOYEE">Analyze Comprehensive Data for Specific Employee</option>
+                </select>
+            </div>
+
+            <div id="l2-anly-date-input-container">
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Target Calendar
+                    Date</label>
+                <input type="date" id="l2-anly-target-date" onchange="window.executeL2AttendanceAnalysisPipeline()"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-mono font-black">
+            </div>
+
+            <div id="l2-anly-emp-input-container"
+                class="hidden col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Search Employee By Name /
+                        ID</label>
+                    <input type="text" id="l2-anly-search-query"
+                        oninput="window.filterL2AnalysisEmployeeDropdownOptions()"
+                        placeholder="Type matching keywords..."
+                        class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-medium">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Employee
+                        Details</label>
+                    <select id="l2-anly-employee-select" onchange="window.executeL2AttendanceAnalysisPipeline()"
+                        class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black">
+                        <option value="">-- Awaiting Search Queries --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Assessment
+                        Month</label>
+                    <input type="month" id="l2-anly-target-month"
+                        onchange="window.executeL2AttendanceAnalysisPipeline()"
+                        class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-mono font-black">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics Pane -->
+    <div id="l2-anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-5 gap-4"></div>
+
+    <!-- Data Matrix Viewport -->
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-4 sm:p-5">
+        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[550px]">
+            <table class="w-full text-left border-collapse table-auto min-w-[1550px]">
+                <thead>
+                    <tr
+                        class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
+                        <th class="px-4 py-3.5 w-28">Date</th>
+                        <th class="px-4 py-3.5 w-56">Employee Details</th>
+                        <th class="px-4 py-3.5 w-32 text-center">Duty Status State</th>
+                        <th class="px-4 py-3.5 w-64">Assigned Project Parameters</th>
+                        <th class="px-4 py-3.5 w-40 text-center">Login Location</th>
+                        <th class="px-4 py-3.5 w-60">Day's Execution Plan</th>
+                        <th class="px-4 py-3.5 w-60">Day's Work Progress</th>
+                        <th class="px-4 py-3.5 w-64">Coordinator Audit Details</th>
+                    </tr>
+                </thead>
+                <tbody id="l2-anly-matrix-table-body"
+                    class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
+                    <tr>
+                        <td colspan="8" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
+                            Assembling authorized project head metadata vectors...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let masterRegistryEmployees = [];
+        let masterAttendanceLogCache = [];
+        let masterLeaveApplicationsCache = [];
+        let allowedProjectBoundaries = [];
+
+        const datePicker = document.getElementById("l2-anly-target-date");
+        if (datePicker) datePicker.value = new Date().toISOString().split('T')[0];
+
+        const monthPicker = document.getElementById("l2-anly-target-month");
+        const todayObj = new Date();
+        if (monthPicker) monthPicker.value = todayObj.getFullYear() + '-' + String(todayObj.getMonth() + 1).padStart(2, '0');
+
+        const labelMonth = document.getElementById("l2-analysis-current-month-lbl");
+        if (labelMonth) labelMonth.innerText = todayObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        window.toggleL2AnalysisFilterContextLayouts = function () {
+            const modeEl = document.getElementById("l2-anly-view-mode");
+            if (!modeEl) return;
+
+            const mode = modeEl.value;
+            const dateContainer = document.getElementById("l2-anly-date-input-container");
+            const empContainer = document.getElementById("l2-anly-emp-input-container");
+
+            if (dateContainer) dateContainer.classList.toggle("hidden", mode !== "DATE");
+            if (empContainer) empContainer.classList.toggle("hidden", mode !== "EMPLOYEE");
+
+            window.executeL2AttendanceAnalysisPipeline();
+        };
+
+        window.filterL2AnalysisEmployeeDropdownOptions = function () {
+            const query = document.getElementById("l2-anly-search-query").value.trim().toLowerCase();
+            const select = document.getElementById("l2-anly-employee-select");
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Choose Profile Target --</option>';
+
+            const matches = masterRegistryEmployees.filter(e =>
+                String(e.employeeName || "").toLowerCase().includes(query) ||
+                String(e.employeeId || "").toLowerCase().includes(query)
+            );
+
+            matches.forEach(e => {
+                let opt = document.createElement("option");
+                opt.value = e.employeeId;
+                opt.textContent = `${e.employeeName} (${e.employeeId})`;
+                select.appendChild(opt);
+            });
+        };
+
+        function cleanToStandardISODate(dInput) {
+            if (!dInput) return "";
+            let cleanStr = String(dInput).trim().split(' ')[0];
+            if (cleanStr.includes('T')) cleanStr = cleanStr.split('T')[0];
+            let parts = cleanStr.includes('/') ? cleanStr.split('/') : cleanStr.split('-');
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                if (parts[2].length === 4) return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+            }
+            return cleanStr;
+        }
+
+        function parseToTimestamp(dateStr) {
+            const normalized = cleanToStandardISODate(dateStr);
+            if (!normalized) return 0;
+            const d = new Date(normalized);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        }
+
+        function evaluateDateInsideLeaveBlock(checkTime, lvRecord) {
+            let startStr = lvRecord.fromDate; let endStr = lvRecord.toDate;
+            if (lvRecord.managerDates && String(lvRecord.managerDates).includes(' to ')) {
+                let p = String(lvRecord.managerDates).split(' to ');
+                startStr = p[0].trim(); endStr = p[1].trim();
+            }
+            if (lvRecord.adminApprovedDate && String(lvRecord.adminApprovedDate).includes(' to ')) {
+                let p = String(lvRecord.adminApprovedDate).split(' to ');
+                startStr = p[0].trim(); endStr = p[1].trim();
+            }
+            const startT = parseToTimestamp(startStr); const endT = parseToTimestamp(endStr);
+            if (!startT || !endT) return false;
+            return (checkTime >= startT && checkTime <= endT);
+        }
+
+        function getMonthMetricsInfo(year, monthIndex) {
+            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+            let sundays = 0;
+            for (let d = 1; d <= totalDays; d++) {
+                if (new Date(year, monthIndex, d).getDay() === 0) sundays++;
+            }
+            return { totalDays, sundays };
+        }
+
+        function parseProjectParameters(empNode, logNode, leaveNode) {
+            let currentProject = "--"; let district = ""; let accuracy = "--";
+            let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
+            if (empNode.appointedProjects) currentProject = empNode.appointedProjects;
+
+            if (logNode) {
+                let logProj = logNode.currentProject || "";
+                if (String(logProj).trim() !== "" && String(logProj).trim() !== "--") currentProject = logProj;
+                let logDist = logNode.district || "";
+                if (String(logDist).trim() !== "" && String(logDist).trim() !== "--" && String(logDist).toLowerCase() !== "unassigned") district = logDist;
+
+                let locStr = String(logNode.location || "").trim();
+
+                if (locStr !== "" && locStr !== "--") {
+                    if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
+                        locationLink = `<a href="${locStr}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
+                        locationLink = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locStr)}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else {
+                        locationLink = `<span class="text-slate-800 font-bold">${locStr}</span>`;
+                    }
+                }
+                let logAcc = logNode.accuracy || "";
+                accuracy = logAcc ? `${logAcc} m` : "--";
+            } else if (leaveNode) {
+                if (leaveNode.project) currentProject = leaveNode.project;
+                if (leaveNode.location) district = leaveNode.location;
+            }
+            return { currentProject, district, locationLink, accuracy };
+        }
+
+        window.executeL2AttendanceAnalysisPipeline = function () {
+            const modeEl = document.getElementById("l2-anly-view-mode");
+            if (!modeEl) return;
+            const mode = modeEl.value;
+            const tbody = document.getElementById("l2-anly-matrix-table-body");
+            const summaryBox = document.getElementById("l2-anly-summary-cards-container");
+
+            if (masterRegistryEmployees.length === 0) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-slate-500 italic">No scope matches located inside the authorized projects list.</td></tr>`;
+                return;
+            }
+            let outputRowsHtml = "";
+
+            if (mode === "DATE") {
+                const rawSelectedDate = datePicker ? datePicker.value : "";
+                if (!rawSelectedDate) { if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pick a target log date.</td></tr>`; return; }
+
+                const checkTime = parseToTimestamp(rawSelectedDate);
+                const dateObj = new Date(checkTime);
+                const monthInfo = getMonthMetricsInfo(dateObj.getFullYear(), dateObj.getMonth());
+                const monthDisplayLabel = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                let presentCount = 0, leaveCount = 0, absentMarkedByCoordinator = 0, passiveAbsentCount = 0;
+                let processedRows = [];
+
+                masterRegistryEmployees.forEach(emp => {
+                    const cleanEmpId = String(emp.employeeId || "").trim().toUpperCase();
+                    const attLog = masterAttendanceLogCache.find(log => String(log.employeeId || "").trim().toUpperCase() === cleanEmpId && parseToTimestamp(log.date) === checkTime);
+                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => String(lv.employeeId || "").trim().toUpperCase() === cleanEmpId && (lv.status === "APPROVED" || lv.status === "SHORT") && evaluateDateInsideLeaveBlock(checkTime, lv));
+
+                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                    let todaysPlan = "--", loginTime = "--", todaysWorkProgress = "--", logoutTime = "--";
+
+                    // 🎯 PRIORITIZATION: Active log field value chosen, falls back cleanly to permanent tracking row value mapping
+                    let coordinatorName = (attLog && attLog.coordinatorName) ? attLog.coordinatorName : (emp.coordinatorName || "--");
+                    let coordinatorRemark = "--", coordinatorComment = "--";
+
+                    const pParams = parseProjectParameters(emp, attLog, hasApprovedLeave);
+
+                    if (attLog) {
+                        let rem = attLog.coordinatorRemark || "";
+                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
+                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+
+                        todaysPlan = attLog.todaysPlan || "--";
+                        loginTime = attLog.loginTime || "--";
+                        todaysWorkProgress = attLog.todaysWorkProgress || "--";
+                        logoutTime = attLog.logoutTime || "--";
+                        coordinatorRemark = rem || "Pending Audit";
+                        coordinatorComment = attLog.coordinatorComment || "--";
+
+                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") absentMarkedByCoordinator++; else presentCount++;
+                    } else if (hasApprovedLeave) {
+                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
+                        coordinatorComment = `Leave Token: ${hasApprovedLeave.applicationId || "N/A"}`;
+                        leaveCount++;
+                    } else {
+                        passiveAbsentCount++;
+                    }
+
+                    processedRows.push({
+                        date: rawSelectedDate.split('-').reverse().join('/'),
+                        name: emp.employeeName || "--", id: emp.employeeId || "--", status, badge, ...pParams,
+                        todaysPlan, loginTime, todaysWorkProgress, logoutTime, coordinatorName, coordinatorRemark, coordinatorComment
+                    });
+                });
+
+                if (summaryBox) {
+                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
+                    summaryBox.innerHTML = `
+                        <div class="bg-slate-900 p-4 rounded-2xl text-white text-bold"><span class="text-[9px] uppercase block mb-1 text-slate-400">Total Employee (Supervised Project) </span><strong class="text-lg font-black">${masterRegistryEmployees.length} </strong></div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl"><span class="text-[9px] text-emerald-600 uppercase block mb-1">Employees Present</span><strong class="text-lg text-emerald-800">${presentCount} </strong></div>
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl"><span class="text-[9px] text-indigo-600 uppercase block mb-1">Employees On Leave</span><strong class="text-lg text-indigo-800">${leaveCount} </strong></div>
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl"><span class="text-[9px] text-amber-700 uppercase block mb-1">Absent Marked By Coordinator</span><strong class="text-lg text-amber-900">${absentMarkedByCoordinator} </strong></div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl"><span class="text-[9px] text-rose-600 uppercase block mb-1">Absent (Attendance Not Marked)</span><strong class="text-lg text-rose-800">${passiveAbsentCount} </strong></div>
+                    `;
+                }
+
+                processedRows.forEach(r => {
+                    outputRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top">
+                            <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
+                            <td class="px-4 py-3"><strong class="text-slate-950 block text-xs">${r.name}</strong><span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span></td>
+                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-black ${r.badge}">${r.status}</span></td>
+                            <td class="px-4 py-3 space-y-1">
+                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td> 
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 text-[11px]">
+                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                            </td>
+                        </tr>`;
+                });
+                tbody.innerHTML = outputRowsHtml;
+
+            } else if (mode === "EMPLOYEE") {
+                const selectedTargetEmpId = document.getElementById("l2-anly-employee-select") ? document.getElementById("l2-anly-employee-select").value : "";
+                if (!selectedTargetEmpId) { if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pinpoint a workspace worker identity above.</td></tr>`; return; }
+
+                const targetEmp = masterRegistryEmployees.find(e => String(e.employeeId || "") === selectedTargetEmpId);
+                const targetMonthStr = monthPicker ? monthPicker.value : "";
+                if (!targetMonthStr) return;
+
+                const tokens = targetMonthStr.split('-');
+                const currentYear = parseInt(tokens[0], 10); const currentMonthIdx = parseInt(tokens[1], 10) - 1;
+                const monthInfo = getMonthMetricsInfo(currentYear, currentMonthIdx);
+                const testDateObj = new Date(currentYear, currentMonthIdx, 1);
+                const monthDisplayLabel = testDateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                let logDaysMap = []; let summaryP = 0, summaryL = 0, summaryS = 0, summaryA = 0, employeeAbsentMarkedByCoordinator = 0;
+
+                for (let dayIndex = 1; dayIndex <= monthInfo.totalDays; dayIndex++) {
+                    const loopDate = new Date(currentYear, currentMonthIdx, dayIndex); const loopTime = loopDate.getTime();
+                    const isSunday = loopDate.getDay() === 0; const cleanSearchEmpId = String(selectedTargetEmpId).trim().toUpperCase();
+
+                    const attLog = masterAttendanceLogCache.find(log => String(log.employeeId || "").trim().toUpperCase() === cleanSearchEmpId && parseToTimestamp(log.date) === loopTime);
+                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => String(lv.employeeId || "").trim().toUpperCase() === cleanSearchEmpId && (lv.status === "APPROVED" || lv.status === "SHORT") && evaluateDateInsideLeaveBlock(loopTime, lv));
+
+                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                    let todaysPlan = "--", loginTime = "--", todaysWorkProgress = "--", logoutTime = "--";
+
+                    // 🎯 PRIORITIZATION: Active log field value chosen, falls back cleanly to permanent tracking row value mapping
+                    let coordinatorName = (attLog && attLog.coordinatorName) ? attLog.coordinatorName : (targetEmp.coordinatorName || "--");
+                    let coordinatorRemark = "--", coordinatorComment = "--";
+
+                    const pParams = parseProjectParameters(targetEmp, attLog, hasApprovedLeave);
+
+                    if (attLog) {
+                        let rem = attLog.coordinatorRemark || "";
+                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
+                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        todaysPlan = attLog.todaysPlan || "--"; loginTime = attLog.loginTime || "--";
+                        todaysWorkProgress = attLog.todaysWorkProgress || "--"; logoutTime = attLog.logoutTime || "--";
+                        coordinatorRemark = rem || "Pending Audit"; coordinatorComment = attLog.coordinatorComment || "--";
+
+                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") employeeAbsentMarkedByCoordinator++; else summaryP++;
+                    } else if (hasApprovedLeave) {
+                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
+                        summaryL++;
+                    } else if (isSunday) {
+                        status = "SUNDAY"; badge = "bg-amber-100 text-amber-950 border border-amber-300";
+                        todaysPlan = "Standard weekend cycle window."; summaryS++;
+                    } else {
+                        summaryA++;
+                    }
+
+                    logDaysMap.push({
+                        date: `${String(dayIndex).padStart(2, '0')}/${String(currentMonthIdx + 1).padStart(2, '0')}/${currentYear}`,
+                        name: targetEmp.employeeName || "--", id: targetEmp.employeeId || "--", status, badge, ...pParams,
+                        todaysPlan, loginTime, todaysWorkProgress, logoutTime, coordinatorName, coordinatorRemark, coordinatorComment
+                    });
+                }
+
+                if (summaryBox) {
+                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
+                    summaryBox.innerHTML = `
+                        <div class="bg-slate-900 p-4 rounded-2xl text-white"><span class="text-[9px] uppercase block mb-1 text-slate-400">Present Days</span><strong class="text-lg font-black text-emerald-400">${summaryP} Days</strong></div>
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl"><span class="text-[9px] text-indigo-600 uppercase block mb-1">Leaves</span><strong class="text-lg text-indigo-800">${summaryL} Days</strong></div>
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl"><span class="text-[9px] text-amber-700 uppercase block mb-1">Auditor Absent</span><strong class="text-lg text-amber-900">${employeeAbsentMarkedByCoordinator} Days</strong></div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl"><span class="text-[9px] text-rose-600 uppercase block mb-1">System Idle</span><strong class="text-lg text-rose-800">${summaryA} Days</strong></div>
+                        <div class="bg-slate-100 border border-slate-200 p-4 rounded-2xl"><span class="text-[9px] text-slate-500 uppercase block mb-1">Sundays</span><strong class="text-lg text-slate-700">${summaryS} Days</strong></div>
+                        <div class="col-span-2 sm:col-span-5 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-center text-[10px] font-black uppercase text-slate-600 tracking-wide">
+                            Statistical Analysis Report Matrix For: <span class="text-slate-950 font-mono">${targetEmp.employeeName} (${targetEmp.employeeId})</span> | Statement Period: <span class="text-slate-950">${monthDisplayLabel}</span>
+                        </div>
+                    `;
+                }
+
+                logDaysMap.forEach(r => {
+                    outputRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top">
+                            <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
+                            <td class="px-4 py-3"><strong class="text-slate-950 block text-xs">${r.name}</strong><span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span></td>
+                            <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-black ${r.badge}">${r.status}</span></td>
+                            <td class="px-4 py-3 space-y-1">
+                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td> 
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 text-[11px]">
+                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                            </td>
+                        </tr>`;
+                });
+                tbody.innerHTML = outputRowsHtml;
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.loadL2MasterAnalysisDataPackages = async function () {
+            const tbody = document.getElementById("l2-anly-matrix-table-body");
+            try {
+                const boundRes = await fetch(`${API_URL}?action=getL2AdminProjectBoundaries&managerId=${encodeURIComponent(currentUser.employeeId)}`);
+                const boundData = await boundRes.json();
+                allowedProjectBoundaries = boundData.status ? boundData.allowedProjects : [];
+
+                const [regRes, attRes, lvRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`),
+                    fetch(`${API_URL}?action=getMonthlyAttendanceHistory&employeeId=ALL`),
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`)
+                ]);
+
+                const regData = await regRes.json();
+                const attData = await attRes.json();
+                const lvData = await lvRes.json();
+
+                let rawEmployees = regData.status ? regData.data : [];
+                masterAttendanceLogCache = attData.status ? attData.data : [];
+                masterLeaveApplicationsCache = lvData.status ? lvData.data : [];
+
+                masterRegistryEmployees = rawEmployees.filter(emp => {
+                    const empProjectClean = String(emp.appointedProjects || "").trim().toUpperCase();
+                    return allowedProjectBoundaries.some(allowedProj => {
+                        const cleanAllowed = String(allowedProj).trim().toUpperCase();
+                        return empProjectClean === cleanAllowed || empProjectClean.startsWith(cleanAllowed);
+                    });
+                });
+
+                masterRegistryEmployees.sort((a, b) => String(a.employeeName || "").localeCompare(String(b.employeeName || "")));
+
+                window.filterL2AnalysisEmployeeDropdownOptions();
+                window.executeL2AttendanceAnalysisPipeline();
+            } catch (e) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-700 font-black">Data Loding Failure.</td></tr>`;
+            }
+        };
+
+        window.loadL2MasterAnalysisDataPackages();
+    })();
+</script>
+
+

@@ -1,0 +1,105 @@
+/* Dynamic Portal Design Token Matrix */
+:root {
+    --primary-blue: #2b6cb0;
+    --glass-nav: rgba(15, 23, 42, 0.95);
+    --neon-accent: #38bdf8;
+    /* Essential for mobile Safari */
+    --vh: 100vh;
+}
+
+/* Base HTML/Body fix for iPhone scroll/visibility */
+html, body {
+    height: 100%;
+    height: -webkit-fill-available;
+    width: 100%;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Glass look topbar block panel */
+.glass-header {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+/* Workspace Container Fix */
+/* Ensure this class is applied to your main workspace wrapper */
+.workspace-container {
+    height: 100vh;
+    height: -webkit-fill-available; /* Fix for iPhone address bar overlap */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Forces native smooth scroll on iPhone */
+    width: 100%;
+    display: block;
+}
+
+/* Quick subtle pulse animation for status modules */
+.pulse-glow {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5);
+    animation: pulseGlowEffect 2s infinite;
+}
+
+@keyframes pulseGlowEffect {
+    70% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+/*************************************************
+🎯 MOBILE & SMALL SCREEN PHONE ADAPTIVE OVERLAYS
+*************************************************/
+@media (max-width: 640px) {
+    /* Reduce blur processing weight on mobile GPUs */
+    .glass-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* Soften pulse scaling bounds */
+    @keyframes pulseGlowEffect {
+        70% { box-shadow: 0 0 0 5px rgba(56, 189, 248, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+    }
+
+    /* Force inputs to not zoom on focus */
+    input, select, textarea {
+        font-size: 16px !important; /* iPhone Safari prefers 16px to prevent auto-zoom */
+        -webkit-appearance: none;
+        border-radius: 0.5rem;
+    }
+
+    /* Padding & Spacing */
+    .p-6, .p-8, .p-5 {
+        padding: 1rem !important;
+    }
+    
+    .gap-4, .gap-5, .gap-6 {
+        gap: 0.75rem !important;
+    }
+
+    .rounded-3xl { border-radius: 1rem !important; }
+    .rounded-2xl { border-radius: 0.75rem !important; }
+
+    /* Fix table scrolling */
+    .overflow-x-auto {
+        scrollbar-width: thin !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    /* Ensure Workspace container is not hidden by overflow parent */
+    .workspace-container {
+        display: block !important;
+        min-height: 50vh; /* Ensure there is a minimum visual space */
+    }
+}

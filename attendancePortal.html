@@ -1,0 +1,385 @@
+<div class="w-full max-w-xl mx-auto glass-panel p-6 rounded-2xl shadow-sm border border-slate-200 fade-in-up">
+    <div class="flex items-center justify-between border-b pb-4 mb-4">
+        <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="clock" class="text-blue-500 w-5 h-5"></i> Daily Attendance Registory Console
+        </h3>
+        <button type="button" onclick="window.showWelcomeMessage()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <div id="box-login-view" class="space-y-4" style="display: none;">
+        <div
+            class="flex items-center gap-2 text-emerald-600 font-bold text-xs tracking-wider uppercase bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-lg w-max">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Phase 1: Register Attendance Log-In
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's Working
+                    Project</label>
+                <select id="mod-proj"
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                    <option value="">-- Choose Project --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's
+                    Operating District</label>
+                <select id="mod-dist"
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                    disabled>
+                    <option value="">-- Choose Project First --</option>
+                </select>
+            </div>
+
+            <!-- Dynamic Coordinator/Manager Assignment Notification Banner -->
+            <div id="box-coordinator-notice"
+                class="hidden p-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-950 font-bold text-[11px] leading-normal flex items-start gap-2 fade-in-up">
+                <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-blue-600"></i>
+                <div id="lbl-coordinator-notice-text"></div>
+            </div>
+
+            <div id="box-custom-district" class="hidden fade-in-up">
+                <label class="block text-[10px] font-black tracking-wider text-orange-600 uppercase mb-1">Enter Custom
+                    District/ Location</label>
+                <input type="text" id="mod-custom-dist-name" placeholder="Specify district location metadata detail"
+                    class="w-full px-4 py-2.5 border border-orange-300 rounded-xl bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Todays
+                    Operational Objectives Strategy / Work Plan </label>
+                <textarea id="mod-plan" rows="3"
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                    placeholder="Detail active field assignments scheduled..."></textarea>
+            </div>
+        </div>
+
+        <button type="button" id="mod-punch-in-btn"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-base uppercase tracking-wider cursor-pointer">
+            Verify Position & Mark Attendnace (Log-In)
+        </button>
+    </div>
+
+    <div id="box-logout-view" class="space-y-4" style="display: none;">
+        <div
+            class="flex items-center gap-2 text-orange-600 font-bold text-xs tracking-wider uppercase bg-orange-50 border border-orange-200/60 px-3 py-1.5 rounded-lg w-max">
+            <span class="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span> Phase 2: Register Attendance Log-Out
+        </div>
+
+        <div
+            class="bg-slate-50/80 border border-slate-200/60 p-4 rounded-xl grid grid-cols-2 gap-3 text-xs shadow-inner">
+            <div class="col-span-1"><span class="text-slate-400 block font-medium mb-0.5">Active Project</span><strong
+                    id="lbl-active-proj" class="text-slate-700 text-sm">-</strong></div>
+            <div class="col-span-1"><span class="text-slate-400 block font-medium mb-0.5">Logged District/
+                    Location</span><strong id="lbl-active-dist" class="text-slate-700 text-sm">-</strong></div>
+            <div class="col-span-2 border-t border-slate-200/60 pt-2"><span
+                    class="text-slate-400 block font-medium mb-0.5">Shift Login Time</span><strong
+                    id="lbl-active-login-time" class="text-blue-600 font-mono text-sm">-</strong></div>
+            <div class="col-span-2 border-t border-slate-200/60 pt-2"><span
+                    class="text-slate-400 block font-medium mb-0.5">Committed Today's Work Plan</span>
+                <p id="lbl-active-plan" class="text-slate-600 italic leading-normal"></p>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Completed
+                End-Of-Day Progress Summary</label>
+            <textarea id="mod-progress" rows="4"
+                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none transition"
+                placeholder="Provide complete descriptions regarding structural tasks processed today..."></textarea>
+        </div>
+
+        <button type="button" id="mod-punch-out-btn"
+            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-base uppercase tracking-wider cursor-pointer">
+            Submit Work Progress & Log-Out
+        </button>
+    </div>
+
+    <div id="box-locked-view" class="text-center py-6 space-y-4" style="display: none;">
+        <div
+            class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-200 shadow-sm">
+            <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <div>
+            <h3 class="text-lg font-black tracking-tight text-slate-800">In-Out Attendance Already Marked For The Day
+            </h3>
+            <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2">Your field tracking parameters, shift entries, and
+                objectives progression summary for today are fully locked and securely recorded inside the cloud
+                repository.</p>
+        </div>
+        <button type="button" onclick="window.showWelcomeMessage()"
+            class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+            Return to Welcome Dashboard
+        </button>
+    </div>
+</div>
+
+<script>
+
+
+    (() => {
+
+        let activeRowIndexRef = null;
+
+        const cache = localStorage.getItem("current_user_cache");
+        if (cache) {
+            window.currentUser = JSON.parse(cache);
+            currentUser = window.currentUser;
+        }
+
+        if (!currentUser || typeof currentUser === "undefined" || !currentUser.employeeId) {
+            alert("Session context trace dropped. Redirecting to security validation portal.");
+            if (typeof window.performManualLogout === "function") window.performManualLogout();
+            return;
+        }
+
+        // Define the cutoff time (24-hour format)
+        const LOGIN_CUTOFF_HOUR = 11;
+
+        const evaluateModuleWorkflowState = async function () {
+    try {
+        const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
+        const state = await res.json();
+
+        // 1. Reset all views
+        document.getElementById("box-login-view").style.display = "none";
+        document.getElementById("box-logout-view").style.display = "none";
+        document.getElementById("box-locked-view").style.display = "none";
+
+        // 2. Already logged in? Proceed to Phase 2 (Logout)
+        if (state.status === "LOGGED_IN") {
+            activeRowIndexRef = state.rowIndex;
+            document.getElementById("lbl-active-proj").innerText = state.project || "-";
+            document.getElementById("lbl-active-dist").innerText = state.district || "-";
+            document.getElementById("lbl-active-plan").innerText = state.plan || "";
+            document.getElementById("lbl-active-login-time").innerText = state.loginTime || "Recorded Modulo System Epoch";
+            document.getElementById("box-logout-view").style.display = "block";
+        }
+        // 3. Completed for the day?
+        else if (state.status === "COMPLETED") {
+            document.getElementById("box-locked-view").style.display = "block";
+        } 
+        // 4. Not logged in? Check time and display login view
+        else {
+            const now = new Date();
+            const currentHour = now.getHours();
+
+            if (currentHour >= LOGIN_CUTOFF_HOUR) {
+                document.getElementById("box-locked-view").innerHTML = `
+                    <div class="text-center py-6">
+                        <h3 class="text-lg font-black text-rose-600">Login Window Closed</h3>
+                        <p class="text-sm text-slate-500 mt-2">
+                            Attendance log-in is only permitted before ${LOGIN_CUTOFF_HOUR > 12 ? LOGIN_CUTOFF_HOUR - 12 : LOGIN_CUTOFF_HOUR}:00 ${LOGIN_CUTOFF_HOUR >= 12 ? 'PM' : 'AM'}. 
+                            Please contact your coordinator.
+                        </p>
+                    </div>`;
+                document.getElementById("box-locked-view").style.display = "block";
+            } else {
+                // EXPLICITLY SHOW LOGIN VIEW
+                document.getElementById("box-login-view").style.display = "block";
+                // Trigger project initialization
+                if (typeof modInitProjects === "function") {
+                    modInitProjects();
+                }
+            }
+        }
+    } catch (e) { 
+        console.error("Tracking execution pipeline terminated.", e); 
+    }
+};
+
+
+        const modInitProjects = async function () {
+            const sel = document.getElementById("mod-proj");
+            if (!sel) return;
+            sel.innerHTML = '<option value="">-- Choose Project Sector --</option>';
+            try {
+                const res = await fetch(`${API_URL}?action=getProjects&employeeId=${currentUser.employeeId}`);
+                const data = await res.json();
+                if (data.status) {
+                    data.data.forEach(p => {
+                        let o = document.createElement("option"); o.value = p.project; o.textContent = p.project; sel.appendChild(o);
+                    });
+                }
+            } catch (err) { console.error(err); }
+        };
+
+        const modLoadDistricts = async function () {
+            const pName = document.getElementById("mod-proj").value;
+            const dSel = document.getElementById("mod-dist");
+            const noticeBox = document.getElementById("box-coordinator-notice");
+            const noticeTxt = document.getElementById("lbl-coordinator-notice-text");
+
+            if (!dSel) return;
+            dSel.innerHTML = '<option value="">-- Choose Target District --</option>';
+            document.getElementById("box-custom-district").classList.add("hidden");
+
+            if (noticeBox) noticeBox.classList.add("hidden");
+
+            if (!pName) { dSel.disabled = true; return; }
+            dSel.disabled = false;
+
+            try {
+                const res = await fetch(`${API_URL}?action=getDistricts&project=${encodeURIComponent(pName)}`);
+                const data = await res.json();
+                if (data.status) {
+                    data.data.forEach(d => {
+                        let o = document.createElement("option"); o.value = d.district; o.textContent = d.district; dSel.appendChild(o);
+                    });
+                }
+
+                // 🎯 FIXED URL PARAMETER: Correctly queries the newly deployed backend script endpoint
+                const coordRes = await fetch(`${API_URL}?action=getCoordinatorForProject&project=${encodeURIComponent(pName)}`);
+                const coordData = await coordRes.json();
+
+                currentUser.activeProjectCoordinatorId = coordData.coordinatorId || "N/A";
+                currentUser.activeProjectCoordinatorName = coordData.coordinatorName || "Unassigned";
+                window.currentUser = currentUser;
+
+                if (noticeBox && noticeTxt) {
+                    const dynamicName = currentUser.activeProjectCoordinatorName;
+                    noticeTxt.innerHTML = `<strong>${dynamicName}</strong> is your today's coordinator/manager. He will verify your attendance and you will report your day's activity to him.`;
+                    noticeBox.classList.remove("hidden");
+                    if (window.lucide) lucide.createIcons();
+                }
+            } catch (err) {
+                currentUser.activeProjectCoordinatorId = "N/A";
+                currentUser.activeProjectCoordinatorName = "Unassigned";
+                window.currentUser = currentUser;
+
+                if (noticeBox && noticeTxt) {
+                    noticeTxt.innerHTML = `<strong>Unassigned</strong> is your today's coordinator/manager. He will verify your attendance and you will report your day's activity to him.`;
+                    noticeBox.classList.remove("hidden");
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        };
+
+        const toggleCustomDistrictField = function () {
+            const distVal = document.getElementById("mod-dist").value;
+            const targetBox = document.getElementById("box-custom-district");
+            if (distVal === "OTHER") {
+                targetBox.classList.remove("hidden");
+            } else {
+                targetBox.classList.add("hidden");
+            }
+        };
+
+        const handlePunchInCycle = function () {
+            const proj = document.getElementById("mod-proj").value;
+            const dist = document.getElementById("mod-dist").value;
+            const customName = document.getElementById("mod-custom-dist-name").value.trim();
+            const plan = document.getElementById("mod-plan").value.trim();
+
+            if (!proj || !dist || !plan) { alert("Please input all required metrics tracking properties."); return; }
+            if (dist === "OTHER" && !customName) { alert("Please fill dynamic sub-district text descriptions."); return; }
+
+            const confirmAction = confirm(`Are you sure you want to mark your Shift Check-In (Login) for today?\n\nProject: ${proj}\nDistrict: ${dist === "OTHER" ? "OTHER-" + customName : dist}`);
+            if (!confirmAction) return;
+
+            const inBtn = document.getElementById("mod-punch-in-btn");
+            inBtn.disabled = true; inBtn.innerText = "PROCESSING SUBMISSION...";
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                try {
+                    const fenceRes = await fetch(`${API_URL}?action=validateGeoFence&project=${encodeURIComponent(proj)}&district=${encodeURIComponent(dist)}&latitude=${lat}&longitude=${lng}`);
+                    const fence = await fenceRes.json();
+
+                    if (!fence.status) {
+                        alert(`Boundary Lockout: ${fence.message}`);
+                        inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+                        return;
+                    }
+
+                    const payload = {
+                        action: "markLogin",
+                        employeeId: currentUser.employeeId,
+                        employeeName: currentUser.employeeName,
+                        currentProject: proj,
+                        district: dist,
+                        isOther: dist === "OTHER",
+                        customDistrict: customName,
+                        location: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+                        accuracy: pos.coords.accuracy.toFixed(1),
+                        todaysPlan: plan,
+                        coordinatorId: currentUser.activeProjectCoordinatorId || "N/A",
+                        coordinatorName: currentUser.activeProjectCoordinatorName || "Unassigned"
+                    };
+
+                    const postRes = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                    const status = await postRes.json();
+                    if (status.status) {
+                        alert("Shift Check-In registered successfully.");
+                        window.showWelcomeMessage();
+                    } else {
+                        alert("Write Failure: " + status.message);
+                    }
+                } catch (err) {
+                    alert("Network tracking transaction dropped out.");
+                } finally {
+                    inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+                }
+            }, () => {
+                alert("Positioning metrics mapping initialization error. Check browser settings.");
+                inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+            });
+        };
+
+        const handlePunchOutCycle = async function () {
+            const progress = document.getElementById("mod-progress").value.trim();
+            if (!progress) { alert("Objective descriptions work verification log cannot be blank."); return; }
+
+            const confirmAction = confirm("Are you sure you want to complete your Shift Checkout (Logout)? Your work metrics logs cannot be changed after submission.");
+            if (!confirmAction) return;
+
+            const outBtn = document.getElementById("mod-punch-out-btn");
+            outBtn.disabled = true; outBtn.innerText = "SYNCHRONIZING REPOSITORY...";
+
+            const payload = {
+                action: "markLogout",
+                rowIndex: parseInt(activeRowIndexRef),
+                todaysWorkProgress: progress
+            };
+
+            try {
+                const postRes = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const status = await postRes.json();
+                if (status.status) {
+                    alert("Shift Clearance Checkout successfully logged.");
+                    window.showWelcomeMessage();
+                } else {
+                    alert("System write execution alert: " + status.message);
+                }
+            } catch (err) {
+                alert("Network boundary sync failed.");
+            } finally {
+                outBtn.disabled = false; outBtn.innerText = "Submit Work Progress & Checkout";
+            }
+        };
+
+
+        document.getElementById("mod-proj").addEventListener("change", modLoadDistricts);
+        document.getElementById("mod-dist").addEventListener("change", toggleCustomDistrictField);
+        document.getElementById("mod-punch-in-btn").addEventListener("click", handlePunchInCycle);
+        document.getElementById("mod-punch-out-btn").addEventListener("click", handlePunchOutCycle);
+
+        if (window.attendanceStateTimeout) clearTimeout(window.attendanceStateTimeout);
+
+        window.attendanceStateTimeout = setTimeout(() => {
+            const loginBox = document.getElementById("box-login-view");
+            if (loginBox && typeof evaluateModuleWorkflowState === "function") {
+                evaluateModuleWorkflowState();
+            }
+        }, 60);
+
+        if (window.lucide) lucide.createIcons();
+
+
+    })();
+</script>

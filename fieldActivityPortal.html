@@ -1,0 +1,388 @@
+<div class="w-full max-w-5xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex items-center justify-between border-b pb-4 mb-6">
+        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="map-pin" class="text-blue-600 w-5 h-5"></i> Field Activity & Movement Portal
+        </h3>
+        <button onclick="window.showWelcomeMessage()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <form id="field-activity-form" onsubmit="window.submitFieldActivity(event)" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Select Activity Mode</label>
+                <select id="fa-mode" onchange="window.toggleActivityMode(this.value)" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <option value="" disabled selected>-- Select Activity Mode --</option>
+                    <option value="NEW">Create New Job Activity</option>
+                    <option value="EXISTING">Add Entry to Existing Job Activity ID</option>
+                </select>
+            </div>
+            <div id="fa-existing-box" class="hidden">
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Select Job Activity ID</label>
+                <!-- Added onchange event here to trigger project autofill -->
+                <select id="fa-job-id-select" onchange="window.autoFillProject(this.value)" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono font-bold text-xs">
+                    <option value="" disabled selected>-- Select Job ID --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Target Project</label>
+                <select id="fa-project" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <option value="" disabled selected>-- Choose Project --</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Tentative / Proposed Travel Date & Time</label>
+                <input type="datetime-local" id="fa-travel-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
+            </div>
+            <div>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Date & Time to Reach Destination</label>
+                <input type="datetime-local" id="fa-reach-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
+            </div>
+            
+            <!-- Movement Configuration -->
+            <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4 mt-2">
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Movement Type</label>
+                    <select id="fa-movement" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                        <option value="" disabled selected>-- Select Route --</option>
+                        <option value="Site to Office">Site to Office</option>
+                        <option value="Site to Home">Site to Home</option>
+                        <option value="Site to Site">Site to Site</option>
+                        <option value="Office to Home">Office to Home</option>
+                        <option value="Office to Site">Office to Site</option>
+                        <option value="Home to Office">Home to Office</option>
+                        <option value="Home to Site">Home to Site</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">From Location</label>
+                    <input type="text" id="fa-loc-from" required placeholder="e.g., Delhi" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">To Location</label>
+                    <input type="text" id="fa-loc-to" required placeholder="e.g., Lucknow" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Mode Of Travel</label>
+                <select id="fa-travel-mode" required onchange="window.checkTravelModeNotice(this.value)" class="w-full md:w-1/2 px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <option value="" disabled selected>-- Select Transport Mode --</option>
+                    <option value="Company Vehicle">Company Vehicle</option>
+                    <option value="Personal Bike/Car">Personal Bike/Car</option>
+                    <option value="Public Transport">Public Transport</option>
+                    <option value="Train">Train (Requires Approval)</option>
+                    <option value="Flight">Flight (Requires Approval)</option>
+                </select>
+                <p id="travel-mode-notice" class="text-[10px] text-amber-600 font-bold mt-1 hidden">⚠️ Train & Flight bookings require explicit manager travel approval.</p>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Activity Description / Work Progress</label>
+            <textarea id="fa-desc" rows="3" required placeholder="Detail specific field tasks, site execution status, or reasons for movement..." class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white text-xs"></textarea>
+        </div>
+
+        <button type="submit" id="fa-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition uppercase tracking-wider text-xs">
+            Submit Field Activity Entry
+        </button>
+    </form>
+
+    <div class="mt-8 border-t pt-6">
+        <h4 class="text-sm font-black text-slate-800 mb-4">My Submitted Field Activity Logs & Feedback Tracker</h4>
+        <div class="overflow-x-auto border rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-900 text-white font-black uppercase text-[10px]">
+                        <th class="p-3 whitespace-nowrap">Job ID & Manager Status</th>
+                        <th class="p-3">Project & Dates</th>
+                        <th class="p-3">Movement & Description</th>
+                        <th class="p-3">Coordinator Review</th>
+                        <th class="p-3 text-center">Manager Instructions & Approvals</th>
+                        <th class="p-3 text-center">Admin Verdict</th>
+                    </tr>
+                </thead>
+                <tbody id="fa-my-logs-body" class="divide-y text-slate-700 font-bold">
+                    <tr><td colspan="6" class="p-4 text-center">Loading logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<br>
+
+<!-- TA Claim Voucher Print Selection Panel -->
+<div class="bg-slate-900 text-white p-4 rounded-2xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
+    <div>
+        <h4 class="text-xs font-black uppercase tracking-wider text-blue-400">TA Claim Documentation Voucher</h4>
+        <p class="text-xs text-slate-300 mt-0.5">Select a Job ID to generate an A4 printable travel expense and approval report in a new tab.</p>
+    </div>
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+        <select id="ta-print-job-select" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-mono font-bold text-white w-full sm:w-44">
+            <option value="">-- Choose Job ID --</option>
+        </select>
+        <button type="button" onclick="window.printTaClaimVoucher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shrink-0">
+            Print TA Claim
+        </button>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let myActivitiesCache = [];
+
+        function formatLocalDateTime(rawStr) {
+            if (!rawStr) return "N/A";
+            try {
+                let d = new Date(rawStr);
+                if (isNaN(d.getTime())) return rawStr;
+                return d.toLocaleString('en-GB', { 
+                    day: '2-digit', month: 'short', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', hour12: true 
+                });
+            } catch(e) {
+                return rawStr;
+            }
+        }
+
+        async function initPortal() {
+            try {
+                const res = await fetch(`${API_URL}?action=getProjects&employeeId=${currentUser.employeeId}`);
+                const data = await res.json();
+                const projSel = document.getElementById("fa-project");
+                projSel.innerHTML = '<option value="" disabled selected>-- Choose Project --</option>';
+                if (data.status) {
+                    data.data.forEach(p => {
+                        let opt = document.createElement("option"); opt.value = p.project; opt.textContent = p.project;
+                        projSel.appendChild(opt);
+                    });
+                }
+            } catch(e) {}
+            loadMyActivities();
+        }
+
+        window.toggleActivityMode = function(mode) {
+            const existingBox = document.getElementById("fa-existing-box");
+            const jobSelect = document.getElementById("fa-job-id-select");
+            
+            if (mode === "EXISTING") {
+                existingBox.classList.remove("hidden");
+                jobSelect.setAttribute("required", "required");
+                populateJobDropdowns();
+            } else {
+                existingBox.classList.add("hidden");
+                jobSelect.removeAttribute("required");
+                jobSelect.value = "";
+                document.getElementById("fa-project").value = ""; // Clear project when creating new
+            }
+        };
+
+        // NEW FEATURE: Auto-fill project based on selected Job ID
+        window.autoFillProject = function(selectedJobId) {
+            if (!selectedJobId) return;
+            // Find the matching activity from the user's cache
+            const matchingActivity = myActivitiesCache.find(a => a.jobActivityId === selectedJobId);
+            if (matchingActivity && matchingActivity.project) {
+                document.getElementById("fa-project").value = matchingActivity.project;
+            }
+        };
+
+        function populateJobDropdowns() {
+            const uniqueJobIds = [...new Set(myActivitiesCache.map(a => a.jobActivityId))];
+            
+            // Populate form existing ID select
+            const jobIdSelect = document.getElementById("fa-job-id-select");
+            jobIdSelect.innerHTML = '<option value="" disabled selected>-- Select Job ID --</option>';
+            uniqueJobIds.forEach(id => {
+                let opt = document.createElement("option"); opt.value = id; opt.textContent = id;
+                jobIdSelect.appendChild(opt);
+            });
+
+            // Populate TA Claim select
+            const taSelect = document.getElementById("ta-print-job-select");
+            taSelect.innerHTML = '<option value="">-- Choose Job ID --</option>';
+            uniqueJobIds.forEach(id => {
+                let opt = document.createElement("option"); opt.value = id; opt.textContent = id;
+                taSelect.appendChild(opt);
+            });
+        }
+
+        window.checkTravelModeNotice = function(val) {
+            const notice = document.getElementById("travel-mode-notice");
+            if (val === "Train" || val === "Flight") {
+                notice.classList.remove("hidden");
+            } else {
+                notice.classList.add("hidden");
+            }
+        };
+
+        async function loadMyActivities() {
+            try {
+                const res = await fetch(`${API_URL}?action=getFieldActivities&role=EMPLOYEE&userId=${currentUser.employeeId}`);
+                const result = await res.json();
+                const tbody = document.getElementById("fa-my-logs-body");
+                if (result.status) {
+                    myActivitiesCache = result.data;
+
+                    if (myActivitiesCache.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No field activity records found.</td></tr>`;
+                        return;
+                    }
+                    
+                    // Populate dropdowns (including TA print)
+                    populateJobDropdowns();
+
+                    let html = "";
+                    myActivitiesCache.forEach(r => {
+                        let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800");
+                        let travelApprovalBadge = r.managerTravelModeApproval === "APPROVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (r.managerTravelModeApproval === "REJECTED" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200");
+
+                        // Parse combined movement type (Split by \n to separate Type and From/To)
+                        let movementParts = (r.movementType || 'N/A').split('\n');
+                        let mainMovement = movementParts[0];
+                        let locations = movementParts.length > 1 ? movementParts[1] : '';
+
+                        html += `
+                            <tr class="hover:bg-slate-50 align-top">
+                                <td class="p-3">
+                                    <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
+                                    <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeClass}">${r.managerStatus}</span>
+                                </td>
+                                <td class="p-3">
+                                    <div class="text-slate-900 font-bold">${r.project}</div>
+                                    <span class="text-[10px] text-slate-500 font-mono block mt-0.5">Travel: ${formatLocalDateTime(r.tentativeTravelDate)}</span>
+                                    <span class="text-[10px] text-indigo-600 font-mono block">Reach: ${formatLocalDateTime(r.dateToReachDestination)}</span>
+                                </td>
+                                <td class="p-3 max-w-xs">
+                                    <div class="font-bold text-slate-900">${mainMovement}</div>
+                                    ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                                    <div class="text-slate-700 text-xs font-semibold mt-0.5">Mode: ${r.modeOfTravel || 'N/A'}</div>
+                                    <p class="text-slate-600 italic text-[11px] mt-1.5 bg-slate-100 p-2 rounded-lg border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                                </td>
+                                <td class="p-3">
+                                    <div class="text-[10px] text-slate-500 mb-0.5">Auditor: <strong>${r.coordinatorName || 'Assigned'}</strong></div>
+                                    <div class="text-slate-700 italic text-[11px] bg-slate-50 p-1.5 rounded border border-slate-200 mt-1">${r.coordinatorComment || 'No comments yet'}</div>
+                                </td>
+                                <td class="p-3 text-center align-middle space-y-1.5">
+                                    ${r.managerTravelModeApproval && r.managerTravelModeApproval !== 'N/A' ? `<span class="inline-block text-[9px] font-mono px-1.5 py-0.5 rounded border ${travelApprovalBadge}">Travel Approval: ${r.managerTravelModeApproval}</span>` : ''}
+                                    ${r.managerInstruction ? `<div class="text-[11px] text-indigo-900 font-semibold bg-indigo-50 p-2 rounded border border-indigo-100">Instruction: ${r.managerInstruction}</div>` : '<div class="text-[10px] text-slate-400">No instructions yet</div>'}
+                                </td>
+                                <td class="p-3 text-center align-middle">
+                                    <div class="text-[11px] font-mono text-slate-700 bg-slate-50 p-1.5 rounded border">
+                                        ${(r.adminVerdict || 'PENDING').split(' (By ')[0]}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+            } catch(e) {}
+        }
+
+        window.printTaClaimVoucher = function() {
+            const selectedJobId = document.getElementById("ta-print-job-select").value;
+            if (!selectedJobId) {
+                alert("Please select a Job Activity ID to generate the TA Claim voucher.");
+                return;
+            }
+
+            const printUrl = `printTaClaim.html?jobId=${encodeURIComponent(selectedJobId)}&userId=${encodeURIComponent(currentUser.employeeId)}&apiUrl=${encodeURIComponent(API_URL)}`;
+            window.open(printUrl, '_blank');
+        };
+
+        window.submitFieldActivity = async function(e) {
+            e.preventDefault();
+            
+            const mode = document.getElementById("fa-mode").value;
+            const jobIdRaw = document.getElementById("fa-job-id-select").value;
+            const jobIdDisplay = mode === "EXISTING" ? jobIdRaw : "NEW JOB ID (Auto-Generated)";
+            const proj = document.getElementById("fa-project").value;
+            
+            const moveType = document.getElementById("fa-movement").value;
+            const locFrom = document.getElementById("fa-loc-from").value.trim();
+            const locTo = document.getElementById("fa-loc-to").value.trim();
+            const combinedMovementString = `${moveType}\nFrom ${locFrom} to ${locTo}`;
+            
+            const travelMode = document.getElementById("fa-travel-mode").value;
+            const travelDate = document.getElementById("fa-travel-date").value;
+            const reachDate = document.getElementById("fa-reach-date").value;
+            const desc = document.getElementById("fa-desc").value.trim();
+
+            const summaryMessage = 
+                `Please review your Field Activity Entry:\n\n` +
+                `• Activity Mode: ${mode === "NEW" ? "Create New Job" : "Add to Existing Job"}\n` +
+                `• Job Assignment: ${jobIdDisplay}\n` +
+                `• Project: ${proj}\n` +
+                `• Route: ${moveType} (From ${locFrom} to ${locTo})\n` +
+                `• Transport Mode: ${travelMode}\n` +
+                `• Departure: ${formatLocalDateTime(travelDate)}\n` +
+                `• Arrival: ${formatLocalDateTime(reachDate)}\n\n` +
+                `Do you want to save and submit this entry?`;
+
+            if (!confirm(summaryMessage)) return; 
+
+            const btn = document.getElementById("fa-submit-btn");
+            btn.disabled = true; btn.innerText = "Submitting Entry...";
+
+            const payload = {
+                action: "submitFieldActivityEntry",
+                jobActivityId: mode === "EXISTING" ? jobIdRaw : "",
+                employeeId: currentUser.employeeId,
+                employeeName: currentUser.employeeName,
+                project: proj,
+                tentativeTravelDate: travelDate,
+                dateToReachDestination: reachDate,
+                movementType: combinedMovementString,
+                modeOfTravel: travelMode,
+                activityDescription: desc,
+                coordinatorId: currentUser.coordinatorId || "",
+                coordinatorName: currentUser.coordinatorName || ""
+            };
+
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await res.json();
+                
+                if (result.status) {
+                    alert("Field activity logged successfully!");
+                    document.getElementById("field-activity-form").reset();
+                    document.getElementById("travel-mode-notice").classList.add("hidden");
+                    document.getElementById("fa-mode").value = "";
+                    document.getElementById("fa-existing-box").classList.add("hidden");
+                    document.getElementById("fa-job-id-select").removeAttribute("required");
+
+                    loadMyActivities();
+
+                    // ==========================================
+                    // ROBUST WHATSAPP REDIRECT TRIGGER (NEW TAB)
+                    // ==========================================
+                    if (result.waPhone && result.waMsg) {
+                        const waUrl = `https://wa.me/${result.waPhone}?text=${encodeURIComponent(result.waMsg)}`;
+                        
+                        // Force a new tab using an invisible anchor link click
+                        const a = document.createElement('a');
+                        a.href = waUrl;
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch(err) {
+                alert("Network communication failure.");
+            } finally {
+                btn.disabled = false; btn.innerText = "Submit Field Activity Entry";
+            }
+        };
+
+        initPortal();
+        if(window.lucide) lucide.createIcons();
+    })();
+</script>

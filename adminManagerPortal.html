@@ -1,0 +1,136 @@
+<div class="w-full max-w-5xl mx-auto p-6 bg-white rounded-3xl border border-slate-300 shadow-xl fade-in-up">
+    <div class="mb-6 border-b border-slate-200 pb-4 flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-black text-slate-900">Manager Registry</h2>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Manage manager contact & project data.</p>
+        </div>
+        <button onclick="document.getElementById('mgr-add-form').classList.toggle('hidden')" class="px-4 py-2 bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md">+ Add Manager</button>
+    </div>
+
+    <div id="mgr-add-form" class="hidden mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl grid grid-cols-2 gap-3">
+        <input type="text" id="new-mempid" placeholder="Emp ID" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="text" id="new-mname" placeholder="Name" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="email" id="new-memail" placeholder="Email" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="tel" id="new-mphone" placeholder="Phone" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="text" id="new-mproj" placeholder="Projects (comma separated)" class="col-span-2 border p-2 rounded-lg text-xs font-bold">
+        <button onclick="window.saveManager(true)" class="col-span-2 bg-emerald-600 text-white p-2 rounded-lg font-black text-xs">SAVE NEW MANAGER</button>
+    </div>
+
+    <div class="overflow-x-auto max-h-[500px]">
+        <table class="w-full text-xs text-left">
+            <thead class="bg-slate-950 text-white uppercase text-[9px]">
+                <tr>
+                    <th class="p-3">Emp ID</th>
+                    <th class="p-3">Name</th>
+                    <th class="p-3">Email</th>
+                    <th class="p-3">Phone</th>
+                    <th class="p-3">Projects</th>
+                    <th class="p-3">Action</th>
+                </tr>
+            </thead>
+            <tbody id="manager-table-body" class="divide-y divide-slate-200 font-bold"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="project-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl w-96 shadow-2xl">
+        <h3 class="font-black mb-4">Select Projects</h3>
+        <div id="checkbox-container" class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto mb-4"></div>
+        <button onclick="window.applyProjects()" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-black">SAVE SELECTION</button>
+    </div>
+</div>
+
+<script>
+    const ALL_PROJECTS = ["Accounts HO", "Material Inspection", "ZQMA", "FWQI REC Pkg 2", "FWQI REC Pkg 4", "FWQI PFC Pkg 3", "Operations HO", "REC Pkg 2", "FMQI REC Pkg 2", "REC Pkg 4", "FMQI REC Pkg 4", "Operations RO", "PFC Pkg 3", "FMQI PFC Pkg 3", "TPTA"];
+    let currentIdx = null;
+
+    window.loadManagers = async function() {
+        const tbody = document.getElementById("manager-table-body");
+        const res = await fetch(`${API_URL}?action=getManagers`);
+        const list = await res.json();
+        
+        tbody.innerHTML = list.map((m, i) => `
+            <tr>
+                <td class="p-2"><input id="empid_${i}" value="${m.empid}" class="w-16 border p-1 rounded font-bold"></td>
+                <td class="p-2"><input id="name_${i}" value="${m.name}" class="w-24 border p-1 rounded font-bold"></td>
+                <td class="p-2"><input id="email_${i}" value="${m.email}" class="w-32 border p-1 rounded font-bold"></td>
+                <td class="p-2"><input id="phone_${i}" value="${m.phone}" class="w-24 border p-1 rounded font-bold"></td>
+                <td class="p-2" id="cell-proj-${i}">${String(m.proj || "").split(',').map(p => p.trim() ? `<span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[9px] mr-1">${p.trim()}</span>` : '').join('')}</td>
+                <td class="p-2">
+                    <button onclick="openModal(${i}, '${m.proj}')" class="text-blue-600 font-black underline mr-2">MODIFY</button>
+                    <button onclick="window.saveManager(false, ${i})" class="text-indigo-600 font-black underline">UPDATE</button>
+                </td>
+            </tr>`).join('');
+    };
+
+    function openModal(idx, currentProjs) {
+        currentIdx = idx;
+        const pList = currentProjs.split(',').map(p => p.trim());
+        document.getElementById("checkbox-container").innerHTML = ALL_PROJECTS.map(p => `
+            <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" value="${p}" ${pList.includes(p) ? 'checked' : ''} class="proj-cb"> ${p}</label>
+        `).join('');
+        document.getElementById("project-modal").classList.remove("hidden");
+    }
+
+    window.applyProjects = async function() {
+        const checked = Array.from(document.querySelectorAll('.proj-cb:checked')).map(cb => cb.value);
+        document.getElementById(`cell-proj-${currentIdx}`).innerHTML = checked.map(p => `<span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[9px] mr-1">${p}</span>`).join('');
+        document.getElementById("project-modal").classList.add("hidden");
+    };
+    window.saveManager = async function(isNew, idx) {
+    // 1. Get all badge elements if updating existing
+    let cleanProjString = "";
+    if (!isNew) {
+        const badgeElements = document.querySelectorAll(`#cell-proj-${idx} span`);
+        const projectArray = Array.from(badgeElements).map(el => el.innerText.trim());
+        cleanProjString = projectArray.join(', ');
+    }
+
+    let payload;
+    if (isNew) {
+        payload = {
+            action: "addManager",
+            empid: document.getElementById("new-mempid").value,
+            name: document.getElementById("new-mname").value,
+            email: document.getElementById("new-memail").value,
+            phone: document.getElementById("new-mphone").value,
+            proj: document.getElementById("new-mproj").value
+        };
+    } else {
+        payload = {
+            action: "updateManager",
+            rowIndex: idx + 2,
+            empid: document.getElementById(`empid_${idx}`).value,
+            name: document.getElementById(`name_${idx}`).value,
+            email: document.getElementById(`email_${idx}`).value,
+            phone: document.getElementById(`phone_${idx}`).value,
+            proj: cleanProjString
+        };
+    }
+
+    const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    const result = await res.json();
+    
+    if(result.status) {
+        alert("Saved successfully!");
+        
+        // 🎯 CLOSE THE FORM IF IT WAS A NEW ENTRY
+        if (isNew) {
+            document.getElementById('mgr-add-form').classList.add('hidden');
+            // Optional: Clear form fields
+            document.getElementById("new-mempid").value = "";
+            document.getElementById("new-mname").value = "";
+            document.getElementById("new-memail").value = "";
+            document.getElementById("new-mphone").value = "";
+            document.getElementById("new-mproj").value = "";
+        }
+        
+        window.loadManagers();
+    } else {
+        alert("Update failed: " + result.message);
+    }
+};
+
+    window.loadManagers();
+</script>

@@ -1,0 +1,172 @@
+<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
+        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Field Audit & Verdict Console
+        </h3>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <select id="admin-filter-job" onchange="window.filterAdminTable()"
+                class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+                <option value="">Filter by Job ID</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
+        <table class="w-full text-left border-collapse text-xs min-w-[1300px]">
+            <thead>
+                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
+                    <th class="p-3.5">Job & Employee</th>
+                    <th class="p-3.5">Project & Timeline</th>
+                    <th class="p-3.5">Movement & Description</th>
+                    <th class="p-3.5">Coordinator & Manager Review</th>
+                    <th class="p-3.5">Admin Verdict & Approval</th>
+                    <th class="p-3.5 text-center">Execute Control</th>
+                </tr>
+            </thead>
+            <tbody id="admin-tbody" class="divide-y text-slate-800 font-bold">
+                <tr>
+                    <td colspan="6" class="p-8 text-center animate-pulse">Loading admin audit logs...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let adminCache = [];
+
+        function formatIndianDateTime(rawStr) {
+            if (!rawStr) return "N/A";
+            try {
+                let trimmed = String(rawStr).trim();
+                let d = new Date(trimmed);
+                if (isNaN(d.getTime())) return trimmed;
+                let day = String(d.getDate()).padStart(2, '0');
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let year = d.getFullYear();
+                let hours = String(d.getHours()).padStart(2, '0');
+                let minutes = String(d.getMinutes()).padStart(2, '0');
+                return `${day}-${month}-${year} ${hours}:${minutes}`;
+            } catch (e) { return rawStr; }
+        }
+
+        async function initAdminPortal() {
+            try {
+                const res = await fetch(`${API_URL}?action=getFieldActivities&role=ADMIN&userId=${currentUser.employeeId}`);
+                const result = await res.json();
+                if (result.status) {
+                    adminCache = result.data;
+                    populateAdminJobDropdown(adminCache);
+                    renderAdminTable(adminCache);
+                }
+            } catch (e) {
+                document.getElementById("admin-tbody").innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load audit records.</td></tr>`;
+            }
+        }
+
+        function populateAdminJobDropdown(data) {
+            const select = document.getElementById("admin-filter-job");
+            const uniqueJobs = [...new Set(data.map(d => d.jobActivityId))];
+            select.innerHTML = '<option value="">Filter by Job ID</option>';
+            uniqueJobs.forEach(job => {
+                let opt = document.createElement("option"); opt.value = job; opt.textContent = job;
+                select.appendChild(opt);
+            });
+        }
+
+        window.filterAdminTable = function () {
+            const val = document.getElementById("admin-filter-job").value;
+            const filtered = val ? adminCache.filter(d => d.jobActivityId === val) : adminCache;
+            renderAdminTable(filtered);
+        };
+
+        function renderAdminTable(data) {
+            const tbody = document.getElementById("admin-tbody");
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No field activity audit records found.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            data.forEach(r => {
+                const isLocked = r.adminVerdict && r.adminVerdict !== "PENDING" && !r.adminVerdict.startsWith("PENDING");
+                let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800");
+
+                html += `
+                    <tr class="hover:bg-slate-50 align-top">
+                        <td class="p-3.5">
+                            <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
+                            <span class="font-mono text-slate-500 text-[10px]">Entry: ${r.entryId}</span>
+                            <strong class="text-slate-950 mt-1 block">${r.employeeName}</strong>
+                            <span class="text-slate-500 font-mono text-[10px]">ID: ${r.employeeId}</span>
+                        </td>
+                        <td class="p-3.5">
+                            <div class="font-bold text-slate-900">${r.project}</div>
+                            <span class="font-mono text-slate-500 text-[10px]">Travel: ${formatIndianDateTime(r.tentativeTravelDate)}</span>
+                            <span class="font-mono text-indigo-600 text-[10px] block">Reach: ${formatIndianDateTime(r.dateToReachDestination)}</span>
+                        </td>
+                        <td class="p-3.5 max-w-xs">
+                            <div class="font-bold text-slate-900">${r.movementType} (${r.modeOfTravel})</div>
+                            <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-100 p-1.5 rounded">"${r.activityDescription || 'N/A'}"</p>
+                        </td>
+                        <td class="p-3.5 space-y-1">
+                            <div class="text-[11px]"><strong>Mgr Status:</strong> <span class="px-1.5 py-0.5 rounded text-[9px] uppercase ${badgeClass}">${r.managerStatus}</span></div>
+                            <div class="text-[10px] text-slate-600"><strong>Manager:</strong> ${r.managerName || 'Pending'}</div>
+                            <div class="text-[10px] text-slate-600"><strong>Coordinator:</strong> ${r.coordinatorName || 'Assigned'}</div>
+                            <div class="text-slate-700 italic text-[10px] bg-slate-50 p-1 rounded border">Coord Note: "${r.coordinatorComment || 'None'}"</div>
+                        </td>
+                        <td class="p-3.5 space-y-2">
+                            <select id="admin-status-${r.rowIndex}" class="w-full p-1.5 border rounded-lg text-xs bg-white font-black" ${isLocked ? 'disabled bg-slate-100' : ''}>
+    <option value="APPROVED">Fully Approved</option>
+    <option value="APPROVED_AS_MANAGER_APPROVAL">Approved as Manager Approval</option>
+    <option value="MANAGER_APPROVAL_OVERRIDE">Manager Approval Override</option>
+    <option value="APPROVED_WITH_DEDUCTION">Approved with Deduction as per Policy</option>
+    <option value="REJECTED">Rejected</option>
+</select>
+                            <input type="text" id="admin-comment-${r.rowIndex}" placeholder="Add audit comment..." class="w-full p-1.5 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                            <div class="text-[10px] font-mono text-slate-600 pt-1">
+                                <div><strong>Verdict Log:</strong> ${r.adminVerdict || 'PENDING'}</div>
+                                <div class="text-indigo-700"><strong>Admin Name:</strong> ${r.adminName || 'Unassigned'}</div>
+                            </div>
+                            ${isLocked ? '<span class="text-[10px] text-emerald-700 font-bold block">🔒 Locked (Verdict Committed)</span>' : ''}
+                        </td>
+                        <td class="p-3.5 text-center align-middle">
+                            ${!isLocked ? `<button onclick="window.saveAdminVerdict(${r.rowIndex})" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Commit Verdict</button>` : '<span class="text-xs text-slate-400">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.saveAdminVerdict = async function (rowIndex) {
+            const statusVal = document.getElementById(`admin-status-${rowIndex}`).value;
+            const commentVal = document.getElementById(`admin-comment-${rowIndex}`).value.trim();
+
+            if (!commentVal) { alert("Please provide a comment for the admin verdict."); return; }
+            if (!confirm("Are you sure you want to commit and lock this admin verdict?")) return;
+
+            const finalVerdictString = `${statusVal} - Note: ${commentVal} (By ${currentUser.employeeName})`;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "processAdminFieldAction",
+                        rowIndex: rowIndex,
+                        adminVerdict: finalVerdictString,
+                        adminName: currentUser.employeeName
+                    })
+                });
+                const result = await res.json();
+                if (result.status) {
+                    alert("Admin verdict committed successfully!");
+                    initAdminPortal();
+                } else alert("Error: " + result.message);
+            } catch (e) { alert("Network error."); }
+        };
+
+        initAdminPortal();
+    })();
+</script>

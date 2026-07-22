@@ -1,0 +1,519 @@
+<div class="w-full glass-panel p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+
+    <!-- DASHBOARD PANEL HEADER CONTROL BAR -->
+    <div class="border-b border-slate-300 pb-4 mb-6 gap-4">
+
+        <div>
+            <h3 class="text-lg font-black tracking-tight text-slate-950 flex items-center gap-2">
+                <i data-lucide="shield" class="text-rose-700 w-5 h-5"></i> Employees Data Management Console
+            </h3>
+            <p class="text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
+                Master Provisioning Engine, Relational Overrides & Registry Sync Console
+            </p>
+        </div>
+
+        <br>
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="relative min-w-[240px]">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-600">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="l3-search-input" oninput="window.handleL3RegistrySearchFilter()"
+                    placeholder="Search employees by name..."
+                    class="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 focus:bg-white text-slate-900 transition shadow-inner">
+            </div>
+
+            <select id="filter-qual" onchange="window.applyComplexFilters()"
+                class="px-3 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none">
+                <option value="">All Qualifications</option>
+                <option value="B.Tech (Electrical)">B.Tech (Electrical)</option>
+                <option value="B.Tech (Electrical & Electronics)">B.Tech (Electrical & Electronics)</option>
+                <option value="B.Tech (Electronics & Communication)">B.Tech (Electronics & Communication)</option>
+                <option value="B.Tech (Mechanical)">B.Tech (Mechanical)</option>
+                <option value="B.Tech (Civil)">B.Tech (Civil)</option>
+                <option value="B.Tech (CS or IT)">B.Tech (CS or IT)</option>
+                <option value="B.Tech (Other)">B.Tech (Other)</option>
+                <option value="Diploma (Electrical)">Diploma (Electrical)</option>
+                <option value="Diploma (Electronics)">Diploma (Electronics)</option>
+                <option value="Diploma (Mechanical)">Diploma (Mechanical)</option>
+                <option value="Diploma (Civil)">Diploma (Civil)</option>
+                <option value="Diploma (Computer)">Diploma (Computer)</option>
+                <option value="Graduation (Non-Tech)">Graduation (Non-Tech)</option>
+            </select>
+            <input type="number" id="filter-yop" oninput="window.applyComplexFilters()" placeholder="Passing Year"
+                class="w-400 px-3 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl">
+
+            <button onclick="window.refreshAdminL3ConsoleData()"
+                class="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Workspace
+            </button>
+        </div>
+    </div>
+
+    <!-- MASTER ROW EDITING UTILITY FORM OVERLAY -->
+    <div id="l3-master-mutation-card"
+        class="hidden mb-6 p-5 bg-slate-100 border-2 border-slate-300 rounded-2xl relative fade-in-up">
+        <div class="flex items-center justify-between border-b border-slate-300 pb-3 mb-4">
+            <h4 class="text-xs font-black uppercase tracking-wider text-rose-700 flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Account Structure Master Record
+            </h4>
+            <button onclick="document.getElementById('l3-master-mutation-card').classList.add('hidden')"
+                class="text-slate-600 hover:text-slate-900"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+
+        <input type="hidden" id="edit-orig-empid">
+        <input type="hidden" id="edit-orig-role">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs font-bold text-slate-800">
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Employee ID</label>
+                <input type="text" id="edit-empid"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Employee Name</label>
+                <input type="text" id="edit-name"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Date of Joining</label>
+                <input type="date" id="edit-doj"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Designation</label>
+                <input type="text" id="edit-desig"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Username</label>
+                <input type="text" id="edit-username"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Password</label>
+                <input type="text" id="edit-password"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Assign Manager</label>
+                <select id="edit-mgr-select"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Assign Coordinator</label>
+                <select id="edit-coord-select"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Qualification</label>
+                <select id="edit-qualification" 
+                        class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    <option value="">-- Select Qualification --</option>
+                    <option value="B.Tech (Electrical)">B.Tech (Electrical)</option>
+                    <option value="B.Tech (Electrical & Electronics)">B.Tech (Electrical & Electronics)</option>
+                    <option value="B.Tech (Electronics & Communication)">B.Tech (Electronics & Communication)</option>
+                    <option value="B.Tech (Mechanical)">B.Tech (Mechanical)</option>
+                    <option value="B.Tech (Civil)">B.Tech (Civil)</option>
+                    <option value="B.Tech (CS or IT)">B.Tech (CS or IT)</option>
+                    <option value="B.Tech (Other)">B.Tech (Other)</option>
+                    <option value="Diploma (Electrical)">Diploma (Electrical)</option>
+                    <option value="Diploma (Electronics)">Diploma (Electronics)</option>
+                    <option value="Diploma (Mechanical)">Diploma (Mechanical)</option>
+                    <option value="Diploma (Civil)">Diploma (Civil)</option>
+                    <option value="Diploma (Computer)">Diploma (Computer)</option>
+                    <option value="Graduation (Non-Tech)">Graduation (Non-Tech)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Year of Passing</label>
+                <input type="text" id="edit-yearofpassing"
+                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                    placeholder="e.g. 2022">
+            </div>
+
+            <!-- Current States Overview -->
+            <div class="md:col-span-3 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div class="p-3 bg-white border border-slate-300 rounded-xl">
+                    <span class="block text-[9px] uppercase text-slate-600 font-black tracking-wider mb-0.5">Currently Appointed Project Strings</span>
+                    <div id="edit-current-projects-view" class="text-[11px] font-bold text-slate-900 leading-normal font-mono break-all"></div>
+                </div>
+                <div class="p-3 bg-white border border-slate-300 rounded-xl">
+                    <span class="block text-[9px] uppercase text-slate-600 font-black tracking-wider mb-0.5">Currently Assigned Roles</span>
+                    <div id="edit-current-roles-view" class="text-[11px] font-bold text-slate-900 leading-normal font-mono break-all"></div>
+                </div>
+            </div>
+
+            <!-- MULTI-SELECT ROLE CHECKBOX GRID (Hidden for AdminL3) -->
+            <div id="role-assignment-container" class="md:col-span-3 lg:col-span-4 mt-2 hidden">
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1.5">Assign System Roles (Multiple Allowed)</label>
+                <div class="w-full grid grid-cols-2 md:grid-cols-4 gap-2 bg-white border border-slate-300 p-3 rounded-xl shadow-inner">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="Non-Tech" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Non-Tech</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="Engineer" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Engineer</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="Coordinator" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Coordinator</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="Manager" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Manager</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="AdminL3" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Admin L3</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" name="l3-role-checkbox" value="AdminL2" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="text-xs font-bold text-slate-800">Admin L2</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="md:col-span-3 lg:col-span-4 mt-2">
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1.5">Modify Project Sector
+                    Selections Checklist</label>
+                <div id="edit-proj-checkbox-grid"
+                    class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-white border border-slate-300 p-4 rounded-xl max-h-40 overflow-y-auto shadow-inner">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-5">
+            <button onclick="document.getElementById('l3-master-mutation-card').classList.add('hidden')"
+                class="px-4 py-2 bg-slate-200 text-slate-800 font-black rounded-xl text-xs hover:bg-slate-300">Cancel</button>
+            <button onclick="window.submitL3MasterOverridePackage()"
+                class="px-5 py-2 bg-rose-700 text-white font-black rounded-xl text-xs hover:bg-rose-800 shadow-md">Commit
+                Update</button>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE IAM PROVISIONING GRID TABLE -->
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-5">
+        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[500px]">
+            <table class="w-full text-left border-collapse table-auto min-w-[1450px]">
+                <thead>
+                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
+                        <th class="px-3 py-3.5">Profile Image</th>
+                        <th class="px-3 py-3.5">Identity (Name & ID)</th>
+                        <th class="px-3 py-3.5 w-36">System Credentials</th>
+                        <th class="px-3 py-3.5 w-44">Designation</th>
+                        <th class="px-3 py-3.5 w-56">Appointed Projects</th>
+                        <th class="px-3 py-3.5">Supervisory Line Allocations</th>
+                        <th class="px-3 py-3.5 w-44">Education Attributes</th>
+                        <th class="px-3 py-3.5 text-center w-24">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="l3-iam-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900">
+                    <tr>
+                        <td colspan="8" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
+                            Assembling ecosystem provisioning matrices map datasets...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="image-preview-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4">
+    <div class="bg-white p-2 rounded-2xl shadow-2xl max-w-sm w-full">
+        <img id="full-profile-img" src="" class="w-full h-auto rounded-xl" alt="Profile">
+        <button onclick="document.getElementById('image-preview-modal').classList.add('hidden')"
+            class="mt-3 w-full py-2 bg-slate-900 text-white font-black text-xs rounded-xl">Close Preview</button>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let employeeRegistryCache = [];
+        let lookupLookupCacheMap = {};
+
+        window.refreshAdminL3ConsoleData = async function () {
+            const tbody = document.getElementById("l3-iam-matrix-table-body");
+            tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-12 text-center text-slate-700 font-bold">Synchronizing infrastructure parameters data...</td></tr>`;
+            document.getElementById("l3-master-mutation-card").classList.add("hidden");
+            document.getElementById("l3-search-input").value = "";
+
+            try {
+                const lookupRes = await fetch(`${API_URL}?action=getL3ConfigurationLookups`);
+                lookupLookupCacheMap = await lookupRes.json();
+
+                const regRes = await fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`);
+                const regResult = await regRes.json();
+                if (!regResult.status) { tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-rose-700 font-black">Sync rejected by database.</td></tr>`; return; }
+
+                employeeRegistryCache = regResult.data;
+                window.renderL3RegistryGridRows(employeeRegistryCache);
+            } catch (e) { tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-700 font-black">Governance stack sync crash.</td></tr>`; }
+        };
+
+        window.renderL3RegistryGridRows = function (dataArray) {
+            const tbody = document.getElementById("l3-iam-matrix-table-body");
+            const currentYear = new Date().getFullYear();
+
+            let outputRows = "";
+            dataArray.forEach((emp) => {
+                let dojParts = String(emp.dateOfJoining || "").split("-");
+                let displayDoj = (dojParts.length === 3) ? `${dojParts[2]}/${dojParts[1]}/${dojParts[0]}` : (emp.dateOfJoining || "N/A");
+
+                const yop = parseInt(emp.yearOfPassing);
+                const experience = (yop && !isNaN(yop)) ? (currentYear - yop) + " yrs" : "N/A";
+
+                outputRows += `
+                <tr class="hover:bg-slate-100/80 transition-colors">
+                <td class="px-3 py-3.5">
+                    <img src="${emp.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNjY2MiLz48L3N2Zz4='}" 
+                         onclick="window.showImageByEmpId('${emp.employeeId}')"
+                         class="w-12 h-12 min-w-[48px] rounded-full border-2 border-slate-200 cursor-pointer object-cover shadow-sm hover:scale-110 transition-transform" 
+                         alt="Profile">
+                </td>
+                 <td class="px-3 py-3.5">
+                    <strong class="text-slate-950 block font-black text-xs">${emp.employeeName}</strong>
+                    <span class="font-mono text-[11px] text-slate-700 block font-bold">${emp.employeeId}</span>
+                    <span class="text-[10px] text-slate-600 block mt-0.5 font-bold">DOJ: ${displayDoj}</span>
+                </td>
+                <td class="px-3 py-3.5 font-mono text-[10px] tracking-wide text-slate-600 leading-normal select-none font-bold">
+                    <div class="flex items-center gap-1"><span class="font-black text-slate-800 text-[11px]">U:</span> ••••••••</div>
+                    <div class="flex items-center gap-1 mt-0.5"><span class="font-black text-slate-800 text-[11px]">P:</span> ••••••••</div>
+                </td>
+                <td class="px-3 py-3.5">
+                    <span class="block text-slate-900 font-black text-xs">${emp.designation || 'Not Configured'}</span>
+                </td>
+                <td class="px-3 py-3.5 max-w-xs text-slate-800 font-bold leading-relaxed">
+                    ${emp.appointedProjects || '<span class="italic text-slate-400 font-medium">Unassigned Workspace</span>'}
+                </td>
+                <td class="px-3 py-3.5 text-[11px] font-bold leading-tight text-slate-800">
+                    <div>Mgr: <strong class="font-black text-slate-950">${emp.managerName || 'None'}</strong></div>
+                    <div class="mt-1">Coord: <strong class="font-black text-slate-900">${emp.coordinatorName || 'None'}</strong></div>
+                </td>
+                <td class="px-3 py-3.5 leading-normal">
+                    <div class="text-slate-900 font-black text-xs">${emp.qualification || 'N/A'}</div>
+                    <div class="text-[10px] font-bold text-slate-600">Pass: ${emp.yearOfPassing || '--'}</div>
+                    <div class="text-[10px] font-black text-rose-700">Exp: ${experience}</div>
+                </td>
+                <td class="px-3 py-3.5 text-center whitespace-nowrap">
+                    <button onclick="window.openL3AccountModifyWizard('${emp.employeeId}')" 
+                            class="px-3 py-2 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1 mx-auto cursor-pointer">
+                        <i data-lucide="edit" class="w-3.5 h-3.5"></i> Edit
+                    </button>
+                </td>
+            </tr>
+        `;
+            });
+            tbody.innerHTML = outputRows;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+        window.showImage = function (url) {
+            document.getElementById('full-profile-img').src = url;
+            document.getElementById('image-preview-modal').classList.remove('hidden');
+        };
+
+        window.handleL3RegistrySearchFilter = function () {
+            const query = document.getElementById("l3-search-input").value.trim().toLowerCase();
+            if (!query) {
+                window.renderL3RegistryGridRows(employeeRegistryCache);
+                return;
+            }
+            const filtered = employeeRegistryCache.filter(emp =>
+                String(emp.employeeName).toLowerCase().includes(query)
+            );
+            window.renderL3RegistryGridRows(filtered);
+        };
+
+        window.openL3AccountModifyWizard = function (empId) {
+            const emp = employeeRegistryCache.find(e => String(e.employeeId) === String(empId));
+            if (!emp) return;
+
+            document.getElementById("edit-orig-empid").value = emp.employeeId;
+            document.getElementById("edit-orig-role").value = emp.role || "EMPLOYEE"; 
+            document.getElementById("edit-empid").value = emp.employeeId || "";
+            document.getElementById("edit-name").value = emp.employeeName || "";
+            document.getElementById("edit-doj").value = emp.dateOfJoining || "";
+            document.getElementById("edit-desig").value = emp.designation || "";
+            document.getElementById("edit-username").value = emp.username || "";
+            document.getElementById("edit-password").value = emp.password || "";
+            document.getElementById("edit-qualification").value = emp.qualification || "";
+            document.getElementById("edit-yearofpassing").value = emp.yearOfPassing || "";
+
+            // Display current roles
+            document.getElementById("edit-current-roles-view").innerHTML = emp.role ?
+                emp.role.split(",").map(r => `<span class="inline-block bg-rose-100 text-rose-800 border border-rose-200 rounded px-2 py-0.5 text-[10px] font-black mr-1.5 mb-1">${r.trim().toUpperCase()}</span>`).join("") :
+                '<span class="text-slate-500 italic font-medium">No roles assigned</span>';
+
+            const currentRoles = (emp.role || "EMPLOYEE").split(",").map(r => r.trim().toUpperCase());
+            const roleCheckboxes = document.querySelectorAll('input[name="l3-role-checkbox"]');
+            roleCheckboxes.forEach(cb => {
+                cb.checked = currentRoles.includes(cb.value.toUpperCase());
+            });
+
+            const loggedInRoles = (currentUser.role || "").toUpperCase().split(",").map(r => r.trim());
+            const roleContainer = document.getElementById("role-assignment-container");
+            if (loggedInRoles.includes("ADMIN")) {
+                roleContainer.classList.remove("hidden");
+            } else {
+                roleContainer.classList.add("hidden");
+            }
+
+            document.getElementById("edit-current-projects-view").innerHTML = emp.appointedProjects ?
+                emp.appointedProjects.split(",").map(p => `<span class="inline-block bg-slate-200 border border-slate-300 text-slate-950 rounded px-2 py-0.5 text-[10px] font-black mr-1.5 mb-1">${p}</span>`).join("") :
+                '<span class="text-slate-500 italic font-medium">No assigned projects on record</span>';
+
+            let mgrOpts = '<option value="">-- Clear/No Manager Assigned --</option>';
+            let hasExistingMgr = lookupLookupCacheMap.managers.some(m => m.id === emp.managerId);
+            if (emp.managerId && !hasExistingMgr && emp.managerName) {
+                mgrOpts += `<option value="${emp.managerId}" selected>${emp.managerName} (${emp.managerId})</option>`;
+            }
+            lookupLookupCacheMap.managers.forEach(m => {
+                mgrOpts += `<option value="${m.id}" ${m.id === emp.managerId ? "selected" : ""}>${m.name} (${m.id})</option>`;
+            });
+            document.getElementById("edit-mgr-select").innerHTML = mgrOpts;
+
+            let coordOpts = '<option value="">-- Clear/No Coordinator Assigned --</option>';
+            let hasExistingCoord = lookupLookupCacheMap.coordinators.some(c => c.id === emp.coordinatorId);
+            if (emp.coordinatorId && !hasExistingCoord && emp.coordinatorName) {
+                coordOpts += `<option value="${emp.coordinatorId}" selected>${emp.coordinatorName} (${emp.coordinatorId})</option>`;
+            }
+            lookupLookupCacheMap.coordinators.forEach(c => {
+                coordOpts += `<option value="${c.id}" ${c.id === emp.coordinatorId ? "selected" : ""}>${c.name} (${c.id})</option>`;
+            });
+            document.getElementById("edit-coord-select").innerHTML = coordOpts;
+
+            const assignedProjects = (emp.appointedProjects || "").split(",").map(p => p.trim());
+            const parentBaseProjectsList = Array.from(new Set(lookupLookupCacheMap.projects.map(p => p.split("-")[0].trim()))).sort();
+
+            let checkboxGridHtml = "";
+            parentBaseProjectsList.forEach(p => {
+                const isChecked = assignedProjects.includes(p) ? "checked" : "";
+                checkboxGridHtml += `
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer transition select-none">
+                        <input type="checkbox" name="l3-proj-checkbox" value="${p}" ${isChecked} class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                        <span class="truncate font-bold text-slate-800">${p}</span>
+                    </label>
+                `;
+            });
+            document.getElementById("edit-proj-checkbox-grid").innerHTML = checkboxGridHtml;
+
+            document.getElementById("l3-master-mutation-card").classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.submitL3MasterOverridePackage = async function () {
+            const origId = document.getElementById("edit-orig-empid").value;
+            const newId = document.getElementById("edit-empid").value.trim();
+            const name = document.getElementById("edit-name").value.trim();
+            const doj = document.getElementById("edit-doj").value;
+            const desig = document.getElementById("edit-desig").value.trim();
+            const user = document.getElementById("edit-username").value.trim();
+            const pass = document.getElementById("edit-password").value.trim();
+            const qual = document.getElementById("edit-qualification").value.trim();
+            const yop = document.getElementById("edit-yearofpassing").value.trim();
+
+            let roleString = "";
+            const roleContainer = document.getElementById("role-assignment-container");
+            
+            if (roleContainer.classList.contains("hidden")) {
+                roleString = document.getElementById("edit-orig-role").value;
+            } else {
+                const roleCheckboxes = document.querySelectorAll('input[name="l3-role-checkbox"]:checked');
+                const selectedRolesArray = [];
+                roleCheckboxes.forEach(cb => selectedRolesArray.push(cb.value));
+                roleString = selectedRolesArray.join(",");
+
+                if (!roleString) {
+                    alert("Please select at least one role for this account.");
+                    return;
+                }
+            }
+
+            const mgrSel = document.getElementById("edit-mgr-select");
+            const coordSel = document.getElementById("edit-coord-select");
+
+            const mgrId = mgrSel.value;
+            let mgrName = "";
+            if (mgrId && mgrSel.selectedIndex >= 0) {
+                mgrName = mgrSel.options[mgrSel.selectedIndex].text.split(" (")[0];
+            }
+
+            const coordId = coordSel.value;
+            let coordName = "";
+            if (coordId && coordSel.selectedIndex >= 0) {
+                coordName = coordSel.options[coordSel.selectedIndex].text.split(" (")[0];
+            }
+
+            const checkboxes = document.querySelectorAll('input[name="l3-proj-checkbox"]:checked');
+            const selectedProjArray = [];
+            checkboxes.forEach(cb => selectedProjArray.push(cb.value));
+            const projectsString = selectedProjArray.join(",");
+
+            const confirmOverride = confirm("Confirm updates to this record?");
+            if (!confirmOverride) return;
+
+            const payload = {
+                action: "updateEmployeeMasterRecordL3",
+                originalEmployeeId: origId,
+                employeeId: newId,
+                employeeName: name,
+                dateOfJoining: doj,
+                username: user,
+                password: pass,
+                designation: desig,
+                role: roleString,
+                appointedProjects: projectsString,
+                managerId: mgrId,
+                managerName: mgrName,
+                coordinatorId: coordId,
+                coordinatorName: coordName,
+                qualification: qual,
+                yearOfPassing: yop
+            };
+
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await res.json();
+                if (result.status) {
+                    alert("Record updated successfully!");
+                    window.refreshAdminL3ConsoleData();
+                } else { alert("Operational Fault: " + result.message); }
+            } catch (e) { alert("Server transaction dropped."); }
+        };
+
+        window.applyComplexFilters = function () {
+            const nameQ = document.getElementById("l3-search-input").value.toLowerCase();
+            const qualQ = document.getElementById("filter-qual").value.toLowerCase();
+            const yopQ = document.getElementById("filter-yop").value;
+
+            const filtered = employeeRegistryCache.filter(emp => {
+                const matchesName = String(emp.employeeName).toLowerCase().includes(nameQ);
+                const matchesQual = qualQ === "" || String(emp.qualification).toLowerCase() === qualQ;
+                const matchesYop = yopQ === "" || String(emp.yearOfPassing) === yopQ;
+                return matchesName && matchesQual && matchesYop;
+            });
+
+            window.renderL3RegistryGridRows(filtered);
+        };
+
+        window.showImageByEmpId = function (empId) {
+            const emp = employeeRegistryCache.find(e => String(e.employeeId) === String(empId));
+            const modal = document.getElementById('image-preview-modal');
+            const modalImg = document.getElementById('full-profile-img');
+
+            if (emp && emp.profilePhoto) {
+                modalImg.src = emp.profilePhoto;
+                modal.classList.remove('hidden');
+            } else {
+                console.error("Employee not found or no photo:", empId);
+            }
+        };
+
+        window.refreshAdminL3ConsoleData();
+    })();
+</script>

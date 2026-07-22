@@ -1,0 +1,70 @@
+<div class="w-full max-w-5xl mx-auto p-6 bg-white rounded-3xl border border-slate-300 shadow-xl fade-in-up">
+    <div class="mb-6 border-b border-slate-200 pb-4 flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-black text-slate-900">Coordinator Registry</h2>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Manage assignments & project mappings.</p>
+        </div>
+        <button onclick="document.getElementById('add-form').classList.toggle('hidden')" class="px-4 py-2 bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md">+ Add New</button>
+    </div>
+
+    <div id="add-form" class="hidden mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl grid grid-cols-4 gap-3">
+        <input type="text" id="new-cid" placeholder="Coord ID" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="text" id="new-cname" placeholder="Name" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="text" id="new-empid" placeholder="Emp ID" class="border p-2 rounded-lg text-xs font-bold">
+        <input type="text" id="new-proj" placeholder="Project" class="border p-2 rounded-lg text-xs font-bold">
+        <button onclick="window.saveCoordinator(true)" class="col-span-4 bg-emerald-600 text-white p-2 rounded-lg font-black text-xs">SAVE NEW ENTRY</button>
+    </div>
+
+    <div class="overflow-x-auto max-h-[400px]">
+        <table class="w-full text-xs text-left">
+            <thead class="bg-slate-950 text-white uppercase text-[9px]">
+                <tr>
+                    <th class="p-3">Coord ID</th>
+                    <th class="p-3">Name</th>
+                    <th class="p-3">Emp ID</th>
+                    <th class="p-3">Project</th>
+                    <th class="p-3">Action</th>
+                </tr>
+            </thead>
+            <tbody id="coordinator-table-body" class="divide-y divide-slate-200 font-bold"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    window.loadCoordinators = async function() {
+        const tbody = document.getElementById("coordinator-table-body");
+        const res = await fetch(`${API_URL}?action=getCoordinators`);
+        const list = await res.json();
+        tbody.innerHTML = list.map((c, i) => `
+            <tr>
+                <td class="p-3"><input id="cid_${i}" value="${c.cid}" class="w-full border p-1 rounded"></td>
+                <td class="p-3"><input id="cname_${i}" value="${c.name}" class="w-full border p-1 rounded"></td>
+                <td class="p-3"><input id="cempid_${i}" value="${c.empid}" class="w-full border p-1 rounded"></td>
+                <td class="p-3"><input id="cproj_${i}" value="${c.proj}" class="w-full border p-1 rounded"></td>
+                <td class="p-3"><button onclick="window.saveCoordinator(false, ${i})" class="text-indigo-600 font-black">UPDATE</button></td>
+            </tr>
+        `).join('');
+    };
+
+    window.saveCoordinator = async function(isNew, idx) {
+        const payload = isNew ? {
+            action: "addCoordinator",
+            cid: document.getElementById("new-cid").value,
+            name: document.getElementById("new-cname").value,
+            empid: document.getElementById("new-empid").value,
+            proj: document.getElementById("new-proj").value
+        } : {
+            action: "updateCoordinator",
+            cid: document.getElementById(`cid_${idx}`).value,
+            name: document.getElementById(`cname_${idx}`).value,
+            empid: document.getElementById(`cempid_${idx}`).value,
+            proj: document.getElementById(`cproj_${idx}`).value,
+            rowIndex: idx + 2 // Assuming header is row 1
+        };
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        alert("Saved successfully!");
+        window.loadCoordinators();
+    };
+    window.loadCoordinators();
+</script>

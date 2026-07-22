@@ -1,0 +1,167 @@
+<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
+        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="shield-check" class="text-blue-600 w-5 h-5"></i> Coordinator Field Review Portal
+        </h3>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <select id="coord-filter-job" onchange="window.filterCoordTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+                <option value="">Filter by Job ID</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
+        <table class="w-full text-left border-collapse text-xs min-w-[1100px]">
+            <thead>
+                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
+                    <th class="p-3.5">Job & Entry ID</th>
+                    <th class="p-3.5">Employee & Project</th>
+                    <th class="p-3.5">Timeline, Movement & Description</th>
+                    <th class="p-3.5 bg-slate-900 border-l border-r border-slate-800">Manager & Admin Reviews</th>
+                    <th class="p-3.5">Coordinator Comment (Locked after save)</th>
+                    <th class="p-3.5 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="coord-tbody" class="divide-y text-slate-800 font-bold">
+                <tr><td colspan="6" class="p-8 text-center animate-pulse">Loading coordinator records...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let coordCache = [];
+
+        function formatIndianDateTime(rawStr) {
+            if (!rawStr) return "N/A";
+            try {
+                let trimmed = String(rawStr).trim();
+                let d = new Date(trimmed);
+                if (isNaN(d.getTime())) return trimmed;
+                let day = String(d.getDate()).padStart(2, '0');
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let year = d.getFullYear();
+                let hours = String(d.getHours()).padStart(2, '0');
+                let minutes = String(d.getMinutes()).padStart(2, '0');
+                let seconds = String(d.getSeconds()).padStart(2, '0');
+                return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+            } catch(e) { return rawStr; }
+        }
+
+        async function initCoordPortal() {
+            try {
+                const res = await fetch(`${API_URL}?action=getFieldActivities&role=COORDINATOR&userId=${currentUser.employeeId}`);
+                const result = await res.json();
+                if (result.status) {
+                    coordCache = result.data;
+                    populateCoordJobDropdown(coordCache);
+                    renderCoordTable(coordCache);
+                }
+            } catch(e) {
+                document.getElementById("coord-tbody").innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load records.</td></tr>`;
+            }
+        }
+
+        function populateCoordJobDropdown(data) {
+            const select = document.getElementById("coord-filter-job");
+            const uniqueJobs = [...new Set(data.map(d => d.jobActivityId))];
+            select.innerHTML = '<option value="">Filter by Job ID</option>';
+            uniqueJobs.forEach(job => {
+                let opt = document.createElement("option"); opt.value = job; opt.textContent = job;
+                select.appendChild(opt);
+            });
+        }
+
+        window.filterCoordTable = function() {
+            const val = document.getElementById("coord-filter-job").value;
+            const filtered = val ? coordCache.filter(d => d.jobActivityId === val) : coordCache;
+            renderCoordTable(filtered);
+        };
+
+        function renderCoordTable(data) {
+            const tbody = document.getElementById("coord-tbody");
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No assigned field activities found.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            data.forEach(r => {
+                const isLocked = r.coordinatorComment && r.coordinatorComment.trim() !== "";
+                
+                // Split movement type in case it contains "From/To" on a new line
+                let movementParts = (r.movementType || 'N/A').split('\n');
+                let mainMovement = movementParts[0];
+                let locations = movementParts.length > 1 ? movementParts[1] : '';
+
+                html += `
+                    <tr class="hover:bg-slate-50 align-top">
+                        <td class="p-3.5">
+                            <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
+                            <span class="font-mono text-slate-500 text-[10px]">Entry: ${r.entryId}</span>
+                        </td>
+                        <td class="p-3.5">
+                            <strong class="text-slate-950 block">${r.employeeName}</strong>
+                            <span class="text-xs text-slate-600">${r.project}</span>
+                        </td>
+                        <td class="p-3.5 max-w-xs">
+                            <div class="font-bold text-slate-900">${mainMovement} (${r.modeOfTravel})</div>
+                            ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                            <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-100 p-1.5 rounded border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                            <div class="font-mono text-[10px] text-slate-500 mt-1.5 space-y-0.5">
+                                <div>Travel: ${formatIndianDateTime(r.tentativeTravelDate)}</div>
+                                <div>Reach: ${formatIndianDateTime(r.dateToReachDestination)}</div>
+                                <div class="text-indigo-600">Logged: ${formatIndianDateTime(r.employeeTimestamp)}</div>
+                            </div>
+                        </td>
+                        
+                        <!-- NEW READ-ONLY REVIEW COLUMN -->
+                        <td class="p-3.5 max-w-xs bg-slate-50 border-l border-r border-slate-200">
+                            <div class="mb-2.5">
+                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-0.5">Manager Status</span>
+                                <div class="text-xs font-bold text-slate-800">${r.managerStatus || 'PENDING'}</div>
+                                ${r.managerInstruction ? `<div class="text-[10px] text-indigo-800 italic bg-indigo-50 p-1.5 rounded border border-indigo-100 mt-1">Instruction: "${r.managerInstruction}"</div>` : ''}
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-0.5">Admin Verdict</span>
+                                <div class="text-[10px] font-mono text-slate-700 bg-white p-1.5 rounded border border-slate-300 shadow-sm">
+                                    ${(r.adminVerdict || 'PENDING').split(' (By ')[0]}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="p-3.5 max-w-sm">
+                            <textarea id="coord-txt-${r.rowIndex}" rows="3" placeholder="Write coordinator comment..." class="w-full p-2 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>${r.coordinatorComment || ''}</textarea>
+                            ${isLocked ? '<span class="text-[10px] text-emerald-700 font-bold block mt-1">🔒 Locked (Saved)</span>' : ''}
+                        </td>
+                        <td class="p-3.5 text-center align-middle">
+                            ${!isLocked ? `<button onclick="window.saveCoordComment(${r.rowIndex})" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Save</button>` : '<span class="text-xs text-slate-400">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.saveCoordComment = async function(rowIndex) {
+            const comment = document.getElementById(`coord-txt-${rowIndex}`).value.trim();
+            if (!comment) { alert("Please write a comment before saving."); return; }
+            if (!confirm("Are you sure you want to save and lock this comment? It cannot be edited further.")) return;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "processCoordinatorFieldAction", rowIndex: rowIndex, coordinatorComment: comment })
+                });
+                const result = await res.json();
+                if (result.status) {
+                    alert("Coordinator comment saved and locked successfully!");
+                    initCoordPortal();
+                } else alert("Error: " + result.message);
+            } catch(e) { alert("Network error."); }
+        };
+
+        initCoordPortal();
+    })();
+</script>

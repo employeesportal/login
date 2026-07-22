@@ -1,0 +1,355 @@
+<div class="w-full max-w-3xl mx-auto glass-panel p-8 rounded-3xl border border-slate-200 shadow-lg fade-in-up">
+
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="user" class="text-blue-600 w-5 h-5"></i> My Profile Management Console
+        </h3>
+        <button onclick="window.showWelcomeMessage()"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <form id="profile-management-form" onsubmit="window.handleProfileUpdate(event)" class="space-y-8">
+
+        <div
+            class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-3xl relative shadow-inner mb-6">
+            <div
+                class="relative group w-48 h-48 rounded-3xl border-4 border-white shadow-md overflow-hidden bg-slate-200 transition-transform duration-200 hover:scale-105">
+                <img id="profile-pane-avatar" src="" class="w-full h-full object-cover hidden"
+                    onload="this.classList.remove('hidden')">
+                <div id="profile-pane-fallback"
+                    class="w-full h-full bg-slate-300 text-slate-500 flex items-center justify-center">
+                    <i data-lucide="user" class="w-20 h-20 text-slate-400"></i>
+                </div>
+
+                <label
+                    class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center cursor-pointer text-white text-sm font-bold gap-2">
+                    <i data-lucide="camera" class="w-6 h-6 text-sky-400"></i>
+                    <span>Change Photo</span>
+                    <input type="file" accept="image/*" class="hidden"
+                        onchange="window.handleProfilePanePhotoUpload(this)">
+                </label>
+            </div>
+            <p class="text-[12px] font-black text-slate-400 uppercase tracking-wider mt-4">Hover image frame to Modify /
+                Change</p>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-4">Add your passport sized,
+                white/ light background image only</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <div class="space-y-4">
+                <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider border-b pb-1">Your Profile
+                    Details</h4>
+
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Employee
+                        ID</label>
+                    <input type="text" id="prof-id" readonly
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-mono font-bold text-slate-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Employee
+                        Name</label>
+                    <input type="text" id="prof-name" readonly
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-bold text-slate-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Date of
+                        Joining</label>
+                    <input type="text" id="prof-doj" readonly
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-medium text-slate-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label
+                        class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Designation</label>
+                    <input type="text" id="prof-desig" readonly
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-bold text-slate-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Appointed
+                        Projects</label>
+                    <textarea id="prof-projects" readonly rows="2"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-medium text-slate-500 cursor-not-allowed resize-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Your
+                            Current Project Manager</label>
+                        <input type="text" id="prof-mgr" readonly
+                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-semibold text-slate-500 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Your
+                            Current Project Coordinator</label>
+                        <input type="text" id="prof-coord" readonly
+                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-semibold text-slate-500 cursor-not-allowed">
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h4 class="text-xs font-black text-blue-600 uppercase tracking-wider border-b pb-1">Account Options
+                    Configuration </h4>
+
+                <div>
+                    <label
+                        class="block text-[10px] font-black tracking-wider text-slate-700 uppercase mb-1">Username</label>
+                    <input type="text" id="prof-user" oninput="window.checkUsernameAvailability()" required
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 transition font-semibold text-slate-800 shadow-sm">
+                    <!-- 🎯 Status Indicator -->
+                    <div id="username-status" class="mt-1 text-[10px] font-bold h-4 transition-all"></div>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] font-black tracking-wider text-slate-700 uppercase mb-1">Password</label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <input type="password" id="prof-pass" required
+                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-mono font-bold text-slate-800 pr-12">
+                        <button type="button" onclick="window.toggleProfilePassReveal()"
+                            class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none">
+                            <i id="prof-pass-eye" data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label
+                        class="block text-[10px] font-black tracking-wider text-slate-700 uppercase mb-1">Communication
+                        Email</label>
+                    <input type="email" id="prof-email" required
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-medium text-slate-800 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-slate-700 uppercase mb-1">Contact
+                        Phone Number</label>
+                    <input type="text" id="prof-phone" required inputmode="numeric" pattern="[0-9]{10}" maxlength="10"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition font-mono font-bold text-slate-800 shadow-sm"
+                        placeholder="Enter 10-digit number">
+                    <span class="text-[9px] text-slate-400 mt-1 block">Must be exactly 10 numerical digits without
+                        spaces or country codes.</span>
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" id="prof-save-btn"
+                        style="width: 100%; background-color: #2563eb; color: #ffffff; font-weight: 700; padding: 14px; border-radius: 12px; border: none; cursor: pointer; display: block; text-align: center; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s;">
+                        Commit Profile Modifications
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (() => {
+        window.initializeProfileConsoleFields = function () {
+            document.getElementById("prof-id").value = currentUser.employeeId || "";
+            document.getElementById("prof-name").value = currentUser.employeeName || "";
+            document.getElementById("prof-doj").value = currentUser.dateOfJoining || "";
+            document.getElementById("prof-desig").value = currentUser.designation || "";
+            document.getElementById("prof-projects").value = currentUser.appointedProjects || "";
+            document.getElementById("prof-mgr").value = currentUser.managerName || "N/A";
+            document.getElementById("prof-coord").value = currentUser.coordinatorName || "N/A";
+
+            document.getElementById("prof-user").value = currentUser.username || "";
+            document.getElementById("prof-pass").value = currentUser.password || "";
+            document.getElementById("prof-email").value = currentUser.email || "";
+            document.getElementById("prof-phone").value = currentUser.phone || "";
+
+            const avatar = document.getElementById("profile-pane-avatar");
+            const fallback = document.getElementById("profile-pane-fallback");
+            if (currentUser.profilePhoto && currentUser.profilePhoto.trim() !== "") {
+                avatar.src = currentUser.profilePhoto;
+                fallback.classList.add("hidden");
+                avatar.classList.remove("hidden");
+            } else {
+                avatar.classList.add("hidden");
+                fallback.classList.remove("hidden");
+            }
+        };
+
+        window.toggleProfilePassReveal = function () {
+            const field = document.getElementById("prof-pass");
+            const icon = document.getElementById("prof-pass-eye");
+            if (field.type === "password") {
+                field.type = "text";
+                icon.setAttribute("data-lucide", "eye-off");
+            } else {
+                field.type = "password";
+                icon.setAttribute("data-lucide", "eye");
+            }
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.handleProfilePanePhotoUpload = function (inputNode) {
+            const file = inputNode.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Image asset size exceeds 2MB threshold limits. Compress files before processing.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = async function () {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+                    const cropSize = 300;
+
+                    canvas.width = cropSize;
+                    canvas.height = cropSize;
+
+                    let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+
+                    if (img.width > img.height) {
+                        sourceWidth = img.height;
+                        sourceX = (img.width - img.height) / 2;
+                    } else if (img.height > img.width) {
+                        sourceHeight = img.width;
+                        sourceY = (img.height - img.width) / 2;
+                    }
+
+                    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, cropSize, cropSize);
+                    const croppedBase64 = canvas.toDataURL("image/jpeg", 0.9).split(',')[1];
+
+                    document.getElementById("profile-pane-fallback").classList.remove("hidden");
+                    document.getElementById("profile-pane-avatar").classList.add("hidden");
+
+                    try {
+                        const payload = {
+                            action: "uploadProfilePhoto",
+                            employeeId: currentUser.employeeId,
+                            imageFileBase64: croppedBase64,
+                            contentType: "image/jpeg"
+                        };
+
+                        const response = await fetch(API_URL, {
+                            method: "POST",
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+
+                        if (result.status) {
+                            alert("Profile avatar cropped and updated successfully!");
+                            currentUser.profilePhoto = result.profilePhotoUrl;
+
+                            document.getElementById("profile-pane-avatar").src = result.profilePhotoUrl;
+                            document.getElementById("profile-pane-fallback").classList.add("hidden");
+                            document.getElementById("profile-pane-avatar").classList.remove("hidden");
+
+                            if (document.getElementById("topbar-avatar-img")) {
+                                document.getElementById("topbar-avatar-img").src = result.profilePhotoUrl;
+                                document.getElementById("topbar-avatar-fallback").classList.add("hidden");
+                                document.getElementById("topbar-avatar-img").classList.remove("hidden");
+                            }
+                        } else {
+                            alert("Upload failed: " + result.message);
+                        }
+                    } catch (err) {
+                        alert("Error streaming binary image segments to server layers.");
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleProfileUpdate = async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById("prof-save-btn");
+            btn.disabled = true; btn.innerText = "Processing Cloud Sync Storage...";
+
+            const inputEmail = document.getElementById("prof-email").value.trim();
+            const inputPhone = document.getElementById("prof-phone").value.trim();
+
+            // 🎯 REDESIGNED ACTIONS PAYLOAD: Targets the user self profile modification endpoint exclusively
+            const payload = {
+                action: "updateUserSelfProfileFields",
+                employeeId: currentUser.employeeId,
+                username: document.getElementById("prof-user").value.trim(),
+                password: document.getElementById("prof-pass").value.trim(),
+                email: inputEmail,
+                phone: inputPhone
+            };
+
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await res.json();
+
+                if (result.status) {
+                    alert("Account configuration metrics updated natively in spreadsheet ledger successfully!");
+
+                    currentUser.username = payload.username;
+                    currentUser.password = payload.password;
+                    currentUser.email = payload.email;
+                    currentUser.phone = payload.phone;
+
+                    if (document.getElementById("topbar-emp-display-name")) {
+                        document.getElementById("topbar-emp-display-name").innerText = currentUser.employeeName;
+                    }
+
+                    window.showWelcomeMessage();
+                } else {
+                    alert("Error saving: " + result.message);
+                }
+            } catch (err) {
+                alert("Communications transaction failure updating core databases.");
+            } finally {
+                btn.disabled = false; btn.innerText = "Commit Profile Modifications";
+            }
+        };
+        
+        // Add these variables inside your script, above initializeProfileConsoleFields
+        let usernameDebounceTimer = null;
+        const originalUsername = currentUser.username; // To ignore the user's current username
+
+        window.checkUsernameAvailability = async function () {
+            const input = document.getElementById("prof-user");
+            const statusDiv = document.getElementById("username-status");
+            const username = input.value.trim();
+
+            // Reset if user reverts to original
+            if (username === originalUsername) {
+                statusDiv.innerHTML = "";
+                input.classList.remove("border-rose-500", "border-emerald-500");
+                return;
+            }
+
+            clearTimeout(usernameDebounceTimer);
+
+            if (username.length < 3) {
+                statusDiv.innerHTML = '<span class="text-slate-400">Username too short...</span>';
+                return;
+            }
+
+            usernameDebounceTimer = setTimeout(async () => {
+                statusDiv.innerHTML = '<span class="text-blue-500 animate-pulse">Checking availability...</span>';
+
+                try {
+                    const res = await fetch(`${API_URL}?action=checkUsernameUnique&username=${encodeURIComponent(username)}`);
+                    const data = await res.json();
+
+                    if (data.available) {
+                        statusDiv.innerHTML = '<span class="text-emerald-600">✓ Username available</span>';
+                        input.classList.remove("border-rose-500");
+                        input.classList.add("border-emerald-500");
+                    } else {
+                        statusDiv.innerHTML = '<span class="text-rose-600">✗ Username not available</span>';
+                        input.classList.remove("border-emerald-500");
+                        input.classList.add("border-rose-500");
+                    }
+                } catch (e) {
+                    statusDiv.innerHTML = '<span class="text-red-600">Check service offline</span>';
+                }
+            }, 500);
+        };
+
+        window.initializeProfileConsoleFields();
+        if (window.lucide) lucide.createIcons();
+    })();
+</script>

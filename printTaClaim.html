@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Claim Voucher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Arial, sans-serif; color: #0f172a; margin: 0; padding: 20px; background: #ffffff; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen py-10">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+        <div class="no-print flex justify-between items-center mb-6 pb-4 border-b">
+            <span class="text-xs font-black uppercase text-slate-500 font-mono" id="print-status">Loading voucher data...</span>
+            <button onclick="window.print()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow">
+                🖨️ Print / Save as PDF
+            </button>
+        </div>
+
+        <div id="voucher-content">
+            <div class="text-center py-12 text-slate-500 animate-pulse font-bold text-sm">Compiling travel activity entries...</div>
+        </div>
+    </div>
+
+    <script>
+        function formatIndianDateTime(rawStr) {
+            if (!rawStr) return "N/A";
+            try {
+                let trimmed = String(rawStr).trim();
+                let d = new Date(trimmed);
+                if (isNaN(d.getTime())) return trimmed;
+
+                let day = String(d.getDate()).padStart(2, '0');
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let year = d.getFullYear();
+                let hours = String(d.getHours()).padStart(2, '0');
+                let minutes = String(d.getMinutes()).padStart(2, '0');
+                let seconds = String(d.getSeconds()).padStart(2, '0');
+
+                return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+            } catch(e) {
+                return rawStr;
+            }
+        }
+
+        (async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const jobId = urlParams.get("jobId");
+            const apiUrl = urlParams.get("apiUrl") || parent.API_URL;
+            const userId = urlParams.get("userId");
+
+            if (!jobId || !userId) {
+                document.getElementById("voucher-content").innerHTML = `<div class="p-6 text-center text-rose-600 font-bold">Invalid parameters provided for voucher generation.</div>`;
+                return;
+            }
+
+            try {
+                const res = await fetch(`${apiUrl}?action=getFieldActivities&role=EMPLOYEE&userId=${userId}`);
+                const result = await res.json();
+
+                if (!result.status || !result.data) throw new Error("Failed to fetch database records.");
+
+                const entries = result.data.filter(a => a.jobActivityId === jobId);
+                if (entries.length === 0) {
+                    document.getElementById("voucher-content").innerHTML = `<div class="p-6 text-center text-rose-600 font-bold">No records found for Job ID: ${jobId}</div>`;
+                    return;
+                }
+
+                const primary = entries[0];
+                document.getElementById("print-status").textContent = `Job Reference: ${jobId}`;
+
+                // Logic: If any segment is PENDING, overall status is PENDING
+                const hasPendingSegment = entries.some(ent => !ent.managerStatus || String(ent.managerStatus).trim().toUpperCase() === "PENDING");
+                const overallStatus = hasPendingSegment ? "PENDING" : primary.managerStatus;
+
+                let rowsHtml = "";
+                entries.forEach((ent) => {
+                    rowsHtml += `
+                        <tr class="border-b text-xs align-top">
+                            <td class="p-2.5 font-mono">${ent.entryId}</td>
+                            <td class="p-2.5">
+                                <strong>${ent.movementType}</strong> via ${ent.modeOfTravel}<br>
+                                <span class="text-[11px] text-slate-600 italic">"${ent.activityDescription || 'N/A'}"</span>
+                                <div class="text-[9px] text-slate-400 font-mono mt-1">Logged At: ${formatIndianDateTime(ent.employeeTimestamp)}</div>
+                            </td>
+                            <td class="p-2.5 font-mono text-[10px]">
+                                <strong>Departure Travel:</strong> ${formatIndianDateTime(ent.tentativeTravelDate)}<br>
+                                <strong>Projected Reach:</strong> ${formatIndianDateTime(ent.dateToReachDestination)}
+                            </td>
+                            <td class="p-2.5 text-[11px]">
+                                <strong>${ent.coordinatorName || 'N/A'}</strong><br>
+                                <span class="italic text-slate-500">"${ent.coordinatorComment || 'No comments'}"</span>
+                            </td>
+                            <td class="p-2.5 text-[10px]">
+                                <strong>Manager:</strong> ${ent.managerName || 'N/A'}<br>
+                                <strong>Status:</strong> ${ent.managerStatus}<br>
+                                <strong>Travel Approval:</strong> ${ent.managerTravelModeApproval || 'N/A'}<br>
+                                <strong>Instruction:</strong> ${ent.managerInstruction || 'None'}<br>
+                                <span class="text-[9px] text-indigo-600 font-mono block mt-1">Action At: ${formatIndianDateTime(ent.managerTimestamp)}</span>
+                            </td>
+                            <td class="p-2.5 text-[10px]">
+                                <strong>Admin Verdict:</strong> ${(ent.adminVerdict || 'PENDING').split(' (By ')[0]}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("voucher-content").innerHTML = `
+                    <div class="border-b-2 border-slate-900 pb-4 mb-6 flex justify-between items-end">
+                        <div>
+                            <h2 class="text-xl font-black uppercase text-slate-900">Travel Allowance (TA) Claim Voucher</h2>
+                            <p class="text-xs text-slate-500 font-mono mt-1">Reference ID: ${jobId}</p>
+                        </div>
+                        <div class="text-right text-xs text-slate-600">
+                            <strong>Generated:</strong> ${formatIndianDateTime(new Date())}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs mb-6">
+                        <div><strong>Employee Name:</strong> ${primary.employeeName} (${primary.employeeId})</div>
+                        <div><strong>Target Project:</strong> ${primary.project}</div>
+                        <div><strong>Total Segments:</strong> ${entries.length} Movement Segment(s)</div>
+                        <div><strong>Overall Status:</strong> ${overallStatus}</div>
+                    </div>
+
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 border-b pb-2 mb-3">Itemized Activity & Audit Logs</h3>
+                    <table class="w-full text-left border-collapse border border-slate-300">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-[10px] font-black uppercase">
+                                <th class="p-2.5">Entry ID</th>
+                                <th class="p-2.5">Movement & Description</th>
+                                <th class="p-2.5">Timeline</th>
+                                <th class="p-2.5">Coordinator Audit</th>
+                                <th class="p-2.5">Manager Audit</th>
+                                <th class="p-2.5">Admin Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div class="mt-16 flex justify-between text-xs font-bold text-slate-700 border-t pt-6">
+                        <div>Employee Signature</div>
+                        <div>Verified & Approved By (Manager / Admin)</div>
+                    </div>
+                `;
+            } catch(e) {
+                document.getElementById("voucher-content").innerHTML = `<div class="p-6 text-center text-rose-600 font-bold">Error loading voucher document.</div>`;
+            }
+        })();
+    </script>
+</body>
+</html>

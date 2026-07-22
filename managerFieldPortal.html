@@ -1,0 +1,157 @@
+<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
+        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="user-check" class="text-emerald-600 w-5 h-5"></i> Manager Approval Console
+        </h3>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <select id="mgr-filter-job" onchange="window.filterMgrTable()"
+                class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+                <option value="">Filter by Job ID</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
+        <table class="w-full text-left border-collapse text-xs min-w-[1200px]">
+            <thead>
+                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
+                    <th class="p-3.5">Job & Employee</th>
+                    <th class="p-3.5">Project & Movement</th>
+                    <th class="p-3.5">Coordinator Remarks</th>
+                    <th class="p-3.5">Manager Approval & Instructions (Locks on save)</th>
+                    <th class="p-3.5 text-center">Execute Control</th>
+                </tr>
+            </thead>
+            <tbody id="mgr-tbody" class="divide-y text-slate-800 font-bold">
+                <tr>
+                    <td colspan="5" class="p-8 text-center animate-pulse">Loading manager team records...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let mgrCache = [];
+
+        async function initMgrPortal() {
+            try {
+                const res = await fetch(`${API_URL}?action=getFieldActivities&role=MANAGER&userId=${currentUser.employeeId}`);
+                const result = await res.json();
+                if (result.status) {
+                    mgrCache = result.data;
+                    populateMgrJobDropdown(mgrCache);
+                    renderMgrTable(mgrCache);
+                }
+            } catch (e) {
+                document.getElementById("mgr-tbody").innerHTML = `<tr><td colspan="5" class="p-6 text-center text-rose-600">Failed to load team activity records.</td></tr>`;
+            }
+        }
+
+        function populateMgrJobDropdown(data) {
+            const select = document.getElementById("mgr-filter-job");
+            const uniqueJobs = [...new Set(data.map(d => d.jobActivityId))];
+            select.innerHTML = '<option value="">Filter by Job ID</option>';
+            uniqueJobs.forEach(job => {
+                let opt = document.createElement("option"); opt.value = job; opt.textContent = job;
+                select.appendChild(opt);
+            });
+        }
+
+        window.filterMgrTable = function () {
+            const val = document.getElementById("mgr-filter-job").value;
+            const filtered = val ? mgrCache.filter(d => d.jobActivityId === val) : mgrCache;
+            renderMgrTable(filtered);
+        };
+
+        function renderMgrTable(data) {
+            const tbody = document.getElementById("mgr-tbody");
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">No team field records found.</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            data.forEach(r => {
+                const isLocked = r.managerStatus && r.managerStatus !== "PENDING";
+                let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800 border" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800 border" : "bg-amber-100 text-amber-800 border");
+
+                html += `
+                    <tr class="hover:bg-slate-50 align-top">
+                        <td class="p-3.5">
+                            <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
+                            <strong class="text-slate-950 mt-1 block">${r.employeeName}</strong>
+                            <span class="text-slate-500 font-mono text-[10px]">ID: ${r.employeeId}</span>
+                        </td>
+                        <td class="p-3.5 max-w-xs">
+                            <div class="font-bold text-slate-900">${r.project}</div>
+                            <div class="text-slate-700 text-xs mt-0.5">${r.movementType} (${r.modeOfTravel})</div>
+                            <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-100 p-1.5 rounded">"${r.activityDescription}"</p>
+                        </td>
+                        <td class="p-3.5">
+                            <div class="text-[10px] text-slate-500">Auditor: <strong>${r.coordinatorName || 'Assigned'}</strong></div>
+                            <div class="text-slate-700 italic text-[11px] bg-slate-50 p-2 rounded border mt-1">${r.coordinatorComment || 'No comments provided'}</div>
+                        </td>
+                        <td class="p-3.5 space-y-2">
+                            <div><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeClass}">${r.managerStatus}</span></div>
+                            <select id="mgr-status-${r.rowIndex}" class="w-full p-1.5 border rounded-lg text-xs bg-white font-black" ${isLocked ? 'disabled bg-slate-100' : ''}>
+    <option value="PENDING" ${r.managerStatus === 'PENDING' ? 'selected' : ''}>Pending Review</option>
+    <option value="APPROVED_SITE" ${r.managerStatus === 'APPROVED_SITE' ? 'selected' : ''}>Approved - Proceed to Site</option>
+    <option value="APPROVED_PROPOSED" ${r.managerStatus === 'APPROVED_PROPOSED' ? 'selected' : ''}>Approved as proposed plan</option>
+    <option value="REDIRECTED_OFFICE" ${r.managerStatus === 'REDIRECTED_OFFICE' ? 'selected' : ''}>Redirected to Base Office</option>
+    <option value="REJECTED" ${r.managerStatus === 'REJECTED' ? 'selected' : ''}>Rejected - Cancel Travel</option>
+</select>
+                            ${r.managerTravelModeApproval !== 'N/A' ? `
+                                <div>
+                                    <label class="text-[9px] font-black uppercase text-slate-500">Train/Flight Sign-off:</label>
+                                    <select id="mgr-travel-${r.rowIndex}" class="w-full p-1 border rounded text-xs bg-amber-50 font-bold" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                                        <option value="PENDING_APPROVAL" ${r.managerTravelModeApproval === 'PENDING_APPROVAL' ? 'selected' : ''}>Pending Travel Approval</option>
+                                        <option value="APPROVED" ${r.managerTravelModeApproval === 'APPROVED' ? 'selected' : ''}>Approved Mode</option>
+                                        <option value="REJECTED" ${r.managerTravelModeApproval === 'REJECTED' ? 'selected' : ''}>Rejected Mode</option>
+                                    </select>
+                                </div>
+                            ` : `<input type="hidden" id="mgr-travel-${r.rowIndex}" value="N/A">`}
+                            <input type="text" id="mgr-inst-${r.rowIndex}" value="${r.managerInstruction || ''}" placeholder="Manager instructions..." class="w-full p-1.5 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                            ${isLocked ? `<span class="text-[10px] text-emerald-700 font-bold block">🔒 Locked (By ${r.managerName || 'Manager'})</span>` : ''}
+                        </td>
+                        <td class="p-3.5 text-center align-middle">
+                            ${!isLocked ? `<button onclick="window.saveManagerDecision(${r.rowIndex})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Commit Decision</button>` : '<span class="text-xs text-slate-400">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.saveManagerDecision = async function (rowIndex) {
+            const status = document.getElementById(`mgr-status-${rowIndex}`).value;
+            const travelApproval = document.getElementById(`mgr-travel-${rowIndex}`).value;
+            const instruction = document.getElementById(`mgr-inst-${rowIndex}`).value.trim();
+
+            if (status === "PENDING") { alert("Please select a valid manager decision state."); return; }
+            if (!confirm("Are you sure you want to commit and lock this decision? It cannot be changed after saving.")) return;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "processManagerFieldAction",
+                        rowIndex: rowIndex,
+                        managerStatus: status,
+                        managerTravelModeApproval: travelApproval,
+                        managerInstruction: instruction,
+                        managerName: currentUser.employeeName
+                    })
+                });
+                const result = await res.json();
+                if (result.status) {
+                    alert("Manager decision committed successfully!");
+                    initMgrPortal();
+                } else alert("Error: " + result.message);
+            } catch (e) { alert("Network error."); }
+        };
+
+        initMgrPortal();
+    })();
+</script>

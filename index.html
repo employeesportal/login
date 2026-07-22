@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Service Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Add this to allow mobile toggle functionality */
+        .sidebar-hidden {
+            display: none !important;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar-hidden {
+                display: flex !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col antialiased bg-slate-50">
+
+    <script>
+        // Production Appscript WebApp endpoint configuration
+        const API_URL = "https://script.google.com/macros/s/AKfycby7dtradPBSGMG6U3JOyfuAJdi2xRel2CJfkHW3LkPTVllaWMsh_UT26NmF33tPuT3A/exec";
+        let currentUser = null;
+    </script>
+
+    <div id="app-root" class="flex-1 flex flex-col h-screen overflow-hidden">
+    </div>
+
+    <script>
+        // CORE BINDER: Restores active authentication credentials safely from local storage vectors on boot
+        document.addEventListener("DOMContentLoaded", () => {
+            const cachedUserString = localStorage.getItem("current_user_cache");
+            if (cachedUserString) {
+                try {
+                    currentUser = JSON.parse(cachedUserString);
+                    mountDashboardShell();
+                } catch (e) {
+                    window.performManualLogout();
+                }
+            } else {
+                loadApplicationFrame("login.html");
+            }
+        });
+
+        async function loadApplicationFrame(fileUrl) {
+            const root = document.getElementById("app-root");
+            try {
+                const response = await fetch(fileUrl);
+                if (!response.ok) throw new Error();
+                root.innerHTML = await response.text();
+
+                const scripts = root.getElementsByTagName("script");
+                for (let script of scripts) {
+                    const newScript = document.createElement("script");
+                    newScript.text = script.innerText;
+                    document.head.appendChild(newScript).parentNode.removeChild(newScript);
+                }
+                lucide.createIcons();
+            } catch (e) {
+                root.innerHTML = `<div class="p-6 text-red-700 font-bold">Failed to render core interface bundle.</div>`;
+            }
+        }
+
+        function mountDashboardShell() {
+            const root = document.getElementById("app-root");
+            root.innerHTML = `
+        <div class="flex flex-1 h-screen overflow-hidden relative">
+            <!-- Sidebar: hidden on mobile by default, shown when class is toggled -->
+<!-- Sidebar: hidden on mobile by default, shown when class is toggled -->
+            <aside id="sidebar" class="sidebar-hidden md:flex absolute md:relative w-64 h-full bg-slate-900 text-white flex-col justify-between border-r border-slate-800 z-50 shadow-2xl overflow-y-auto">
+                <div>
+                    <div class="p-5 border-b border-slate-800 bg-slate-950 flex items-center justify-between sticky top-0 z-20">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layout-dashboard" class="text-blue-500 w-5 h-5"></i>
+                            <span class="font-black text-xs tracking-wider uppercase text-slate-200">Modules</span>
+                        </div>
+                        <!-- Close button for mobile -->
+                        <button onclick="toggleSidebar()" class="md:hidden text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    <nav id="dynamic-role-nav" class="mt-4 pr-3 space-y-1 pb-4"></nav>
+                </div>
+                <div class="p-4 bg-slate-950/80 sticky bottom-0 z-20 border-t border-slate-800">
+                    <button onclick="window.performManualLogout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-black text-red-400 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 transition">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Logout
+                    </button>
+                </div>
+            </aside>
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+                <!-- Mobile Topbar Toggle -->
+                <div class="md:hidden p-4 bg-white border-b flex items-center">
+                    <button onclick="toggleSidebar()" class="text-slate-900"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <span class="ml-3 font-bold text-sm">Dashboard</span>
+                </div>
+                <div id="topbar-mount-node" class="shrink-0 w-full hidden md:block"></div> 
+                <main id="view-port" class="flex-1 p-6 overflow-y-auto bg-slate-50 flex flex-col justify-start items-center"></main>
+            </div>
+        </div>
+    `;
+
+            // Helper to toggle sidebar on mobile
+            window.toggleSidebar = () => {
+                document.getElementById('sidebar').classList.toggle('sidebar-hidden');
+            };
+
+            buildNavigationMenuByRole();
+            loadComponentToContainer("topbar.html", "topbar-mount-node");
+            window.showWelcomeMessage();
+        }
+
+
+        window.showWelcomeMessage = function () {
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
+            const view = document.getElementById("view-port");
+
+            const designationBadge = currentUser.designation ? `
+                <span class="inline-block mt-2 bg-blue-600 border border-blue-700 text-white font-black uppercase text-[10px] px-2.5 py-0.5 rounded shadow-sm tracking-wider">
+                    ${currentUser.designation}
+                </span>
+            ` : '';
+
+            view.innerHTML = `
+                <div class="text-center max-w-md p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up">
+                    <div class="inline-flex p-4 bg-slate-100 text-slate-950 border border-slate-200 rounded-2xl mb-4">
+                        <i data-lucide="smile" class="w-10 h-10"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-950 tracking-tight">Welcome Back!</h2>
+                    <p id="welcome-user-lbl" class="text-slate-900 font-black mt-1 text-sm">${currentUser.employeeName}</p>
+                    <div class="font-mono text-[11px] text-slate-700 mt-0.5 font-bold">ID: ${currentUser.employeeId}</div>
+                    
+                    ${designationBadge}
+                    
+                    <p class="text-slate-800 text-xs font-medium mt-4 leading-relaxed border-t border-slate-200 pt-3">
+                        Select a module from the left bar layout panel to begin managing your day.
+                    </p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function buildNavigationMenuByRole() {
+            const nav = document.getElementById("dynamic-role-nav");
+            if (!nav) return;
+
+            const rawRoles = (currentUser.role || "").split(",");
+            const normalizedRoles = rawRoles.map(r => String(r).trim().toUpperCase().replace(/[^A-Z0-9]/g, ""));
+
+            const isGlobalAdmin = normalizedRoles.includes("ADMIN");
+            const isL3Admin = normalizedRoles.includes("ADMINL3") || normalizedRoles.includes("ADMIN_L3") || normalizedRoles.includes("L3ADMIN");
+            const isL2Admin = normalizedRoles.includes("ADMINL2") || normalizedRoles.includes("ADMIN_L2") || normalizedRoles.includes("L2ADMIN");
+            const isManager = normalizedRoles.includes("MANAGER") || isGlobalAdmin;
+            const isCoordinator = normalizedRoles.includes("COORDINATOR") || isGlobalAdmin;
+
+            let outputHtml = `
+                <div class="px-4 mb-2 mt-2"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">My Workspace</span></div>
+                <button onclick="loadTabModule('profile.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="user" class="w-4 h-4 shrink-0"></i> My Account Profile</button>
+                <button onclick="loadTabModule('attendancePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="calendar-check" class="w-4 h-4 shrink-0"></i> Mark Attendance</button>
+                <button onclick="loadTabModule('attendanceHistory.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="history" class="w-4 h-4 shrink-0"></i> Attendance History</button>
+                <button onclick="loadTabModule('leavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="plane-takeoff" class="w-4 h-4 text-rose-500 shrink-0"></i> Leave Portal</button>
+            `;
+
+            if (isManager) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Managerial Overrides</span></div>
+                    <button onclick="loadTabModule('managerLeavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-500 shrink-0"></i> Leave Recommendations
+                    </button>
+                `;
+            }
+
+            if (isCoordinator) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Supervisory Controls</span></div>
+                    <button onclick="loadTabModule('coordinatorVerification.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 shrink-0"></i> Attendance Verification
+                    </button>
+                `;
+            }
+
+            if (isGlobalAdmin || isL3Admin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">System Administration</span></div>
+                    <button onclick="loadTabModule('adminL3Console.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield" class="w-4 h-4 text-rose-500 shrink-0"></i> Employees Data Management Console
+                    </button>
+                `;
+
+                if (isGlobalAdmin) {
+                    outputHtml += `
+                        <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
+                        <button onclick="loadTabModule('adminLaunchpad.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="settings" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Hub
+                        </button>
+                    `;
+                }
+            }
+
+            if (isL2Admin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Project Admin Portal</span>
+                    </div>
+                    <button onclick="loadTabModule('adminL2Portal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500 shrink-0"></i> Admin Leave & Attendance Console 
+                    </button>
+                `;
+            }
+
+            // Field Operations Section
+            // Field Operations Section
+            outputHtml += `
+                <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Operations</span></div>
+                <button onclick="loadTabModule('fieldActivityPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0"></i> Field Activity Portal</button>
+            `;
+
+            // Display Coordinator Field Review if the user is a Coordinator or Admin
+            if (isCoordinator) {
+                outputHtml += `
+                    <button onclick="loadTabModule('coordinatorFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i> Coordinator Field Review</button>
+                `;
+            }
+
+            // Display Manager Approval Console if the user is a Manager or Admin
+            if (isManager) {
+                outputHtml += `
+                    <button onclick="loadTabModule('managerFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="user-check" class="w-4 h-4 text-emerald-400 shrink-0"></i> Manager Approval Console</button>
+                `;
+            }
+
+            if (isGlobalAdmin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Administration</span></div>
+                    <button onclick="loadTabModule('adminFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Field Audit Console
+                    </button>
+                `;
+            }
+
+            nav.innerHTML = outputHtml;
+            lucide.createIcons();
+        }
+
+        async function loadComponentToContainer(fileUrl, containerId) {
+            try {
+                const res = await fetch(fileUrl);
+                document.getElementById(containerId).innerHTML = await res.text();
+                const scripts = document.getElementById(containerId).getElementsByTagName("script");
+                for (let s of scripts) {
+                    const sc = document.createElement("script"); sc.text = s.innerText;
+                    document.head.appendChild(sc).parentNode.removeChild(sc);
+                }
+                lucide.createIcons();
+            } catch (e) { }
+        }
+
+        async function loadTabModule(fileUrl, targetElement) {
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar) sidebar.classList.add("sidebar-hidden");
+
+            const view = document.getElementById("view-port");
+            view.innerHTML = `<div class="p-8 text-center text-slate-700 font-bold animate-pulse">Synchronizing workspace layer parameters...</div>`;
+
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
+            if (targetElement) targetElement.classList.add("nav-btn-active");
+
+            try {
+                const res = await fetch(fileUrl);
+                if (!res.ok) throw new Error(`HTTP Error: ${res.status} - Could not load ${fileUrl}`);
+
+                const htmlText = await res.text();
+
+                if (htmlText.trim().toLowerCase().startsWith("<!doctype html>") && res.status !== 200) {
+                    throw new Error(`File ${fileUrl} returned an error page.`);
+                }
+
+                view.innerHTML = htmlText;
+
+                const scripts = view.getElementsByTagName("script");
+                for (let s of scripts) {
+                    const scriptContent = s.textContent.trim();
+                    if (!scriptContent) continue;
+
+                    const sc = document.createElement("script");
+                    sc.textContent = scriptContent;
+                    document.head.appendChild(sc);
+                    document.head.removeChild(sc);
+                }
+
+                if (window.lucide) lucide.createIcons();
+            } catch (e) {
+                console.error("Module load error:", e);
+                view.innerHTML = `
+                    <div class="p-8 text-center max-w-md mx-auto bg-rose-50 border border-rose-200 rounded-2xl text-rose-700">
+                        <h4 class="font-black text-sm uppercase">Module Load Failed</h4>
+                        <p class="text-xs mt-1 text-slate-600 font-medium">${e.message}</p>
+                        <p class="text-[11px] mt-2 text-slate-500">Make sure <strong>${fileUrl}</strong> is saved in your project directory.</p>
+                    </div>`;
+            }
+        }
+
+        // UNIFIED LOGOUT & CLEANUP PIPELINE
+        window.performManualLogout = function () {
+            currentUser = null;
+            localStorage.removeItem("current_user_cache");
+            localStorage.removeItem("session_expiration_epoch");
+            localStorage.removeItem("session_warned");
+
+            if (window.topbarSessionInterval) {
+                clearInterval(window.topbarSessionInterval);
+            }
+            if (window.topbarClockInterval) {
+                clearInterval(window.topbarClockInterval);
+            }
+
+            loadApplicationFrame("login.html");
+        };
+
+        window.logout = window.performManualLogout;
+    </script>
+</body>
+
+</html>

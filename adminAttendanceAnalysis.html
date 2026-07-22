@@ -1,0 +1,608 @@
+<div class="w-full space-y-6 fade-in-up">
+    
+    <div class="border-b border-slate-200 pb-4 mb-6">
+        <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+            <div class="w-5 h-5 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center group-hover:scale-100 transition-transform">
+                <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+            </div>
+            
+            Attendance & Analysis Console
+        </h3>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">View & Analyse Daily and Employee Wise Attendance </p>
+    </div>
+
+    <!-- Filter Configuration Matrix Card -->
+    <div class="p-5 bg-slate-100 border-2 border-slate-300 rounded-2xl text-xs font-bold text-slate-800 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-300 pb-2">
+            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-4 h-4"></i> Analysis Filter Engine Configurations 
+            </span>
+            <span id="analysis-current-month-lbl" class="font-mono text-[11px] bg-slate-200 px-2.5 py-0.5 rounded text-slate-950 font-black"></span>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Target Assessment View Mode</label>
+                <select id="anly-view-mode" onchange="window.toggleAnalysisFilterContextLayouts()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black">
+                    <option value="DATE">View System Logs By Specific Calendar Date</option>
+                    <option value="EMPLOYEE">Analyze Comprehensive Data of Specific Employee</option>
+                </select>
+            </div>
+            
+            <div id="anly-date-input-container">
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Target Calendar Date</label>
+                <input type="date" id="anly-target-date" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-mono font-black">
+            </div>
+
+            <div id="anly-emp-input-container" class="hidden col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Search Employee By Name / ID</label>
+                    <input type="text" id="anly-search-query" oninput="window.filterAnalysisEmployeeDropdownOptions()" placeholder="Type matching keywords..." class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-medium">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Employee Details</label>
+                    <select id="anly-employee-select" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black">
+                        <option value="">-- Awaiting Search Queries --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Assessment Month</label>
+                    <input type="month" id="anly-target-month" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-mono font-black">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics Pane -->
+    <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-5 gap-4"></div>
+
+    <!-- Data Matrix Viewport -->
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-4 sm:p-5">
+        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[550px]">
+            <table class="w-full text-left border-collapse table-auto min-w-[1550px]">
+                <thead>
+                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
+                        <th class="px-4 py-3.5 w-28">Date</th>
+                        <th class="px-4 py-3.5 w-56">Employee Details</th>
+                        <th class="px-4 py-3.5 w-32 text-center">Duty Status State</th>
+                        <th class="px-4 py-3.5 w-64">Assigned Project Parameters</th>
+                        <th class="px-4 py-3.5 w-40 text-center">Login Location</th>
+                        <th class="px-4 py-3.5 w-60">Day's Execution Plan</th>
+                        <th class="px-4 py-3.5 w-60">Day's Work Progress</th>
+                        <th class="px-4 py-3.5 w-64">Coordinator Audit Details</th>
+                    </tr>
+                </thead>
+                <tbody id="anly-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
+                    <tr>
+                        <td colspan="8" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
+                            Synchronizing data and system configurations layout...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let masterRegistryEmployees = [];
+        let masterAttendanceLogCache = [];
+        let masterLeaveApplicationsCache = [];
+
+        const datePicker = document.getElementById("anly-target-date");
+        if (datePicker) datePicker.value = new Date().toISOString().split('T')[0];
+
+        const monthPicker = document.getElementById("anly-target-month");
+        const todayObj = new Date();
+        if (monthPicker) monthPicker.value = todayObj.getFullYear() + '-' + String(todayObj.getMonth() + 1).padStart(2, '0');
+
+        const labelMonth = document.getElementById("analysis-current-month-lbl");
+        if (labelMonth) labelMonth.innerText = todayObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        window.toggleAnalysisFilterContextLayouts = function () {
+            const modeEl = document.getElementById("anly-view-mode");
+            if (!modeEl) return;
+            
+            const mode = modeEl.value;
+            const dateContainer = document.getElementById("anly-date-input-container");
+            const empContainer = document.getElementById("anly-emp-input-container");
+
+            if (dateContainer) dateContainer.classList.toggle("hidden", mode !== "DATE");
+            if (empContainer) empContainer.classList.toggle("hidden", mode !== "EMPLOYEE");
+            
+            window.executeAttendanceAnalysisPipeline();
+        };
+
+        // Deeply sanitizes backend objects to handle space discrepancies or mixed-case headers
+        function normalizeBackendObject(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            let cleanObj = {};
+            for (let key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    // Normalize key: remove spaces, lowercase completely
+                    let normalizedKey = String(key).replace(/\s+/g, '').toLowerCase();
+                    cleanObj[normalizedKey] = obj[key];
+                }
+            }
+            return cleanObj;
+        }
+
+        window.filterAnalysisEmployeeDropdownOptions = function () {
+            const query = document.getElementById("anly-search-query").value.trim().toLowerCase();
+            const select = document.getElementById("anly-employee-select");
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Choose Profile Target --</option>';
+
+            const matches = masterRegistryEmployees.filter(e => {
+                const clean = normalizeBackendObject(e);
+                const name = String(clean.employeename || "").toLowerCase();
+                const id = String(clean.employeeid || "").toLowerCase();
+                return name.includes(query) || id.includes(query);
+            });
+
+            matches.forEach(e => {
+                const clean = normalizeBackendObject(e);
+                let opt = document.createElement("option");
+                opt.value = clean.employeeid;
+                opt.textContent = `${clean.employeename} (${clean.employeeid})`;
+                select.appendChild(opt);
+            });
+        };
+
+        function cleanToStandardISODate(dInput) {
+            if (!dInput) return "";
+            let cleanStr = String(dInput).trim().split(' ')[0];
+            if (cleanStr.includes('T')) cleanStr = cleanStr.split('T')[0];
+            
+            let parts = [];
+            if (cleanStr.includes('/')) parts = cleanStr.split('/');
+            else if (cleanStr.includes('-')) parts = cleanStr.split('-');
+            
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                if (parts[2].length === 4) return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+            }
+            return cleanStr;
+        }
+
+        function parseToTimestamp(dateStr) {
+            const normalized = cleanToStandardISODate(dateStr);
+            if (!normalized) return 0;
+            const d = new Date(normalized);
+            d.setHours(0,0,0,0);
+            return d.getTime();
+        }
+
+        function evaluateDateInsideLeaveBlock(checkTime, lvRecord) {
+            const cleanLv = normalizeBackendObject(lvRecord);
+            let startStr = cleanLv.fromdate || "";
+            let endStr = cleanLv.todate || "";
+            
+            if (cleanLv.managerdates && String(cleanLv.managerdates).includes(' to ')) {
+                let p = String(cleanLv.managerdates).split(' to ');
+                startStr = p[0].trim(); endStr = p[1].trim();
+            }
+            if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).includes(' to ')) {
+                let p = String(cleanLv.adminapproveddate).split(' to ');
+                startStr = p[0].trim(); endStr = p[1].trim();
+            }
+            
+            const startT = parseToTimestamp(startStr);
+            const endT = parseToTimestamp(endStr);
+            if (!startT || !endT) return false;
+            return (checkTime >= startT && checkTime <= endT);
+        }
+
+        function getMonthMetricsInfo(year, monthIndex) {
+            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+            let sundays = 0;
+            for (let d = 1; d <= totalDays; d++) {
+                if (new Date(year, monthIndex, d).getDay() === 0) sundays++;
+            }
+            return { totalDays, sundays };
+        }
+
+        function parseProjectParameters(cleanEmp, cleanLog, cleanLeave) {
+            let currentProject = "--";
+            let district = "";
+            let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
+            let accuracy = "--";
+
+            if (cleanEmp.appointedprojects && String(cleanEmp.appointedprojects).trim() !== "") {
+                currentProject = cleanEmp.appointedprojects;
+            }
+
+            if (cleanLog.employeeid) { // check if log exists
+                let logProj = cleanLog.currentproject || "";
+                if (String(logProj).trim() !== "" && String(logProj).trim() !== "--") {
+                    currentProject = logProj;
+                }
+                
+                let logDist = cleanLog.district || "";
+                if (String(logDist).trim() !== "" && String(logDist).trim() !== "--" && String(logDist).toLowerCase() !== "unassigned") {
+                    district = logDist;
+                }
+                
+                let locStr = String(cleanLog.location || "").trim();
+                if (locStr.includes("||")) {
+                    let segments = locStr.split("||");
+                    let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
+                    locationLink = `<a href="${parsedUrl}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                } else if (locStr !== "" && locStr !== "--") {
+                    if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
+                        locationLink = `<a href="${locStr}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
+                        locationLink = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locStr)}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else {
+                        locationLink = `<span class="text-slate-800 font-bold">${locStr}</span>`;
+                    }
+                }
+                
+                let logAcc = cleanLog.accuracy || cleanLog["accuracym"] || "";
+                accuracy = logAcc ? `${logAcc} m` : "--";
+
+            } else if (cleanLeave.employeeid) {
+                if (cleanLeave.project && String(cleanLeave.project).trim() !== "") currentProject = cleanLeave.project;
+                if (cleanLeave.location && String(cleanLeave.location).trim() !== "" && String(cleanLeave.location).toLowerCase() !== "unassigned") district = cleanLeave.location;
+            }
+
+            return { currentProject, district, locationLink, accuracy };
+        }
+
+        window.executeAttendanceAnalysisPipeline = function () {
+            const modeEl = document.getElementById("anly-view-mode");
+            if (!modeEl) return;
+            const mode = modeEl.value;
+            const tbody = document.getElementById("anly-matrix-table-body");
+            const summaryBox = document.getElementById("anly-summary-cards-container");
+            
+            if (masterRegistryEmployees.length === 0) return;
+            let outputRowsHtml = "";
+
+            if (mode === "DATE") {
+                const rawSelectedDate = datePicker ? datePicker.value : "";
+                if (!rawSelectedDate) { 
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pick a date parameter first.</td></tr>`; 
+                    return; 
+                }
+                
+                const checkTime = parseToTimestamp(rawSelectedDate);
+                const dateObj = new Date(checkTime);
+                const monthInfo = getMonthMetricsInfo(dateObj.getFullYear(), dateObj.getMonth());
+                const monthDisplayLabel = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                let presentCount = 0, leaveCount = 0, absentMarkedByCoordinator = 0, passiveAbsentCount = 0;
+                let processedRows = [];
+
+                masterRegistryEmployees.forEach(emp => {
+                    const cleanEmp = normalizeBackendObject(emp);
+                    const cleanEmpId = String(cleanEmp.employeeid || "").trim().toUpperCase();
+                    
+                    const attLog = masterAttendanceLogCache.find(log => {
+                        const cleanLog = normalizeBackendObject(log);
+                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanEmpId && 
+                               parseToTimestamp(cleanLog.date) === checkTime;
+                    });
+
+                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => {
+                        const cleanLv = normalizeBackendObject(lv);
+                        if (String(cleanLv.employeeid || "").trim().toUpperCase() !== cleanEmpId) return false;
+                        if (cleanLv.status !== "APPROVED" && cleanLv.status !== "SHORT") return false;
+                        return evaluateDateInsideLeaveBlock(checkTime, lv);
+                    });
+
+                    const cleanLog = normalizeBackendObject(attLog);
+                    const cleanLeave = normalizeBackendObject(hasApprovedLeave);
+
+                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                    let todaysPlan = "--", loginTime = "--";
+                    let todaysWorkProgress = "--", logoutTime = "--";
+                    
+                    // FALLBACK CHAIN: Log Coordinator -> Registry Coordinator -> Default Blank
+                    let coordinatorName = cleanLog.coordinatorname || cleanEmp.coordinatorname || "--";
+                    let coordinatorRemark = "--", coordinatorComment = "--";
+
+                    const pParams = parseProjectParameters(cleanEmp, cleanLog, cleanLeave);
+
+                    if (attLog) {
+                        let rem = cleanLog.coordinatorremark || "";
+                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
+                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        
+                        todaysPlan = cleanLog.todaysplan || "--";
+                        loginTime = cleanLog.logintime || "--";
+                        todaysWorkProgress = cleanLog.todaysworkprogress || "--";
+                        logoutTime = cleanLog.logouttime || "--";
+
+                        coordinatorRemark = rem || "Pending Audit";
+                        coordinatorComment = cleanLog.coordinatorcomment || "--";
+                        
+                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") {
+                            absentMarkedByCoordinator++;
+                        } else {
+                            presentCount++;
+                        }
+                    } else if (hasApprovedLeave) {
+                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
+                        coordinatorComment = `Leave Token: ${cleanLeave.applicationid || "N/A"} [Remarks: "${cleanLeave.adminremark || 'Processed'}"]`;
+                        leaveCount++;
+                    } else {
+                        passiveAbsentCount++;
+                    }
+
+                    processedRows.push({
+                        date: rawSelectedDate.split('-').reverse().join('/'),
+                        name: cleanEmp.employeename || "--", id: cleanEmp.employeeid || "--",
+                        status, badge, ...pParams,
+                        todaysPlan, loginTime, todaysWorkProgress, logoutTime,
+                        coordinatorName, coordinatorRemark, coordinatorComment
+                    });
+                });
+
+                if (summaryBox) {
+                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
+                    summaryBox.innerHTML = `
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-inner text-white">
+                            <span class="text-[9px] font-black text-slate-400 uppercase block tracking-wider mb-1">Total Employees</span>
+                            <strong class="text-lg font-mono font-black">${masterRegistryEmployees.length} </strong>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present Employees</span>
+                            <strong class="text-lg font-mono font-black text-emerald-800">${presentCount} </strong>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">On Approved Leave</span>
+                            <strong class="text-lg font-mono font-black text-indigo-800">${leaveCount} </strong>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-amber-700 uppercase block tracking-wider mb-1"> Marked by Coordinator (Absent)</span>
+                            <strong class="text-lg font-mono font-black text-amber-900">${absentMarkedByCoordinator} </strong>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1"> Absent (Attendance Not Marked)</span>
+                            <strong class="text-lg font-mono font-black text-rose-800">${passiveAbsentCount} </strong>
+                        </div>
+                        <div class="col-span-2 sm:col-span-5 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex justify-between text-[11px] font-black uppercase text-slate-600">
+                            <span>Month Frame: <strong class="text-slate-900">${monthDisplayLabel}</strong></span>
+                            <span>Total Days: <strong class="text-slate-900">${monthInfo.totalDays}</strong></span>
+                            <span>Sundays Blocked: <strong class="text-slate-900">${monthInfo.sundays}</strong></span>
+                        </div>
+                    `;
+                }
+
+                processedRows.forEach(r => {
+                    outputRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top">
+                            <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
+                            <td class="px-4 py-3">
+                                <strong class="text-slate-950 block text-xs">${r.name}</strong>
+                                <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
+                            </td>
+                            <td class="px-4 py-3 space-y-1">
+                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 text-[11px]">
+                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                if (tbody) tbody.innerHTML = outputRowsHtml;
+
+            } else if (mode === "EMPLOYEE") {
+                const selectedTargetEmpId = document.getElementById("anly-employee-select") ? document.getElementById("anly-employee-select").value : "";
+                if (!selectedTargetEmpId) { 
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please identify an active employee node using selection box inputs above.</td></tr>`; 
+                    return; 
+                }
+
+                const targetEmp = masterRegistryEmployees.find(e => {
+                    const clean = normalizeBackendObject(e);
+                    return String(clean.employeeid || "") === selectedTargetEmpId;
+                });
+                
+                const cleanTargetEmp = normalizeBackendObject(targetEmp);
+                const targetMonthStr = monthPicker ? monthPicker.value : "";
+                if (!targetMonthStr) { 
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pick a calculation month frame.</td></tr>`; 
+                    return; 
+                }
+                
+                const tokens = targetMonthStr.split('-');
+                const currentYear = parseInt(tokens[0], 10);
+                const currentMonthIdx = parseInt(tokens[1], 10) - 1;
+                
+                const monthInfo = getMonthMetricsInfo(currentYear, currentMonthIdx);
+                const testDateObj = new Date(currentYear, currentMonthIdx, 1);
+                const monthDisplayLabel = testDateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+                let logDaysMap = [];
+                let summaryP = 0, summaryL = 0, summaryS = 0, summaryA = 0, employeeAbsentMarkedByCoordinator = 0;
+
+                for (let dayIndex = 1; dayIndex <= monthInfo.totalDays; dayIndex++) {
+                    const loopDate = new Date(currentYear, currentMonthIdx, dayIndex);
+                    const loopTime = loopDate.getTime();
+                    const isSunday = loopDate.getDay() === 0;
+                    const cleanSearchEmpId = String(selectedTargetEmpId).trim().toUpperCase();
+
+                    const attLog = masterAttendanceLogCache.find(log => {
+                        const cleanLog = normalizeBackendObject(log);
+                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanSearchEmpId && 
+                               parseToTimestamp(cleanLog.date) === loopTime;
+                    });
+
+                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => {
+                        const cleanLv = normalizeBackendObject(lv);
+                        if (String(cleanLv.employeeid || "").trim().toUpperCase() !== cleanSearchEmpId) return false;
+                        if (cleanLv.status !== "APPROVED" && cleanLv.status !== "SHORT") return false;
+                        return evaluateDateInsideLeaveBlock(loopTime, lv);
+                    });
+
+                    const cleanLog = normalizeBackendObject(attLog);
+                    const cleanLeave = normalizeBackendObject(hasApprovedLeave);
+
+                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                    let todaysPlan = "--", loginTime = "--";
+                    let todaysWorkProgress = "--", logoutTime = "--";
+                    
+                    // FALLBACK CHAIN
+                    let coordinatorName = cleanLog.coordinatorname || cleanTargetEmp.coordinatorname || "--";
+                    let coordinatorRemark = "--", coordinatorComment = "--";
+
+                    const pParams = parseProjectParameters(cleanTargetEmp, cleanLog, cleanLeave);
+
+                    if (attLog) {
+                        let rem = cleanLog.coordinatorremark || "";
+                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
+                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        
+                        todaysPlan = cleanLog.todaysplan || "--";
+                        loginTime = cleanLog.logintime || "--";
+                        todaysWorkProgress = cleanLog.todaysworkprogress || "--";
+                        logoutTime = cleanLog.logouttime || "--";
+                        
+                        coordinatorRemark = rem || "Pending Audit";
+                        coordinatorComment = cleanLog.coordinatorcomment || "--";
+                        
+                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") {
+                            employeeAbsentMarkedByCoordinator++;
+                        } else {
+                            summaryP++;
+                        }
+                    } else if (hasApprovedLeave) {
+                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
+                        summaryL++;
+                    } else if (isSunday) {
+                        status = "SUNDAY"; badge = "bg-amber-100 text-amber-950 border border-amber-300";
+                        todaysPlan = "Standard weekend cycle closure window.";
+                        summaryS++;
+                    } else {
+                        summaryA++;
+                    }
+
+                    logDaysMap.push({
+                        date: `${String(dayIndex).padStart(2, '0')}/${String(currentMonthIdx + 1).padStart(2, '0')}/${currentYear}`,
+                        name: cleanTargetEmp.employeename || "--", id: cleanTargetEmp.employeeid || "--",
+                        status, badge, ...pParams,
+                        todaysPlan, loginTime, todaysWorkProgress, logoutTime,
+                        coordinatorName, coordinatorRemark, coordinatorComment
+                    });
+                }
+
+                if (summaryBox) {
+                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
+                    summaryBox.innerHTML = `
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-inner text-white">
+                            <span class="text-[9px] font-black text-slate-400 uppercase block tracking-wider mb-1">Present Cycles</span>
+                            <strong class="text-lg font-mono font-black text-emerald-400">${summaryP} Day(s)</strong>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">Approved Leaves</span>
+                            <strong class="text-lg font-mono font-black text-indigo-800">${summaryL} Day(s)</strong>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-amber-600 uppercase block tracking-wider mb-1">Auditor Absent Summary</span>
+                            <strong class="text-lg font-mono font-black text-amber-800">${employeeAbsentMarkedByCoordinator} Day(s)</strong>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1">System Absence (Idle)</span>
+                            <strong class="text-lg font-mono font-black text-rose-800">${summaryA} Day(s)</strong>
+                        </div>
+                        <div class="bg-slate-100 border border-slate-300 p-4 rounded-2xl shadow-inner">
+                            <span class="text-[9px] font-black text-slate-500 uppercase block tracking-wider mb-1">Sundays Excluded</span>
+                            <strong class="text-lg font-mono font-black text-slate-700">${summaryS} Day(s)</strong>
+                        </div>
+                        <div class="col-span-2 sm:col-span-5 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-center text-[10px] font-black uppercase text-slate-600 tracking-wide">
+                            Statistical Analysis Report Matrix For: <span class="text-slate-950 font-mono">${cleanTargetEmp.employeename} (${cleanTargetEmp.employeeid})</span> | Statement Period: <span class="text-slate-950">${monthDisplayLabel}</span>
+                        </div>
+                    `;
+                }
+
+                logDaysMap.forEach(r => {
+                    outputRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top">
+                            <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
+                            <td class="px-4 py-3">
+                                <strong class="text-slate-950 block text-xs">${r.name}</strong>
+                                <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
+                            </td>
+                            <td class="px-4 py-3 space-y-1">
+                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 text-[11px]">
+                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                if (tbody) tbody.innerHTML = outputRowsHtml;
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.loadMasterAnalysisDataPackages = async function () {
+            const tbody = document.getElementById("anly-matrix-table-body");
+            try {
+                const [regRes, attRes, lvRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`),
+                    fetch(`${API_URL}?action=getMonthlyAttendanceHistory&employeeId=ALL`),
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`)
+                ]);
+
+                const regData = await regRes.json();
+                const attData = await attRes.json();
+                const lvData = await lvRes.json();
+
+                masterRegistryEmployees = regData.status ? regData.data : [];
+                masterAttendanceLogCache = attData.status ? attData.data : [];
+                masterLeaveApplicationsCache = lvData.status ? lvData.data : [];
+
+                masterRegistryEmployees.sort((a, b) => {
+                    const cleanA = normalizeBackendObject(a);
+                    const cleanB = normalizeBackendObject(b);
+                    return String(cleanA.employeename || "").localeCompare(String(cleanB.employeename || ""));
+                });
+                
+                window.filterAnalysisEmployeeDropdownOptions();
+                window.executeAttendanceAnalysisPipeline();
+            } catch(e) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-700 font-black">Data Loading Failure.</td></tr>`;
+            }
+        };
+
+        window.loadMasterAnalysisDataPackages();
+    })();
+</script> 

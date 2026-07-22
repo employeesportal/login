@@ -1,0 +1,471 @@
+<div class="w-full glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up"
+    id="admin-verification-portal-container">
+
+
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4 mb-5">
+        <div>
+            <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+                <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Leave & Global Attendance Console
+            </h3>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                Bypassed Master Matrix Control — Global Employee Roster Records
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+            <div class="flex items-center gap-2">
+                <label class="text-[10px] font-black text-slate-500 uppercase px-1">Target Audit Date:</label>
+                <input type="date" id="admin-audit-date" onchange="window.fetchAdminVerificationRoster()"
+                    class="bg-white border border-slate-300 text-xs font-bold rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
+            </div>
+            <button onclick="window.openAdminReportModal()"
+                class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
+                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Show Global Summary Report
+            </button>
+        </div>
+
+        <!-- Add this near your Date Selector -->
+        <div class="flex items-center gap-2">
+            <label class="text-[10px] font-black text-slate-500 uppercase px-1">Status Filter:</label>
+            <select id="admin-status-filter" onchange="window.renderAdminTable()"
+                class="bg-white border border-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                <option value="ALL">All Statuses</option>
+                <option value="NOT_MARKED">Not Marked</option>
+                <option value="MARKED_UNVERIFIED">Marked (Unverified)</option>
+                <option value="MARKED_BY_COORDINATOR_ONLY">Marked by Coord Only</option>
+                <option value="MARKED_BY_COORDINATOR">Marked & Verified</option>
+            </select>
+        </div>
+
+    </div>
+
+    <!-- Metrics Summary -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl shadow-inner">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Selected Audit
+                Date</span>
+            <strong id="admin-stat-date" class="text-sm font-bold text-slate-700 font-mono">-</strong>
+        </div>
+        <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl shadow-inner">
+            <span class="text-[9px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Employees
+                (Global)</span>
+            <strong id="admin-stat-total" class="text-xl font-black text-blue-700 font-mono">0</strong>
+        </div>
+        <div class="bg-amber-50/60 border border-amber-100 p-4 rounded-2xl shadow-inner">
+            <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider block mb-1">Marked by Emp</span>
+            <strong id="admin-stat-emp-marked" class="text-xl font-black text-amber-700 font-mono">0</strong>
+        </div>
+        <div class="bg-purple-50/50 border border-purple-100 p-4 rounded-2xl shadow-inner">
+            <span class="text-[9px] font-black text-purple-600 uppercase tracking-wider block mb-1">Marked by
+                Admin/Coord</span>
+            <strong id="admin-stat-coord-marked" class="text-xl font-black text-purple-700 font-mono">0</strong>
+        </div>
+        <div class="bg-rose-50/50 border border-rose-100 p-4 rounded-2xl shadow-inner col-span-2 md:col-span-1">
+            <span class="text-[9px] font-black text-rose-500 uppercase tracking-wider block mb-1">Not Marked
+                Roster</span>
+            <strong id="admin-stat-not-marked" class="text-xl font-black text-rose-700 font-mono">0</strong>
+        </div>
+    </div>
+
+    <!-- Roster Table Wrapper -->
+    <div class="overflow-x-auto w-full border border-slate-200 rounded-2xl bg-white shadow-inner max-h-[600px] mb-4">
+        <table class="w-full text-left border-collapse table-auto min-w-[2000px]">
+            <thead>
+                <tr
+                    class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
+                    <th class="px-3 py-3.5 whitespace-nowrap">Employee Details</th>
+                    <th class="px-3 py-3.5 whitespace-wrap">Status</th>
+                    <th class="px-3 py-3.5 w-60">Project Sector</th>
+                    <th class="px-3 py-3.5 w-50">Operating District</th>
+                    <th class="px-3 py-3.5 w-50 text-center">Login Location</th>
+                    <th class="px-3 py-3.5 w-70 text-white">Today's Plan</th>
+                    <th class="px-3 py-3.5 w-40 whitespace-nowrap">Login Time</th>
+                    <th class="px-4 py-3.5 w-60">Last Progress</th>
+                    <th class="px-3 py-3.5 w-60 whitespace-nowrap">Audit Remark</th>
+                    <th class="px-3 py-3.5 w-60">Comments</th>
+                    <th class="px-3 py-3.5 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="admin-roster-table-body" class="text-xs divide-y divide-slate-100 text-slate-700 font-bold">
+                <tr>
+                    <td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">
+                        Initializing global operations registry parameters...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Admin Report Dynamic Modal Overlay Context -->
+<div id="admin-report-modal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-8 relative">
+        <button onclick="document.getElementById('admin-report-modal').classList.add('hidden')"
+            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <div id="admin-report-content">
+            <h2 class="text-xl font-black mb-6">Global Master Attendance Verification Ledger</h2>
+            <div id="admin-modal-report-body">Loading dynamic global indices...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let activeAdminRosterCache = [];
+        const dateSelector = document.getElementById("admin-audit-date");
+
+        // Default execution environment setup targeting current local timestamp parameters
+        if (dateSelector) dateSelector.value = new Date().toISOString().split('T')[0];
+
+        window.recalculateAdminRosterStatistics = () => {
+            const total = activeAdminRosterCache.length;
+            let empM = 0, coordM = 0, notM = 0;
+
+            activeAdminRosterCache.forEach(r => {
+                if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") empM++;
+                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordM++;
+                else if (r.trackingState === "NOT_MARKED") notM++;
+            });
+
+            let rawDate = dateSelector.value;
+            let displayDate = rawDate ? rawDate.split("-").reverse().join("/") : "-";
+
+            document.getElementById("admin-stat-date").innerText = displayDate;
+            document.getElementById("admin-stat-total").innerText = total;
+            document.getElementById("admin-stat-emp-marked").innerText = empM;
+            document.getElementById("admin-stat-coord-marked").innerText = coordM;
+            document.getElementById("admin-stat-not-marked").innerText = notM;
+        };
+
+
+
+        window.fetchAdminVerificationRoster = async () => {
+            const tableBody = document.getElementById("admin-roster-table-body");
+            const targetDate = document.getElementById("admin-audit-date").value;
+            if (!targetDate) return;
+
+            tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">Querying database...</td></tr>`;
+
+            try {
+                const res = await fetch(`${API_URL}?action=getGlobalRoster&targetDate=${targetDate}`);
+                const result = await res.json();
+                activeAdminRosterCache = result.data || [];
+                window.renderAdminTable(); // Trigger render after fetch
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-rose-500 font-black">Fetch Error</td></tr>`;
+            }
+        };
+
+
+
+
+
+        window.renderAdminTable = () => {
+            const tableBody = document.getElementById("admin-roster-table-body");
+            const statusFilter = document.getElementById("admin-status-filter").value;
+
+            // Filter the cache based on selection
+            const filteredData = statusFilter === "ALL"
+                ? activeAdminRosterCache
+                : activeAdminRosterCache.filter(r => r.trackingState === statusFilter);
+
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-slate-400 font-bold">No records found for this status.</td></tr>`;
+                return;
+            }
+
+            let outputRows = "";
+            // 🎯 FIX: Use filteredData here instead of activeAdminRosterCache
+            filteredData.forEach((r, idx) => {
+                let stateBadge = "";
+                if (r.trackingState === "MARKED_UNVERIFIED") {
+                    stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED / VERIFICATION PENDING</span>`;
+                } else if (r.trackingState === "NOT_MARKED") {
+                    stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">NOT MARKED</span>`;
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR") {
+                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED AND VERIFIED BY COORDINATOR</span>`;
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED BY COORDINATOR ONLY</span>`;
+                }
+
+                // To maintain correct reference, we use the original index if available in the object, 
+                // or ensure the ID is unique. Assuming your logic handles idx globally:
+                let projSelect = `<select id="admin_proj_sel_${idx}" class="px-2 py-1 w-50 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.handleAdminRowProjectChange(${idx}, this.value)">`;
+                projSelect += `<option value="">-- Choose Project --</option>`;
+                r.appointedProjectsList.forEach(p => {
+                    projSelect += `<option value="${p}" ${p === r.currentProject ? "selected" : ""}>${p}</option>`;
+                });
+                projSelect += `</select>`;
+
+                const isDistrictOther = String(r.district || "").startsWith("OTHER");
+                const baseDistrictVal = isDistrictOther ? "OTHER" : r.district;
+                const customDistrictVal = isDistrictOther ? String(r.district).replace("OTHER-", "") : "";
+
+                let distSelect = `
+                <div class="space-y-1.5 w-50">
+                    <select id="admin_dist_sel_${idx}" class="w-50 px-2 py-1 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.toggleAdminRowCustomDistrictField(${idx}, this.value)">
+                        <option value="">-- Choose District --</option>`;
+                r.availableDistrictsList.forEach(d => {
+                    distSelect += `<option value="${d}" ${d === baseDistrictVal ? "selected" : ""}>${d}</option>`;
+                });
+                distSelect += `
+                    </select>
+                    <input type="text" id="admin_custom_dist_name_${idx}" value="${customDistrictVal}" placeholder="Specify sub-district name" 
+                           class="w-full px-2 py-1 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-1 focus:ring-orange-500 font-bold bg-white">
+                </div>`;
+
+                let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
+                let locStr = String(r.location || "").trim();
+
+                if (locStr && locStr !== "--" && locStr !== "undefined") {
+                    const btnClass = "w-32 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
+
+                    if (locStr.includes("||")) {
+                        let segments = locStr.split("||");
+                        let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
+                        locationLink = `<a href="${parsedUrl}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
+                        locationLink = `<a href="${locStr}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
+                        locationLink = `<a href="https://maps.google.com/?q=${encodeURIComponent(locStr)}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    } else {
+                        locationLink = `<span class="text-slate-800 font-bold break-words">${locStr}</span>`;
+                    }
+                }
+
+                let historyHtml = '<span class="text-slate-300 italic">No history found</span>';
+                if (r.historyObj && r.historyObj.hasHistory) {
+                    historyHtml = `
+                            <div class="space-y-1 bg-slate-50 border border-slate-200/60 p-3 rounded-xl shadow-inner text-[11px] leading-normal font-medium text-slate-600 min-w-[300px]">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b><span class="font-mono text-slate-900 font-bold ml-1">${r.historyObj.date}</span>
+                                    </div>
+                                    <div>
+                                        <b class="text-slate-400 uppercase text-[8px]">Logout:</b><span class="font-mono text-slate-900 font-bold ml-1">${r.historyObj.logout}</span>
+                                    </div>
+                                </div>
+                                <div class="border-t border-slate-200/60 pt-1 mt-1">
+                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b>
+                                    <p class="italic text-slate-700 font-normal leading-tight mt-0.5">${r.historyObj.progress}</p>
+                                </div>
+                            </div>`;
+                }
+
+                outputRows += `
+                        <tr class="hover:bg-slate-50/50 transition-colors align-top">
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <strong class="text-slate-900 block font-semibold text-xs">${r.employeeName}</strong>
+                                <span class="font-mono text-[11px] text-slate-400 block">ID: ${r.employeeId}</span>
+                            </td>
+                            <td class="px-3 py-3 break-words whitespace-normal">${stateBadge}</td>
+                            <td class="px-3 py-3">${projSelect}</td>
+                            <td class="px-3 py-3">
+                                ${distSelect}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
+                            </td>
+                            <td class="w-60 px-3 py-3 text-center align-middle">${locationLink}</td> 
+                            <td class="w-70 px-3 py-3 break-words font-medium text-slate-600 italic">"${r.todaysPlan || 'None'}"</td>
+                            <td class="w-40 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
+                            <td class="px-4 py-3">${historyHtml}</td>
+                            <td class="px-3 py-3 whitespace-nowrap">
+                                <select id="admin_remark_${idx}" class="px-2 py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs focus:ring-1" style="width:185px;">
+                                    <option value="Pending" ${!r.coordinatorRemark || r.coordinatorRemark === "Pending" ? "selected" : ""}>Pending</option>
+                                    <option value="Verified" ${r.coordinatorRemark === "Verified" ? "selected" : ""}>Verified</option>
+                                    <option value="Present" ${r.coordinatorRemark === "Present" ? "selected" : ""}>Present</option>
+                                    <option value="Absent" ${r.coordinatorRemark === "Absent" ? "selected" : ""}>Absent</option>
+                                    <option value="On Leave" ${r.coordinatorRemark === "On Leave" ? "selected" : ""}>On Leave</option>
+                                    <option value="Leave Applied" ${r.coordinatorRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
+                                    <option value="Half-Day" ${r.coordinatorRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
+                                    <option value="Holiday" ${r.coordinatorRemark === "Holiday" ? "selected" : ""}>Holiday</option>
+                                    <option value="On Duty" ${r.coordinatorRemark === "On Duty" ? "selected" : ""}>On Duty</option>
+                                    <option value="Field Visit" ${r.coordinatorRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
+                                    <option value="Location Wrongly Marked" ${r.coordinatorRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
+                                    <option value="Status Unknown-Audit Please" ${r.coordinatorRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-3">
+                                <textarea id="admin_comment_${idx}" rows="3" class="w-full min-w-[220px] px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-rose-500" placeholder="Provide system master override logs...">${r.coordinatorComment || ''}</textarea>
+                            </td>
+                            <td class="px-3 py-3 text-center whitespace-nowrap">
+                                <button onclick="window.saveAdminRowDirectly(${idx})" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white border border-rose-700 font-bold rounded-xl transition cursor-pointer shadow-sm flex items-center gap-1.5">
+                                    <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Commit Row
+                                </button>
+                            </td>
+                        </tr>`;
+            });
+
+            tableBody.innerHTML = outputRows;
+            window.recalculateAdminRosterStatistics();
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+
+
+        window.handleAdminRowProjectChange = function (index, newProjectValue) {
+            const distSel = document.getElementById(`admin_dist_sel_${index}`);
+            const cacheItem = activeAdminRosterCache[index];
+            cacheItem.currentProject = newProjectValue;
+            if (!newProjectValue) { distSel.innerHTML = '<option value="">-- Choose District --</option>'; return; }
+
+            const dList = cacheItem.projectDistrictsMap[newProjectValue] || ["OTHER"];
+            let dOptions = '<option value="">-- Choose District --</option>';
+            dList.forEach(d => { dOptions += `<option value="${d}">${d}</option>`; });
+            distSel.innerHTML = dOptions;
+            window.toggleAdminRowCustomDistrictField(index, distSel.value);
+        };
+
+        window.toggleAdminRowCustomDistrictField = function (index, selectedDistrictValue) {
+            const txtInput = document.getElementById(`admin_custom_dist_name_${index}`);
+            if (selectedDistrictValue === "OTHER") txtInput.classList.remove("hidden");
+            else txtInput.classList.add("hidden");
+        };
+
+        window.saveAdminRowDirectly = async function (idx) {
+            const r = activeAdminRosterCache[idx];
+            const targetDate = dateSelector.value;
+
+            const selectedProj = document.getElementById(`admin_proj_sel_${idx}`).value;
+            let selectedDist = document.getElementById(`admin_dist_sel_${idx}`).value;
+            const customDistName = document.getElementById(`admin_custom_dist_name_${idx}`).value.trim();
+            const selectedRemark = document.getElementById(`admin_remark_${idx}`).value;
+            const typedComment = document.getElementById(`admin_comment_${idx}`).value.trim();
+
+            if (!selectedProj) { alert(`Admin Override Refused: Project field missing for ${r.employeeName}.`); return; }
+            if (!selectedDist) { alert(`Admin Override Refused: District tracking field missing for ${r.employeeName}.`); return; }
+            if (selectedDist === "OTHER" && !customDistName) { alert(`Admin Override Refused: Custom notation required.`); return; }
+            if (!selectedRemark || selectedRemark === "Pending") { alert(`Admin Override Refused: Choose a decisive operational evaluation remark.`); return; }
+            if (!typedComment) { alert(`Admin Override Refused: Strategic description verification comments required.`); return; }
+
+            if (selectedDist === "OTHER") selectedDist = "OTHER-" + customDistName;
+
+            const confirmSubmission = confirm(`Execute Master Admin Roster Rewrite Strategy for ${r.employeeName}?`);
+            if (!confirmSubmission) return;
+
+            const targetRowPayload = [{
+                employeeId: r.employeeId, employeeName: r.employeeName, currentProject: selectedProj, district: selectedDist,
+                trackingState: r.trackingState, rowIndex: r.rowIndex, coordinatorRemark: selectedRemark, coordinatorComment: typedComment
+            }];
+
+            const masterPayload = {
+                action: "processCoordinatorVerificationData", date: targetDate,
+                coordinatorId: currentUser.employeeId, coordinatorName: currentUser.employeeName, records: targetRowPayload
+            };
+
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(masterPayload) });
+                const result = await res.json();
+                if (result.status) {
+                    alert(`Global dataset synchronized successfully for ${r.employeeName}.`);
+                    window.fetchAdminVerificationRoster();
+                } else { alert("Sync Error: " + result.message); }
+            } catch (e) { alert("Network transaction failure during global database commit pipeline."); }
+        };
+
+        window.openAdminReportModal = () => {
+            const modal = document.getElementById('admin-report-modal');
+            const body = document.getElementById('admin-modal-report-body');
+            const targetDate = dateSelector.value;
+
+            let formattedReportDate = "-";
+            if (targetDate) {
+                const parts = targetDate.split("-");
+                const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                formattedReportDate = dObj.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            const adminExecutorName = currentUser.employeeName || "Master Administrator";
+
+            body.innerHTML = `
+                <div id="admin-pdf-content-area" class="p-4">
+                    <div class="mb-6 border-b pb-4 border-rose-200">
+                        <h2 class="text-xl font-black text-slate-800 mb-2">Global Roster Master Verification Summary Ledger</h2>
+                        <div class="flex gap-8 text-xs font-bold text-slate-600">
+                            <p>Report Target Date: <span class="text-rose-600">${formattedReportDate}</span></p>
+                            <p>Auditor Identity: <span class="text-slate-900">${adminExecutorName} (Admin Status)</span></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase">Global Total</p><strong class="text-lg">${activeAdminRosterCache.length}</strong></div>
+                        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase">Marked by Emp</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState.includes("MARKED")).length}</strong></div>
+                        <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100"><p class="text-[9px] font-black text-purple-600 uppercase">Marked by Authority</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState === "MARKED_BY_COORDINATOR").length}</strong></div>
+                        <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100"><p class="text-[9px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState === "NOT_MARKED").length}</strong></div>
+                    </div>
+
+                    <table class="w-full text-left border-collapse table-fixed">
+                        <thead>
+                            <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200">
+                                <th class="pb-3 px-3 w-32">Employee Details</th>
+                                <th class="pb-3 px-3 w-25">Status</th>
+                                <th class="pb-3 px-3 w-30">Project / District</th>
+                                <th class="pb-3 px-3 w-50">Plan / Login / Loc</th>
+                                <th class="pb-3 px-3 w-50">Last Day Progress</th>
+                                <th class="pb-3 px-3 w-50">Audit Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100">
+                            ${activeAdminRosterCache.map(r => {
+                const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
+                const locLink = hasLocation
+                    ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
+                    : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
+                return `
+                                    <tr class="align-top">
+                                        <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
+                                        <td class="py-4 break-words whitespace-normal"> 
+                                            <span class="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block"> ${r.trackingState}</span>
+                                        </td>
+                                        <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
+                                        <td class="py-4 text-slate-600 break-words">
+                                            <div>${r.todaysPlan || '-'}</div>
+                                            <div class="font-mono text-emerald-600 font-bold">${r.loginTime || '--:--'}</div>
+                                            ${locLink}
+                                        </td>
+                                        <td class="py-4 text-[10px] text-slate-600">
+                                            ${r.historyObj?.hasHistory ? `
+                                                <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                                                    <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
+                                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b><br>${r.historyObj.progress}<br>
+                                                    <b class="text-slate-400 uppercase text-[8px]">Logout:</b> ${r.historyObj.logout}
+                                                </div>
+                                            ` : 'No history'}
+                                        </td>
+                                        <td class="py-4 font-bold text-slate-800 break-words">${r.coordinatorRemark || '-'}<br><span class="text-[10px] font-normal text-slate-500">${r.coordinatorComment || ''}</span></td>
+                                    </tr>`;
+            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 border-t pt-4">
+                    <button onclick="window.downloadAdminReportPDF()" class="w-full py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 transition">
+                        Download Master PDF Audit Report
+                    </button>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.downloadAdminReportPDF = () => {
+            const element = document.getElementById('admin-pdf-content-area');
+            const targetDate = dateSelector.value;
+            const opt = {
+                margin: 0.5,
+                filename: `Global_Master_Audit_Report_${targetDate || 'Execution'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        };
+
+        // Automatic compilation on module mapping load routines
+        window.fetchAdminVerificationRoster();
+    })();
+</script>
