@@ -1,78 +1,86 @@
-<header class="glass-header px-4 sm:px-6 py-4 flex flex-col gap-4 z-10 shadow-sm relative bg-white border-b border-slate-200">
+<header class="glass-header px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3 sm:gap-4 z-10 shadow-sm relative bg-white border-b border-slate-200 w-full text-center sm:text-left">
     
-    <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-3 bg-slate-900 text-white border border-slate-800 px-4 py-2 rounded-2xl shadow-md transition-all duration-300 hover:scale-105">
-            <div class="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0"></div>
-            <span id="topbar-live-clock" class="text-xs font-mono font-black tracking-wide text-sky-400">
-                LOADING INDIAN STANDARD TIME METRICS...
-            </span>
-        </div>
-
-        <div id="session-timer-badge" class="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 rounded-2xl text-slate-200 font-mono text-xs font-black shadow-inner transition-all duration-300 hover:scale-105">
-            <span id="timer-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Session Remaining:</span>
-            <span id="session-countdown-display" class="text-sky-400 font-black">30:00</span>
-        </div>
-    </div>
-
-    <div class="flex items-center gap-4 w-full">
+    <!-- LEFT SIDE / MOBILE TOP: Profile Information Block -->
+    <div class="flex flex-col sm:flex-row items-center sm:items-center gap-3.5 w-full sm:w-auto">
         <div onclick="if(typeof window.loadTabModule === 'function'){ window.loadTabModule('profile.html', document.querySelector('[onclick*=\'profile.html\']')); }" 
-             class="relative group w-20 h-20 rounded-2xl border-2 border-slate-200 shadow-md overflow-hidden bg-slate-100 shrink-0 transition-transform hover:scale-105 cursor-pointer">
+             class="relative group w-20 h-20 sm:w-16 sm:h-16 rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden bg-slate-100 shrink-0 transition-transform hover:scale-105 cursor-pointer mx-auto sm:mx-0">
             <img id="topbar-avatar-img" src="" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden')">
             <div id="topbar-avatar-fallback" class="w-full h-full bg-slate-300 text-slate-600 flex items-center justify-center">
-                <i data-lucide="user" class="w-10 h-10"></i>
+                <i data-lucide="user" class="w-10 h-10 sm:w-8 sm:h-8"></i>
             </div>
             
-            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase text-center tracking-wider p-1">
-                <i data-lucide="edit-3" class="w-5 h-5 text-sky-400 mb-0.5"></i>
-                Edit Profile
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[8px] font-black uppercase text-center tracking-wider p-0.5">
+                <i data-lucide="edit-3" class="w-4 h-4 text-sky-400 mb-0.5"></i>
+                Edit
             </div>
         </div>
 
-        <div class="flex flex-col justify-center items-start">
-            <h4 id="topbar-emp-display-name" class="text-lg font-black text-slate-950 leading-tight">-</h4>
+        <div class="flex flex-col justify-center items-center sm:items-start min-w-0 w-full sm:w-auto">
+            <h4 id="topbar-emp-display-name" class="text-base sm:text-base font-black text-slate-950 leading-tight truncate w-full">-</h4>
             <div class="font-mono text-xs font-bold text-slate-700 mt-0.5" id="topbar-emp-id-tag">ID: -</div>
             <div class="mt-1" id="topbar-meta-badge-container">
                 <span id="topbar-emp-designation-tag"></span>
             </div>
         </div>
     </div>
+
+    <!-- RIGHT SIDE / MOBILE BOTTOM: Live Clock & Session Timer Badges -->
+    <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
+        <div class="flex items-center justify-center gap-2 bg-slate-900 text-white border border-slate-800 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm w-full sm:w-auto">
+            <div class="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0"></div>
+            <span id="topbar-live-clock" class="text-[11px] sm:text-xs font-mono font-black tracking-wide text-sky-400">
+                Wednesday , 22 July 2026 : 1:00:00 PM
+            </span>
+        </div>
+
+        <div id="session-timer-badge" class="flex items-center justify-center gap-1 px-3 py-1.5 sm:py-2 bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl text-slate-200 font-mono text-xs font-black shadow-inner w-full sm:w-auto">
+            <span id="timer-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Session:</span>
+            <span id="session-countdown-display" class="text-sky-400 font-black text-[11px] sm:text-xs">30:00</span>
+        </div>
+    </div>
 </header>
 
 <script>
     (() => {
-        // 1. Hydrate identity parameters cleanly from core memory array contexts
-        document.getElementById("topbar-emp-display-name").innerText = currentUser.employeeName;
-        document.getElementById("topbar-emp-id-tag").innerText = `ID: ${currentUser.employeeId}`;
-        
-        const desigNode = document.getElementById("topbar-emp-designation-tag");
-        if (currentUser.designation && currentUser.designation.trim() !== "") {
-            desigNode.className = "inline-block bg-blue-600 border border-blue-700 text-white px-2 py-0.5 rounded-lg text-[10px] font-black uppercase shadow-sm tracking-wider";
-            desigNode.innerText = currentUser.designation;
-        } else {
-            desigNode.className = "hidden";
-            desigNode.innerText = "";
+        // 1. Hydrate identity parameters safely
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            const nameNode = document.getElementById("topbar-emp-display-name");
+            const idNode = document.getElementById("topbar-emp-id-tag");
+            if (nameNode) nameNode.innerText = currentUser.employeeName || "-";
+            if (idNode) idNode.innerText = `ID: ${currentUser.employeeId || "-"}`;
+            
+            const desigNode = document.getElementById("topbar-emp-designation-tag");
+            if (desigNode && currentUser.designation && currentUser.designation.trim() !== "") {
+                desigNode.className = "inline-block bg-blue-600 border border-blue-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase shadow-sm tracking-wider";
+                desigNode.innerText = currentUser.designation;
+            } else if (desigNode) {
+                desigNode.className = "hidden";
+                desigNode.innerText = "";
+            }
+
+            const avatarImg = document.getElementById("topbar-avatar-img");
+            const avatarFallback = document.getElementById("topbar-avatar-fallback");
+            if (currentUser.profilePhoto && currentUser.profilePhoto.trim() !== "" && avatarImg && avatarFallback) {
+                avatarImg.src = currentUser.profilePhoto;
+                avatarFallback.classList.add("hidden");
+            }
         }
 
-        if(currentUser.profilePhoto && currentUser.profilePhoto.trim() !== "") {
-            document.getElementById("topbar-avatar-img").src = currentUser.profilePhoto;
-            document.getElementById("topbar-avatar-fallback").classList.add("hidden");
-        }
-
-        // 2. Ticking loop engine with Indian standard date formatting rules
-        if(window.topbarClockInterval) clearInterval(window.topbarClockInterval);
+        // 2. Strict Ticking loop engine matching your exact format: Wednesday , 22 July 2026 : time
+        if (window.topbarClockInterval) clearInterval(window.topbarClockInterval);
         
         window.topbarClockInterval = setInterval(() => {
             const clockNode = document.getElementById("topbar-live-clock");
-            if(!clockNode) { clearInterval(window.topbarClockInterval); return; }
+            if (!clockNode) return; 
             
             const time = new Date();
             const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const actualMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             
             const dayOfWeek = dayNames[time.getDay()];
             const dayOfMonth = time.getDate();
-            const month = monthNames[time.getMonth()];
+            const month = actualMonthNames[time.getMonth()];
             const year = time.getFullYear();
             
             let hours = time.getHours();
@@ -81,20 +89,18 @@
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
             hours = hours ? hours : 12;
-            const formattedTimeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            const timeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
             
-            clockNode.innerText = `${dayOfWeek}, ${dayOfMonth} ${month} ${year} | ${formattedTimeStr}`;
+            clockNode.innerText = `${dayOfWeek} , ${dayOfMonth} ${month} ${year} : ${timeStr}`;
         }, 1000);
 
-        // 3. PERSISTENT SESSION COUNTDOWN TIMER LOGIC (NON-RESETTABLE Matrix)
+        // 3. PERSISTENT SESSION COUNTDOWN TIMER LOGIC
         const SESSION_DURATION_MINUTES = 30; 
         const PROMPT_WARNING_SECONDS = 30;   
         let isPromptActive = false;
 
         window.startOrResetSessionTimer = function() {
             const currentEpoch = localStorage.getItem("session_expiration_epoch");
-            
-            // STRICT PROTECTION: If a valid future timestamp exists, DO NOT touch it!
             if (currentEpoch && parseInt(currentEpoch, 10) > Date.now()) {
                 return; 
             }
@@ -173,17 +179,14 @@
             }
         };
 
-        // Initialize execution ticker loops safely
         window.startOrResetSessionTimer();
         if (window.topbarSessionInterval) clearInterval(window.topbarSessionInterval);
         window.runSessionTickEngine();
         window.topbarSessionInterval = setInterval(window.runSessionTickEngine, 1000);
 
-        // Tab focus recalculation binding
         window.removeEventListener("focus", window.runSessionTickEngine); 
         window.addEventListener("focus", window.runSessionTickEngine);
 
-        // FIXED USER INTERACTION THROTTLE GUARD
         const interactionEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
         interactionEvents.forEach(evt => {
             document.removeEventListener(evt, window.handleSessionActivitySync);
@@ -194,8 +197,6 @@
                     const maxAllowedTime = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
                     const timeLeftMs = currentExpiration - Date.now();
 
-                    // Only push timer back up if the user has lost more than 60 seconds of their current session allocation.
-                    // This blocks simple cursor movement or window refocusing from forcing a layout reset back to 30:00!
                     if (timeLeftMs > (PROMPT_WARNING_SECONDS * 1000) && (maxAllowedTime - currentExpiration > 60000)) {
                         localStorage.setItem("session_expiration_epoch", maxAllowedTime);
                     }
