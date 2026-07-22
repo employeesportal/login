@@ -191,53 +191,7 @@
                 <button onclick="loadTabModule('leavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="plane-takeoff" class="w-4 h-4 text-rose-500 shrink-0"></i> Leave Portal</button>
             `;
 
-            if (isManager) {
-                outputHtml += `
-                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Managerial Overrides</span></div>
-                    <button onclick="loadTabModule('managerLeavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-500 shrink-0"></i> Leave Recommendations
-                    </button>
-                `;
-            }
-
-            if (isCoordinator) {
-                outputHtml += `
-                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Supervisory Controls</span></div>
-                    <button onclick="loadTabModule('coordinatorVerification.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 shrink-0"></i> Attendance Verification
-                    </button>
-                `;
-            }
-
-            if (isGlobalAdmin || isL3Admin) {
-                outputHtml += `
-                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">System Administration</span></div>
-                    <button onclick="loadTabModule('adminL3Console.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="shield" class="w-4 h-4 text-rose-500 shrink-0"></i> Employees Data Management Console
-                    </button>
-                `;
-
-                if (isGlobalAdmin) {
-                    outputHtml += `
-                        <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
-                        <button onclick="loadTabModule('adminLaunchpad.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="settings" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Hub
-                        </button>
-                    `;
-                }
-            }
-
-            if (isL2Admin) {
-                outputHtml += `
-                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4">
-                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Project Admin Portal</span>
-                    </div>
-                    <button onclick="loadTabModule('adminL2Portal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500 shrink-0"></i> Admin Leave & Attendance Console 
-                    </button>
-                `;
-            }
-
+         
             outputHtml += `
                 <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Operations</span></div>
                 <button onclick="loadTabModule('fieldActivityPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0"></i> Field Activity Portal</button>
@@ -255,15 +209,56 @@
                 `;
             }
 
-            if (isGlobalAdmin) {
+            
+            if (isCoordinator) {
                 outputHtml += `
-                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Administration</span></div>
-                    <button onclick="loadTabModule('adminFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="shield-alert" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Field Audit Console
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Supervisory Controls</span></div>
+                    <button onclick="loadTabModule('coordinatorVerification.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500 shrink-0"></i> Attendance Verification
                     </button>
                 `;
             }
 
+            if (isManager) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Managerial Overrides</span></div>
+                    <button onclick="loadTabModule('managerLeavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-500 shrink-0"></i> Leave Recommendations
+                    </button>
+                `;
+            }
+
+
+            if (isGlobalAdmin || isL3Admin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">System Administration</span></div>
+                    <button onclick="loadTabModule('adminL3Console.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield" class="w-4 h-4 text-rose-500 shrink-0"></i> Employees Data Management Console
+                    </button>
+                `;
+            }
+
+            if (isL2Admin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Project Admin Portal</span>
+                    </div>
+                    <button onclick="loadTabModule('adminL2Portal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500 shrink-0"></i> Admin Leave & Attendance Console 
+                    </button>
+                `;
+            }
+
+         
+
+            if (isGlobalAdmin) {
+                    outputHtml += `
+                        <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
+                        <button onclick="loadTabModule('adminLaunchpad.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="settings" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Hub
+                        </button>
+                    `;
+                }
             nav.innerHTML = outputHtml;
             lucide.createIcons();
         }
