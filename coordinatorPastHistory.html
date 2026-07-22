@@ -1,0 +1,198 @@
+<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    
+    <!-- TOP HEADER BAR -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
+        <div>
+            <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+                <i data-lucide="calendar" class="text-indigo-600 w-5 h-5"></i> Past Attendance Log Archive Viewer
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Query historical logs filtered directly from attendance sheet records mapped to you.</p>
+        </div>
+        <button onclick="window.loadTabModule('coordinatorVerification.html', document.querySelector('[onclick*=\'coordinatorVerification.html\']'))" 
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Console
+        </button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6" data-html2pdf-ignore>
+        <div class="w-full sm:w-auto">
+            <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Select Archive Date:</label>
+            <input type="date" id="archive-date-picker" class="px-3 py-2 border rounded-xl text-xs bg-white font-bold w-full sm:w-48">
+        </div>
+        <div class="w-full sm:w-auto sm:self-end flex gap-2">
+            <button onclick="window.fetchArchiveLogs()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="search" class="w-4 h-4"></i> Query Records
+            </button>
+            <button onclick="window.printArchivePDF()" id="btn-print-pdf" class="hidden px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition cursor-pointer flex items-center gap-1.5">
+                <i data-lucide="download" class="w-4 h-4"></i> Download PDF Report
+            </button>
+        </div>
+    </div>
+
+    <!-- PRINTABLE REPORT WRAPPER -->
+    <div id="archive-pdf-printable-area" class="bg-white p-4 rounded-2xl">
+        <div id="archive-meta-header" class="hidden mb-4 border-b pb-3">
+            <h2 class="text-xl font-black text-slate-900">Attendance Log Sheet Archive Report</h2>
+            <p class="text-xs text-slate-600 font-bold mt-1">Coordinator: <span id="report-coord-lbl">-</span> | Date Roster: <span id="report-date-lbl" class="font-mono">-</span></p>
+        </div>
+
+        <div class="border rounded-2xl bg-white overflow-hidden">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-950 text-white font-black uppercase text-[10px]">
+                        <th class="p-3 w-28">Date</th>
+                        <th class="p-3 w-40">Employee Details</th>
+                        <th class="p-3 w-48">Project, District & Location</th>
+                        <th class="p-3 w-44">Today's Plan & Login</th>
+                        <th class="p-3 w-48">Work Progress & Logout</th>
+                        <th class="p-3 w-48">Audit Remark & Comment</th>
+                        <th class="p-3 w-36">Coordinator Info</th>
+                    </tr>
+                </thead>
+                <tbody id="archive-table-body" class="divide-y text-slate-800 font-bold">
+                    <tr><td colspan="7" class="p-12 text-center text-slate-400 font-medium">Select a target date and query records above.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let currentArchiveCache = [];
+        const dateInput = document.getElementById("archive-date-picker");
+        dateInput.value = new Date().toISOString().split('T')[0];
+
+        function formatToIndianDateTime(rawVal) {
+            if (!rawVal) return '--:--:--';
+            let d = new Date(rawVal);
+            if (isNaN(d.getTime())) {
+                let parts = String(rawVal).trim().split(' ');
+                if (parts.length >= 2) {
+                    let dateParts = parts[0].split('/');
+                    if (dateParts.length === 3) {
+                        let isoStr = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${parts[1]}`;
+                        d = new Date(isoStr);
+                    }
+                }
+            }
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            }
+            return rawVal;
+        }
+
+        window.fetchArchiveLogs = async function() {
+            const dateVal = dateInput.value;
+            const tableBody = document.getElementById("archive-table-body");
+            const btnPdf = document.getElementById("btn-print-pdf");
+
+            if (!dateVal) {
+                alert("Please select a target date.");
+                return;
+            }
+
+            tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 animate-pulse font-medium">Querying log sheets for ${dateVal}...</td></tr>`;
+            btnPdf.classList.add("hidden");
+
+            try {
+                const res = await fetch(`${API_URL}?action=getPastAttendanceHistoryArchive&coordinatorId=${currentUser.employeeId}&date=${dateVal}`);
+                const result = await res.json();
+
+                if (!result.data || result.data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 font-medium">No log records found for ${dateVal} mapped to your profile.</td></tr>`;
+                    currentArchiveCache = [];
+                    return;
+                }
+
+                currentArchiveCache = result.data;
+                btnPdf.classList.remove("hidden");
+
+                let rowsHtml = "";
+                currentArchiveCache.forEach(r => {
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-50 align-top">
+                            <td class="p-3 font-mono text-slate-700 whitespace-nowrap">
+                                ${r.date || '-'}
+                            </td>
+                            <td class="p-3">
+                                <strong class="text-slate-900 block">${r.employeeName || '-'}</strong>
+                                <span class="font-mono text-[10px] text-slate-500">ID: ${r.employeeId || '-'}</span>
+                            </td>
+                            <td class="p-3">
+                                <span class="block font-bold text-slate-800">${r.currentProject || 'N/A'}</span>
+                                <span class="block text-[11px] text-slate-500">${r.district || 'N/A'}</span>
+                                <div class="mt-1">
+                                    ${r.location ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline font-bold text-[10px]">View Map</a>` : '<span class="text-slate-400 italic text-[10px]">No Map</span>'}
+                                    <span class="text-slate-400 font-mono text-[10px] ml-1">(${r.accuracy ? `±${r.accuracy}m` : '--'})</span>
+                                </div>
+                            </td>
+                            <td class="p-3">
+                                <div class="text-slate-600 font-medium mb-1">${r.todaysPlan || 'None'}</div>
+                                <div class="font-mono text-emerald-600 font-bold whitespace-nowrap text-[11px]">${formatToIndianDateTime(r.loginTime)}</div>
+                            </td>
+                            <td class="p-3">
+                                <div class="text-slate-600 font-medium italic mb-1">${r.todaysWorkProgress || 'No progress'}</div>
+                                <div class="font-mono text-rose-600 font-bold whitespace-nowrap text-[11px]">${formatToIndianDateTime(r.logoutTime)}</div>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-800 border inline-block mb-1">${r.coordinatorRemark || 'Pending'}</span>
+                                <div class="text-slate-600 font-normal italic text-[11px]">${r.coordinatorComment || 'No comments'}</div>
+                            </td>
+                            <td class="p-3">
+                                <strong class="text-slate-900 block">${r.coordinatorName || '-'}</strong>
+                                <span class="font-mono text-[10px] text-slate-500">ID: ${r.coordinatorId || '-'}</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableBody.innerHTML = rowsHtml;
+            } catch (e) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-rose-600 font-bold">Failed to synchronize archive logs.</td></tr>`;
+                currentArchiveCache = [];
+            }
+        };
+
+        window.printArchivePDF = function() {
+            if (!currentArchiveCache || currentArchiveCache.length === 0) {
+                alert("No records to export.");
+                return;
+            }
+
+            const dateVal = dateInput.value;
+            document.getElementById("report-coord-lbl").innerText = currentUser.employeeName || "Coordinator";
+            document.getElementById("report-date-lbl").innerText = dateVal;
+
+            const metaHeader = document.getElementById("archive-meta-header");
+            metaHeader.classList.remove("hidden");
+
+            const element = document.getElementById("archive-pdf-printable-area");
+            const opt = {
+                margin: 0.4,
+                filename: `Attendance_Archive_${dateVal}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                metaHeader.classList.add("hidden");
+            }).catch(err => {
+                console.error("PDF engine error:", err);
+                metaHeader.classList.add("hidden");
+            });
+        };
+
+        if (window.lucide) lucide.createIcons();
+    })();
+</script>
