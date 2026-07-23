@@ -20,21 +20,33 @@
             <span id="analysis-current-month-lbl" class="font-mono text-[11px] bg-slate-200 px-2.5 py-0.5 rounded text-slate-950 font-black"></span>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
-                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Target Assessment View Mode</label>
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Assessment View Mode</label>
                 <select id="anly-view-mode" onchange="window.toggleAnalysisFilterContextLayouts()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black">
-                    <option value="DATE">View System Logs By Specific Calendar Date</option>
-                    <option value="EMPLOYEE">Analyze Comprehensive Data of Specific Employee</option>
+                    <option value="DATE">View Logs By Calendar Date</option>
+                    <option value="EMPLOYEE">Analyze Specific Employee Data</option>
+                </select>
+            </div>
+
+            <!-- NEW STATUS FILTER ADDED HERE -->
+            <div>
+                <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Filter By Duty Status</label>
+                <select id="anly-status-filter" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black text-indigo-700">
+                    <option value="ALL">Show All Statuses</option>
+                    <option value="PRESENT">Present & Verified</option>
+                    <option value="ABSENT">Absent & Rejected</option>
+                    <option value="LEAVE">Approved Leaves</option>
+                    <option value="SUNDAY">Sundays / Off Days</option>
                 </select>
             </div>
             
-            <div id="anly-date-input-container">
+            <div id="anly-date-input-container" class="sm:col-span-2">
                 <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Select Target Calendar Date</label>
                 <input type="date" id="anly-target-date" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-mono font-black">
             </div>
 
-            <div id="anly-emp-input-container" class="hidden col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div id="anly-emp-input-container" class="hidden col-span-1 sm:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Search Employee By Name / ID</label>
                     <input type="text" id="anly-search-query" oninput="window.filterAnalysisEmployeeDropdownOptions()" placeholder="Type matching keywords..." class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-medium">
@@ -114,13 +126,11 @@
             window.executeAttendanceAnalysisPipeline();
         };
 
-        // Deeply sanitizes backend objects to handle space discrepancies or mixed-case headers
         function normalizeBackendObject(obj) {
             if (!obj || typeof obj !== 'object') return {};
             let cleanObj = {};
             for (let key in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    // Normalize key: remove spaces, lowercase completely
                     let normalizedKey = String(key).replace(/\s+/g, '').toLowerCase();
                     cleanObj[normalizedKey] = obj[key];
                 }
@@ -213,7 +223,7 @@
                 currentProject = cleanEmp.appointedprojects;
             }
 
-            if (cleanLog.employeeid) { // check if log exists
+            if (cleanLog.employeeid) {
                 let logProj = cleanLog.currentproject || "";
                 if (String(logProj).trim() !== "" && String(logProj).trim() !== "--") {
                     currentProject = logProj;
@@ -252,6 +262,7 @@
 
         window.executeAttendanceAnalysisPipeline = function () {
             const modeEl = document.getElementById("anly-view-mode");
+            const statusFilter = document.getElementById("anly-status-filter") ? document.getElementById("anly-status-filter").value : "ALL";
             if (!modeEl) return;
             const mode = modeEl.value;
             const tbody = document.getElementById("anly-matrix-table-body");
@@ -299,7 +310,6 @@
                     let todaysPlan = "--", loginTime = "--";
                     let todaysWorkProgress = "--", logoutTime = "--";
                     
-                    // FALLBACK CHAIN: Log Coordinator -> Registry Coordinator -> Default Blank
                     let coordinatorName = cleanLog.coordinatorname || cleanEmp.coordinatorname || "--";
                     let coordinatorRemark = "--", coordinatorComment = "--";
 
@@ -308,7 +318,7 @@
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
                         status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
-                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        badge = (status === "ABSENT" || status === "REJECTED" || status === "C-AB") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
                         
                         todaysPlan = cleanLog.todaysplan || "--";
                         loginTime = cleanLog.logintime || "--";
@@ -348,7 +358,7 @@
                             <strong class="text-lg font-mono font-black">${masterRegistryEmployees.length} </strong>
                         </div>
                         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present Employees</span>
+                            <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present / Verified</span>
                             <strong class="text-lg font-mono font-black text-emerald-800">${presentCount} </strong>
                         </div>
                         <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-inner">
@@ -356,54 +366,66 @@
                             <strong class="text-lg font-mono font-black text-indigo-800">${leaveCount} </strong>
                         </div>
                         <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-amber-700 uppercase block tracking-wider mb-1"> Marked by Coordinator (Absent)</span>
+                            <span class="text-[9px] font-black text-amber-700 uppercase block tracking-wider mb-1"> Rejected / Absent </span>
                             <strong class="text-lg font-mono font-black text-amber-900">${absentMarkedByCoordinator} </strong>
                         </div>
                         <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1"> Absent (Attendance Not Marked)</span>
+                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1"> System Absence (Idle)</span>
                             <strong class="text-lg font-mono font-black text-rose-800">${passiveAbsentCount} </strong>
-                        </div>
-                        <div class="col-span-2 sm:col-span-5 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex justify-between text-[11px] font-black uppercase text-slate-600">
-                            <span>Month Frame: <strong class="text-slate-900">${monthDisplayLabel}</strong></span>
-                            <span>Total Days: <strong class="text-slate-900">${monthInfo.totalDays}</strong></span>
-                            <span>Sundays Blocked: <strong class="text-slate-900">${monthInfo.sundays}</strong></span>
                         </div>
                     `;
                 }
 
-                processedRows.forEach(r => {
-                    outputRowsHtml += `
-                        <tr class="hover:bg-slate-50 transition-colors align-top">
-                            <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
-                            <td class="px-4 py-3">
-                                <strong class="text-slate-950 block text-xs">${r.name}</strong>
-                                <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
-                            </td>
-                            <td class="px-4 py-3 space-y-1">
-                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
-                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
-                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
-                            </td>
-                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
-                            <td class="px-4 py-3 space-y-1 max-w-xs">
-                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
-                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
-                            </td>
-                            <td class="px-4 py-3 space-y-1 max-w-xs">
-                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
-                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
-                            </td>
-                            <td class="px-4 py-3 space-y-1 text-[11px]">
-                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
-                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
-                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
-                            </td>
-                        </tr>
-                    `;
-                });
+                // APPLY SELECTED FILTER 
+                let filteredRows = processedRows;
+                if (statusFilter !== "ALL") {
+                    filteredRows = processedRows.filter(r => {
+                        const s = String(r.status).toUpperCase();
+                        if (statusFilter === "PRESENT") return s === "PRESENT" || s === "VERIFIED" || s === "OK";
+                        if (statusFilter === "ABSENT") return s === "ABSENT" || s === "REJECTED" || s === "C-AB";
+                        if (statusFilter === "LEAVE") return s === "ON LEAVE";
+                        if (statusFilter === "SUNDAY") return s === "SUNDAY";
+                        return true;
+                    });
+                }
+
+                if (filteredRows.length === 0) {
+                    outputRowsHtml = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 font-bold">No records found matching the chosen duty status.</td></tr>`;
+                } else {
+                    filteredRows.forEach(r => {
+                        outputRowsHtml += `
+                            <tr class="hover:bg-slate-50 transition-colors align-top">
+                                <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
+                                <td class="px-4 py-3">
+                                    <strong class="text-slate-950 block text-xs">${r.name}</strong>
+                                    <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
+                                </td>
+                                <td class="px-4 py-3 space-y-1">
+                                    <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                    ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                    <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                                </td>
+                                <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
+                                <td class="px-4 py-3 space-y-1 max-w-xs">
+                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                    <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                                </td>
+                                <td class="px-4 py-3 space-y-1 max-w-xs">
+                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                    <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                                </td>
+                                <td class="px-4 py-3 space-y-1 text-[11px]">
+                                    <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                    <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                    <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
                 if (tbody) tbody.innerHTML = outputRowsHtml;
 
             } else if (mode === "EMPLOYEE") {
@@ -462,7 +484,6 @@
                     let todaysPlan = "--", loginTime = "--";
                     let todaysWorkProgress = "--", logoutTime = "--";
                     
-                    // FALLBACK CHAIN
                     let coordinatorName = cleanLog.coordinatorname || cleanTargetEmp.coordinatorname || "--";
                     let coordinatorRemark = "--", coordinatorComment = "--";
 
@@ -471,7 +492,7 @@
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
                         status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
-                        badge = (status === "ABSENT" || status === "REJECTED") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        badge = (status === "ABSENT" || status === "REJECTED" || status === "C-AB") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
                         
                         todaysPlan = cleanLog.todaysplan || "--";
                         loginTime = cleanLog.logintime || "--";
@@ -529,45 +550,59 @@
                             <span class="text-[9px] font-black text-slate-500 uppercase block tracking-wider mb-1">Sundays Excluded</span>
                             <strong class="text-lg font-mono font-black text-slate-700">${summaryS} Day(s)</strong>
                         </div>
-                        <div class="col-span-2 sm:col-span-5 bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-center text-[10px] font-black uppercase text-slate-600 tracking-wide">
-                            Statistical Analysis Report Matrix For: <span class="text-slate-950 font-mono">${cleanTargetEmp.employeename} (${cleanTargetEmp.employeeid})</span> | Statement Period: <span class="text-slate-950">${monthDisplayLabel}</span>
-                        </div>
                     `;
                 }
 
-                logDaysMap.forEach(r => {
-                    outputRowsHtml += `
-                        <tr class="hover:bg-slate-50 transition-colors align-top">
-                            <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
-                            <td class="px-4 py-3">
-                                <strong class="text-slate-950 block text-xs">${r.name}</strong>
-                                <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
-                            </td>
-                            <td class="px-4 py-3 space-y-1">
-                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
-                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
-                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
-                            </td>
-                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
-                            <td class="px-4 py-3 space-y-1 max-w-xs">
-                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
-                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
-                            </td>
-                            <td class="px-4 py-3 space-y-1 max-w-xs">
-                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
-                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
-                            </td>
-                            <td class="px-4 py-3 space-y-1 text-[11px]">
-                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
-                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
-                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
-                            </td>
-                        </tr>
-                    `;
-                });
+                // APPLY SELECTED FILTER
+                let filteredDays = logDaysMap;
+                if (statusFilter !== "ALL") {
+                    filteredDays = logDaysMap.filter(r => {
+                        const s = String(r.status).toUpperCase();
+                        if (statusFilter === "PRESENT") return s === "PRESENT" || s === "VERIFIED" || s === "OK";
+                        if (statusFilter === "ABSENT") return s === "ABSENT" || s === "REJECTED" || s === "C-AB";
+                        if (statusFilter === "LEAVE") return s === "ON LEAVE";
+                        if (statusFilter === "SUNDAY") return s === "SUNDAY";
+                        return true;
+                    });
+                }
+
+                if (filteredDays.length === 0) {
+                    outputRowsHtml = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 font-bold">No records found matching the chosen duty status.</td></tr>`;
+                } else {
+                    filteredDays.forEach(r => {
+                        outputRowsHtml += `
+                            <tr class="hover:bg-slate-50 transition-colors align-top">
+                                <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
+                                <td class="px-4 py-3">
+                                    <strong class="text-slate-950 block text-xs">${r.name}</strong>
+                                    <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
+                                </td>
+                                <td class="px-4 py-3 space-y-1">
+                                    <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                    ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                    <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                                </td>
+                                <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
+                                <td class="px-4 py-3 space-y-1 max-w-xs">
+                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                    <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                                </td>
+                                <td class="px-4 py-3 space-y-1 max-w-xs">
+                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                    <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                                </td>
+                                <td class="px-4 py-3 space-y-1 text-[11px]">
+                                    <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                    <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                    <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
                 if (tbody) tbody.innerHTML = outputRowsHtml;
             }
             if (window.lucide) window.lucide.createIcons();
@@ -605,4 +640,4 @@
 
         window.loadMasterAnalysisDataPackages();
     })();
-</script> 
+</script>
