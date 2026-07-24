@@ -78,13 +78,28 @@
 
                 let rowsHtml = "";
                 entries.forEach((ent) => {
+                    // Attachment Display Logic
+                    let attachmentText = "";
+                    if (ent.attachmentUrl && ent.attachmentUrl.trim() !== "") {
+                        attachmentText = `
+                            <div class="mt-1.5 text-[9px] text-blue-600 font-mono break-all leading-tight">
+                                <strong>Attachment:</strong> <a href="${ent.attachmentUrl}" target="_blank" class="underline">${ent.attachmentUrl}</a>
+                            </div>`;
+                    } else {
+                        attachmentText = `
+                            <div class="mt-1.5 text-[9px] text-slate-400 font-mono italic">
+                                <strong>Attachment:</strong> No attachment provided
+                            </div>`;
+                    }
+
                     rowsHtml += `
                         <tr class="border-b text-xs align-top">
                             <td class="p-2.5 font-mono">${ent.entryId}</td>
-                            <td class="p-2.5">
+                            <td class="p-2.5 max-w-[250px]">
                                 <strong>${ent.movementType}</strong> via ${ent.modeOfTravel}<br>
                                 <span class="text-[11px] text-slate-600 italic">"${ent.activityDescription || 'N/A'}"</span>
-                                <div class="text-[9px] text-slate-400 font-mono mt-1">Logged At: ${formatIndianDateTime(ent.employeeTimestamp)}</div>
+                                ${attachmentText}
+                                <div class="text-[9px] text-slate-400 font-mono mt-1.5">Logged At: ${formatIndianDateTime(ent.employeeTimestamp)}</div>
                             </td>
                             <td class="p-2.5 font-mono text-[10px]">
                                 <strong>Departure Travel:</strong> ${formatIndianDateTime(ent.tentativeTravelDate)}<br>
@@ -131,7 +146,7 @@
                         <thead>
                             <tr class="bg-slate-900 text-white text-[10px] font-black uppercase">
                                 <th class="p-2.5">Entry ID</th>
-                                <th class="p-2.5">Movement & Description</th>
+                                <th class="p-2.5">Movement, Details & Attachments</th>
                                 <th class="p-2.5">Timeline</th>
                                 <th class="p-2.5">Coordinator Audit</th>
                                 <th class="p-2.5">Manager Audit</th>
