@@ -177,11 +177,13 @@
             const rawRoles = (currentUser.role || "").split(",");
             const normalizedRoles = rawRoles.map(r => String(r).trim().toUpperCase().replace(/[^A-Z0-9]/g, ""));
 
+            // Role Flags
             const isGlobalAdmin = normalizedRoles.includes("ADMIN");
             const isL3Admin = normalizedRoles.includes("ADMINL3") || normalizedRoles.includes("ADMIN_L3") || normalizedRoles.includes("L3ADMIN");
             const isL2Admin = normalizedRoles.includes("ADMINL2") || normalizedRoles.includes("ADMIN_L2") || normalizedRoles.includes("L2ADMIN");
             const isManager = normalizedRoles.includes("MANAGER") || isGlobalAdmin;
             const isCoordinator = normalizedRoles.includes("COORDINATOR") || isGlobalAdmin;
+            const isAccountManager = normalizedRoles.includes("ACCOUNTMANAGER") || normalizedRoles.includes("ACCOUNT_MANAGER") || isGlobalAdmin;
 
             let outputHtml = `
                 <div class="px-4 mb-2 mt-2"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">My Workspace</span></div>
@@ -209,7 +211,6 @@
                 `;
             }
 
-            
             if (isCoordinator) {
                 outputHtml += `
                     <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Supervisory Controls</span></div>
@@ -228,6 +229,15 @@
                 `;
             }
 
+            // ACCCOUNT MANAGER PORTAL TAB
+            if (isAccountManager) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Accounts & Finance</span></div>
+                    <button onclick="loadTabModule('accountManagerFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="calculator" class="w-4 h-4 text-sky-400 shrink-0"></i> Accounts TA Verification
+                    </button>
+                `;
+            }
 
             if (isGlobalAdmin || isL3Admin) {
                 outputHtml += `
@@ -249,16 +259,14 @@
                 `;
             }
 
-         
-
             if (isGlobalAdmin) {
-                    outputHtml += `
-                        <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
-                        <button onclick="loadTabModule('adminLaunchpad.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
-                        <i data-lucide="settings" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Hub
-                        </button>
-                    `;
-                }
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
+                    <button onclick="loadTabModule('adminLaunchpad.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                    <i data-lucide="settings" class="w-4 h-4 text-rose-500 shrink-0"></i> Admin Hub
+                    </button>
+                `;
+            }
             nav.innerHTML = outputHtml;
             lucide.createIcons();
         }
