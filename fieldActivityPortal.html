@@ -31,20 +31,37 @@
                     <option value="" disabled selected>-- Choose Project --</option>
                 </select>
             </div>
+
+            <!-- NEW: ENTRY CATEGORY TOGGLE -->
+            <div class="md:col-span-2 mt-2">
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Entry Category</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-slate-50">
+                        <input type="radio" name="entry_category" value="TRAVEL" checked onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-blue-600">
+                        Travel / Movement Log
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-indigo-50">
+                        <input type="radio" name="entry_category" value="STAY" onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-indigo-600">
+                        Accommodation / Stay Booking
+                    </label>
+                </div>
+            </div>
+
+            <!-- DYNAMIC DATES -->
             <div>
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Tentative / Proposed Travel Date & Time</label>
+                <label id="lbl-date-1" class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Tentative / Proposed Travel Date & Time</label>
                 <input type="datetime-local" id="fa-travel-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
             </div>
             <div>
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Date & Time to Reach Destination</label>
+                <label id="lbl-date-2" class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Date & Time to Reach Destination</label>
                 <input type="datetime-local" id="fa-reach-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
             </div>
             
-            <!-- Movement Configuration -->
-            <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4 mt-2">
+            <!-- TRAVEL: Movement Configuration -->
+            <div id="travel-section" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4 mt-2">
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Movement Type</label>
-                    <select id="fa-movement" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <select id="fa-movement" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                         <option value="" disabled selected>-- Select Route --</option>
                         <option value="Site to Office">Site to Office</option>
                         <option value="Site to Home">Site to Home</option>
@@ -57,19 +74,19 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">From Location</label>
-                    <input type="text" id="fa-loc-from" required placeholder="e.g., Delhi" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <input type="text" id="fa-loc-from" placeholder="e.g., Delhi" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">To Location</label>
-                    <input type="text" id="fa-loc-to" required placeholder="e.g., Lucknow" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                    <input type="text" id="fa-loc-to" placeholder="e.g., Lucknow" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                 </div>
             </div>
 
-            <!-- TRAVEL MODE DYNAMIC SECTION -->
-            <div class="md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+            <!-- TRAVEL: Travel Mode Dynamic Section -->
+            <div id="travel-mode-wrapper" class="md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-800 uppercase mb-1">Mode Of Travel</label>
-                    <select id="fa-travel-mode" required onchange="window.handleTravelModeChange(this.value)" class="w-full md:w-1/2 px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    <select id="fa-travel-mode" onchange="window.handleTravelModeChange(this.value)" class="w-full md:w-1/2 px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none req-travel">
                         <option value="" disabled selected>-- Select Transport Mode --</option>
                         <option value="Company Vehicle">Company Vehicle</option>
                         <option value="Personal Bike/Car">Personal Bike/Car</option>
@@ -80,14 +97,45 @@
                     </select>
                     <p id="travel-mode-notice" class="text-[10px] text-amber-600 font-bold mt-1.5 hidden">⚠️ Train & Flight bookings require explicit manager travel approval.</p>
                 </div>
-                
                 <!-- Dynamic fields will be injected here -->
                 <div id="fa-dynamic-travel-section" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden"></div>
             </div>
 
+            <!-- STAY: Dynamic Section (Hidden by Default) -->
+            <div id="stay-section" class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-indigo-200 bg-indigo-50/50 p-4 rounded-xl mt-2 hidden">
+                <div class="md:col-span-4 border-b border-indigo-100 pb-2 mb-2">
+                    <h4 class="text-sm font-black text-indigo-900 flex items-center gap-1.5"><i data-lucide="hotel" class="w-4 h-4"></i> Accommodation Request Details</h4>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Stay City / Location</label>
+                    <input type="text" id="sa-loc" placeholder="e.g., Mumbai" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Accommodation Type</label>
+                    <select id="sa-type" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                        <option value="" disabled selected>-- Select --</option>
+                        <option value="Hotel">Hotel</option>
+                        <option value="Guesthouse">Guesthouse</option>
+                        <option value="Company Transit Camp">Company Transit Camp</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Est. Cost / Night (Rs)</label>
+                    <input type="number" id="sa-cost" placeholder="₹" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Number of Nights</label>
+                    <input type="number" id="sa-nights" placeholder="Nights" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                </div>
+                <div class="md:col-span-4">
+                    <p class="text-[10px] text-indigo-700 font-bold mt-1">ℹ️ Hotel/Stay bookings are subject to approval limits as per company TA/DA policy.</p>
+                </div>
+            </div>
+
             <!-- FILE UPLOAD FIELD -->
             <div class="md:col-span-2">
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Upload Document / Ticket <span class="text-rose-500 font-bold normal-case text-[10px] ml-1">(Upload the travel ticket here, otherwise same will not be accepted later by accounts)</span></label>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Upload Document / Ticket / Booking <span class="text-rose-500 font-bold normal-case text-[10px] ml-1">(Upload the travel ticket or booking invoice here, otherwise same will not be accepted later by accounts)</span></label>
                 <input type="file" id="fa-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer border border-slate-300 p-1.5 rounded-xl transition">
             </div>
         </div>
@@ -103,7 +151,7 @@
         </div>
 
         <button type="submit" id="fa-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition uppercase tracking-wider text-xs">
-            Submit Field Activity Entry
+            Submit Entry Request
         </button>
     </form>
 
@@ -114,8 +162,8 @@
                 <thead>
                     <tr class="bg-slate-900 text-white font-black uppercase text-[10px]">
                         <th class="p-3 whitespace-nowrap">Job ID & Manager Status</th>
-                        <th class="p-3">Project & Dates</th>
-                        <th class="p-3">Movement & Travel Details</th>
+                        <th class="p-3">Project, Dates & Log Time</th>
+                        <th class="p-3">Movement & Details</th>
                         <th class="p-3">Coordinator Review</th>
                         <th class="p-3 text-center">Manager Instructions & Approvals</th>
                         <th class="p-3 text-center">Admin Verdict</th>
@@ -166,6 +214,9 @@
         }
 
         async function initPortal() {
+            // Set initial required attributes correctly
+            window.toggleEntryCategory("TRAVEL");
+            
             try {
                 const res = await fetch(`${API_URL}?action=getProjects&employeeId=${currentUser.employeeId}`);
                 const data = await res.json();
@@ -202,6 +253,41 @@
             const matchingActivity = myActivitiesCache.find(a => a.jobActivityId === selectedJobId);
             if (matchingActivity && matchingActivity.project) {
                 document.getElementById("fa-project").value = matchingActivity.project;
+            }
+        };
+
+        // --- NEW: TOGGLE ENTRY CATEGORY (TRAVEL vs STAY) ---
+        window.toggleEntryCategory = function(val) {
+            const travelSec = document.getElementById('travel-section');
+            const travelModeSec = document.getElementById('travel-mode-wrapper');
+            const staySec = document.getElementById('stay-section');
+            
+            const lbl1 = document.getElementById('lbl-date-1');
+            const lbl2 = document.getElementById('lbl-date-2');
+            
+            const travelReqs = document.querySelectorAll('.req-travel');
+            const stayReqs = document.querySelectorAll('.req-stay');
+
+            if (val === 'TRAVEL') {
+                travelSec.classList.remove('hidden');
+                travelModeSec.classList.remove('hidden');
+                staySec.classList.add('hidden');
+                
+                lbl1.innerText = "Tentative / Proposed Travel Date & Time";
+                lbl2.innerText = "Date & Time to Reach Destination";
+                
+                travelReqs.forEach(el => el.setAttribute('required', 'required'));
+                stayReqs.forEach(el => el.removeAttribute('required'));
+            } else {
+                travelSec.classList.add('hidden');
+                travelModeSec.classList.add('hidden');
+                staySec.classList.remove('hidden');
+                
+                lbl1.innerText = "Check-In Date & Time";
+                lbl2.innerText = "Check-Out Date & Time";
+                
+                travelReqs.forEach(el => el.removeAttribute('required'));
+                stayReqs.forEach(el => el.setAttribute('required', 'required'));
             }
         };
 
@@ -245,22 +331,22 @@
             
             if (val === "Company Vehicle") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Company Car Auth.</label><select id="dt-auth" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"><option value="" disabled selected>-- Select --</option><option value="Have Approval">Have Approval</option><option value="Approval Needed">Approval Needed</option></select></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Expected KM Travel</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Company Car Auth.</label><select id="dt-auth" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Have Approval">Have Approval</option><option value="Approval Needed">Approval Needed</option></select></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Expected KM Travel</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                 `;
             } 
             else if (val === "Personal Bike/Car") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Vehicle Type</label><select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"><option value="" disabled selected>-- Select --</option><option value="Car">Car</option><option value="Bike">Bike</option></select></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Vehicle Type</label><select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Car">Car</option><option value="Bike">Bike</option></select></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                 `;
             } 
             else if (val === "Public Transport") {
                 html = `
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Transport Type</label>
-                        <select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold">
+                        <select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="General Sitting">General Sitting</option>
                             <option value="AC Sitting">AC Sitting</option>
@@ -268,8 +354,8 @@
                             <option value="AC Sleeper">AC Sleeper</option>
                         </select>
                     </div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                     <div class="md:col-span-3">
                         <p class="text-[10px] text-rose-500 font-bold bg-rose-50 p-2 rounded-lg border border-rose-200 mt-1">⚠️ Warning: A proper ticket/bill is mandatory for processing Public Transport TA claims.</p>
                     </div>
@@ -277,8 +363,8 @@
             } 
             else if (val === "Rented Cab") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                     <div class="md:col-span-3">
                         <p class="text-[10px] text-rose-500 font-bold bg-rose-50 p-2 rounded-lg border border-rose-200 mt-1">⚠️ Warning: A proper original bill/receipt is strictly mandatory for processing Rented Cab TA claims.</p>
                     </div>
@@ -288,7 +374,7 @@
                 html = `
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Train Type</label>
-                        <select id="dt-train-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold">
+                        <select id="dt-train-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="Passenger/Local">Passenger / Local</option>
                             <option value="Express">Express</option>
@@ -301,7 +387,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Travel Class</label>
-                        <select id="dt-class" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold">
+                        <select id="dt-class" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="General">General</option>
                             <option value="Sleeper">Sleeper</option>
@@ -314,7 +400,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Ticketing Mode</label>
-                        <select id="dt-ticket" required onchange="window.handleTrainModeSwitch(this.value)" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold">
+                        <select id="dt-ticket" required onchange="window.handleTrainModeSwitch(this.value)" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="Pre-Ticket">Pre-Ticket</option>
                             <option value="On General Ticket">On General Ticket</option>
@@ -323,9 +409,8 @@
                     <div id="dt-train-dynamic-wrapper" class="hidden flex flex-col gap-1 w-full md:col-span-3"></div>
                 `;
             }
-
             else if (val === "Flight") {
-                html = `<div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Amount (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold"></div>`;
+                html = `<div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Amount (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>`;
             }
 
             container.innerHTML = html;
@@ -339,15 +424,15 @@
                 wrap.innerHTML = `
                     <label class="block text-[10px] font-black uppercase text-rose-600 mb-1">Approval Needed (Gen. Ticket)</label>
                     <div class="flex gap-2">
-                        <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold" title="Enter KM">
-                        <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold" title="Amount">
+                        <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Enter KM">
+                        <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Amount">
                     </div>
                     <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid per company & railway norms.</p>
                 `;
             } else {
                 wrap.innerHTML = `
                     <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimate / Ticket Amount</label>
-                    <input type="number" id="dt-rs" required placeholder="₹ Amount" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold">
+                    <input type="number" id="dt-rs" required placeholder="₹ Amount" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                 `;
             }
         };
@@ -391,8 +476,9 @@
                                 </td>
                                 <td class="p-3">
                                     <div class="text-slate-900 font-bold">${r.project}</div>
-                                    <span class="text-[10px] text-slate-500 font-mono block mt-0.5">Travel: ${formatLocalDateTime(r.tentativeTravelDate)}</span>
-                                    <span class="text-[10px] text-indigo-600 font-mono block">Reach: ${formatLocalDateTime(r.dateToReachDestination)}</span>
+                                    <span class="text-[10px] text-slate-500 font-mono block mt-1">Start: ${formatLocalDateTime(r.tentativeTravelDate)}</span>
+                                    <span class="text-[10px] text-indigo-600 font-mono block mt-0.5">End/Reach: ${formatLocalDateTime(r.dateToReachDestination)}</span>
+                                    <span class="text-[9px] text-slate-400 font-mono block mt-2 pt-1 border-t border-slate-200">Logged: ${formatLocalDateTime(r.employeeTimestamp)}</span>
                                 </td>
                                 <td class="p-3 max-w-sm">
                                     <div class="font-bold text-slate-900">${mainMovement}</div>
@@ -441,51 +527,62 @@
             const jobIdDisplay = mode === "EXISTING" ? jobIdRaw : "NEW JOB ID (Auto-Generated)";
             const proj = document.getElementById("fa-project").value;
             
-            const moveType = document.getElementById("fa-movement").value;
-            const locFrom = document.getElementById("fa-loc-from").value.trim();
-            const locTo = document.getElementById("fa-loc-to").value.trim();
-            const combinedMovementString = `${moveType}\nFrom ${locFrom} to ${locTo}`;
-            
-            // --- CONSTRUCT DYNAMIC TRAVEL MODE STRING ---
-            const baseMode = document.getElementById("fa-travel-mode").value;
-            let travelModeCompiled = baseMode;
+            // --- CONSTRUCT MULTIPLEXED DATA BASED ON ENTRY CATEGORY ---
+            const entryCat = document.querySelector('input[name="entry_category"]:checked').value;
+            let combinedMovementString = "";
+            let travelModeCompiled = "";
 
-            try {
-                if (baseMode === "Company Vehicle") {
-                    travelModeCompiled += ` | Auth: ${document.getElementById("dt-auth").value} | Est KM: ${document.getElementById("dt-km").value}`;
-                } else if (baseMode === "Personal Bike/Car") {
-                    travelModeCompiled += ` | Type: ${document.getElementById("dt-type").value} | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
-                } else if (baseMode === "Public Transport") {
-                    travelModeCompiled += ` | Type: ${document.getElementById("dt-type").value} | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
-                } else if (baseMode === "Rented Cab") {
-                    travelModeCompiled += ` | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
-                } else if (baseMode === "Train") {
-                    travelModeCompiled += ` | Train: ${document.getElementById("dt-train-type").value} | Class: ${document.getElementById("dt-class").value} | Tkt: ${document.getElementById("dt-ticket").value}`;
-                    if(document.getElementById("dt-ticket").value === "On General Ticket") {
-                        travelModeCompiled += ` | Est KM: ${document.getElementById("dt-km").value}`;
+            if (entryCat === "TRAVEL") {
+                const moveType = document.getElementById("fa-movement").value;
+                const locFrom = document.getElementById("fa-loc-from").value.trim();
+                const locTo = document.getElementById("fa-loc-to").value.trim();
+                combinedMovementString = `${moveType}\nFrom ${locFrom} to ${locTo}`;
+                
+                const baseMode = document.getElementById("fa-travel-mode").value;
+                travelModeCompiled = baseMode;
+                try {
+                    if (baseMode === "Company Vehicle") {
+                        travelModeCompiled += ` | Auth: ${document.getElementById("dt-auth").value} | Est KM: ${document.getElementById("dt-km").value}`;
+                    } else if (baseMode === "Personal Bike/Car") {
+                        travelModeCompiled += ` | Type: ${document.getElementById("dt-type").value} | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
+                    } else if (baseMode === "Public Transport") {
+                        travelModeCompiled += ` | Type: ${document.getElementById("dt-type").value} | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
+                    } else if (baseMode === "Rented Cab") {
+                        travelModeCompiled += ` | Est KM: ${document.getElementById("dt-km").value} | Est ₹${document.getElementById("dt-rs").value}`;
+                    } else if (baseMode === "Train") {
+                        travelModeCompiled += ` | Train: ${document.getElementById("dt-train-type").value} | Class: ${document.getElementById("dt-class").value} | Tkt: ${document.getElementById("dt-ticket").value}`;
+                        if(document.getElementById("dt-ticket").value === "On General Ticket") {
+                            travelModeCompiled += ` | Est KM: ${document.getElementById("dt-km").value}`;
+                        }
+                        travelModeCompiled += ` | Est ₹${document.getElementById("dt-rs").value}`;
+                    } else if (baseMode === "Flight") {
+                        travelModeCompiled += ` | Est ₹${document.getElementById("dt-rs").value}`;
                     }
-                    travelModeCompiled += ` | Est ₹${document.getElementById("dt-rs").value}`;
-                } else if (baseMode === "Flight") {
-                    travelModeCompiled += ` | Est ₹${document.getElementById("dt-rs").value}`;
-                }
-            } catch (err) {
-                console.warn("Dynamic field mapping issue", err);
+                } catch (err) { console.warn("Dynamic field mapping issue", err); }
+
+            } else {
+                // ACCOMMODATION / STAY LOGIC
+                const saLoc = document.getElementById("sa-loc").value.trim();
+                const saType = document.getElementById("sa-type").value;
+                const saCost = document.getElementById("sa-cost").value;
+                const saNights = document.getElementById("sa-nights").value;
+
+                combinedMovementString = `Accommodation / Stay Booking\nLocation: ${saLoc}`;
+                travelModeCompiled = `Stay Type: ${saType} | Est ₹${saCost}/night | Nights: ${saNights}`;
             }
-            // --------------------------------------------
 
             const travelDate = document.getElementById("fa-travel-date").value;
             const reachDate = document.getElementById("fa-reach-date").value;
             const desc = document.getElementById("fa-desc").value.trim();
 
             const summaryMessage = 
-                `Please review your Field Activity Entry:\n\n` +
-                `• Activity Mode: ${mode === "NEW" ? "Create New Job" : "Add to Existing Job"}\n` +
+                `Please review your Entry:\n\n` +
+                `• Entry Mode: ${mode === "NEW" ? "Create New Job" : "Add to Existing Job"}\n` +
                 `• Job Assignment: ${jobIdDisplay}\n` +
                 `• Project: ${proj}\n` +
-                `• Route: ${moveType} (From ${locFrom} to ${locTo})\n` +
-                `• Transport Mode: ${travelModeCompiled.replace(/ \| /g, ', ')}\n` +
-                `• Departure: ${formatLocalDateTime(travelDate)}\n` +
-                `• Arrival: ${formatLocalDateTime(reachDate)}\n\n` +
+                `• Details: ${travelModeCompiled.replace(/ \| /g, ', ')}\n` +
+                `• Check-in / Start: ${formatLocalDateTime(travelDate)}\n` +
+                `• Check-out / End: ${formatLocalDateTime(reachDate)}\n\n` +
                 `Do you want to save and submit this entry?`;
 
             if (!confirm(summaryMessage)) return; 
@@ -526,7 +623,6 @@
                 await window.executeFASubmitAjaxRequest(payload, btn); 
             }
         };
-        
 
         window.executeFASubmitAjaxRequest = async function(payload, btn) {
             try {
@@ -534,10 +630,11 @@
                 const result = await res.json();
                 
                 if (result.status) {
-                    alert("Field activity logged successfully!");
+                    alert("Entry logged successfully!");
                     document.getElementById("field-activity-form").reset();
                     
-                    // Clear out dynamic configurations
+                    // Reset UI State
+                    window.toggleEntryCategory("TRAVEL");
                     document.getElementById("fa-dynamic-travel-section").innerHTML = "";
                     document.getElementById("fa-dynamic-travel-section").classList.add("hidden");
                     document.getElementById("travel-mode-notice").classList.add("hidden");
@@ -566,7 +663,7 @@
                 alert("Network communication failure.");
             } finally {
                 if (btn) {
-                    btn.disabled = false; btn.innerText = "Submit Field Activity Entry";
+                    btn.disabled = false; btn.innerText = "Submit Entry Request";
                 }
             }
         };
