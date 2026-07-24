@@ -188,6 +188,16 @@
             } catch (e) { alert("Network error."); }
         };
 
-        initMgrPortal();
+        // FIXED TIMING INITIALIZATION
+        setTimeout(() => {
+            const tableBody = document.getElementById("mgr-tbody");
+            if (tableBody) {
+                initMgrPortal();
+            } else {
+                console.warn("DOM not ready. Retrying init...");
+                setTimeout(initMgrPortal, 150);
+            }
+        }, 50);
+
     })();
 </script>
