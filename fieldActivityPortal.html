@@ -38,11 +38,11 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-slate-50">
                         <input type="radio" name="entry_category" value="TRAVEL" checked onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-blue-600">
-                        Travel / Movement Log
+                        Travel / Movement Log & Approval Request
                     </label>
                     <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-indigo-50">
                         <input type="radio" name="entry_category" value="STAY" onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-indigo-600">
-                        Accommodation / Stay Booking
+                        Accommodation / Stay Log & Approval Request
                     </label>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                         <option value="Train">Train (Requires Approval)</option>
                         <option value="Flight">Flight (Requires Approval)</option>
                     </select>
-                    <p id="travel-mode-notice" class="text-[10px] text-amber-600 font-bold mt-1.5 hidden">⚠️ Train & Flight bookings require explicit manager travel approval.</p>
+                    <p id="travel-mode-notice" class="text-[10px] text-rose-600 font-bold mt-1.5 hidden"></p>
                 </div>
                 <!-- Dynamic fields will be injected here -->
                 <div id="fa-dynamic-travel-section" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden"></div>
@@ -142,6 +142,11 @@
 
         <div>
             <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Activity Description / Work Progress / Request for any Approval</label>
+            <!-- DYNAMIC APPROVAL TEXT HEADER -->
+            <div id="dynamic-approval-display" class="hidden mb-2 p-2.5 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-900 text-xs font-bold flex items-start gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+                <span id="dynamic-approval-text"></span>
+            </div>
             <textarea id="fa-desc" rows="3" required placeholder="Detail specific field tasks, site execution status, or reasons for movement/approval..." class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white text-xs"></textarea>
         </div>
 
@@ -256,7 +261,25 @@
             }
         };
 
-        // --- NEW: TOGGLE ENTRY CATEGORY (TRAVEL vs STAY) ---
+        // --- NEW: DYNAMIC APPROVAL TEXT UPDATER ---
+        window.updateApprovalTextDisplay = function(modeStr, isStay) {
+            const displayBox = document.getElementById("dynamic-approval-display");
+            const displayText = document.getElementById("dynamic-approval-text");
+            
+            if (isStay) {
+                displayText.innerText = "Approval is needed for Accommodation/Stay booking as per the description - subject to the TA policy.";
+                displayBox.classList.remove("hidden");
+            } else if (modeStr) {
+                displayText.innerText = `Approval is needed for ${modeStr} travel as per the description - subject to the TA policy.`;
+                displayBox.classList.remove("hidden");
+            } else {
+                displayBox.classList.add("hidden");
+                displayText.innerText = "";
+            }
+            if (window.lucide) lucide.createIcons();
+        };
+
+        // --- TOGGLE ENTRY CATEGORY (TRAVEL vs STAY) ---
         window.toggleEntryCategory = function(val) {
             const travelSec = document.getElementById('travel-section');
             const travelModeSec = document.getElementById('travel-mode-wrapper');
@@ -278,6 +301,10 @@
                 
                 travelReqs.forEach(el => el.setAttribute('required', 'required'));
                 stayReqs.forEach(el => el.removeAttribute('required'));
+                
+                // Reset approval text to whatever travel mode is currently selected
+                const currentMode = document.getElementById("fa-travel-mode").value;
+                window.updateApprovalTextDisplay(currentMode, false);
             } else {
                 travelSec.classList.add('hidden');
                 travelModeSec.classList.add('hidden');
@@ -288,6 +315,8 @@
                 
                 travelReqs.forEach(el => el.removeAttribute('required'));
                 stayReqs.forEach(el => el.setAttribute('required', 'required'));
+
+                window.updateApprovalTextDisplay(null, true);
             }
         };
 
@@ -323,6 +352,9 @@
             const notice = document.getElementById("travel-mode-notice");
             const container = document.getElementById("fa-dynamic-travel-section");
             
+            // Update the approval text display box dynamically
+            window.updateApprovalTextDisplay(val, false);
+
             notice.classList.add("hidden");
             container.innerHTML = "";
             container.classList.remove("hidden");
@@ -414,7 +446,15 @@
             }
 
             container.innerHTML = html;
-            if(val === "Train" || val === "Flight") notice.classList.remove("hidden");
+
+            // DYNAMIC WARNING MESSAGES
+            if (val === "Flight") {
+                notice.innerText = "⚠️ Flight bookings require explicit pre-approval from administration. Managerial approval is not valid.";
+                notice.classList.remove("hidden");
+            } else if (val === "Train" || val === "Rented Cab" || val === "Personal Bike/Car") {
+                notice.innerText = "⚠️ Train, Rented Cab, and Personal Vehicle bookings require explicit manager travel approval.";
+                notice.classList.remove("hidden");
+            }
         };
 
         window.handleTrainModeSwitch = function(val) {
@@ -427,7 +467,7 @@
                         <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Enter KM">
                         <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Amount">
                     </div>
-                    <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid as per audit by accounts department/norms.</p>
+                    <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid per company & railway norms.</p>
                 `;
             } else {
                 wrap.innerHTML = `
@@ -484,7 +524,7 @@
                                     <div class="font-bold text-slate-900">${mainMovement}</div>
                                     ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
                                     <div class="mt-1">${travelDetailsBlock}</div>
-                                    <p class="text-slate-600 italic text-[11px] mt-1.5 bg-slate-100 p-2 rounded-lg border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                                    <div class="text-slate-700 text-[11px] mt-1.5 bg-slate-100 p-2 rounded-lg border border-slate-200 whitespace-pre-wrap">${r.activityDescription || 'No description provided'}</div>
                                     ${docLink}
                                 </td>
                                 <td class="p-3">
@@ -531,6 +571,7 @@
             const entryCat = document.querySelector('input[name="entry_category"]:checked').value;
             let combinedMovementString = "";
             let travelModeCompiled = "";
+            let systemApprovalHeader = "";
 
             if (entryCat === "TRAVEL") {
                 const moveType = document.getElementById("fa-movement").value;
@@ -540,6 +581,11 @@
                 
                 const baseMode = document.getElementById("fa-travel-mode").value;
                 travelModeCompiled = baseMode;
+
+                if (baseMode) {
+                    systemApprovalHeader = `[SYSTEM] Approval is needed for ${baseMode} travel as per the description - subject to the TA policy.`;
+                }
+
                 try {
                     if (baseMode === "Company Vehicle") {
                         travelModeCompiled += ` | Auth: ${document.getElementById("dt-auth").value} | Est KM: ${document.getElementById("dt-km").value}`;
@@ -567,13 +613,17 @@
                 const saCost = document.getElementById("sa-cost").value;
                 const saNights = document.getElementById("sa-nights").value;
 
-                combinedMovementString = `Accommodation / Stay Log\nLocation: ${saLoc}`;
+                combinedMovementString = `Accommodation / Stay Booking\nLocation: ${saLoc}`;
                 travelModeCompiled = `Stay Type: ${saType} | Est ₹${saCost}/night | Nights: ${saNights}`;
+                systemApprovalHeader = `[SYSTEM] Approval is needed for Accommodation/Stay booking as per the description - subject to the TA policy.`;
             }
 
             const travelDate = document.getElementById("fa-travel-date").value;
             const reachDate = document.getElementById("fa-reach-date").value;
-            const desc = document.getElementById("fa-desc").value.trim();
+            
+            // --- COMBINE THE DYNAMIC APPROVAL HEADER WITH USER DESCRIPTION ---
+            const userDesc = document.getElementById("fa-desc").value.trim();
+            const finalCombinedDescription = `${systemApprovalHeader}\n\n[USER REMARK]\n${userDesc}`;
 
             const summaryMessage = 
                 `Please review your Entry:\n\n` +
@@ -600,7 +650,7 @@
                 dateToReachDestination: reachDate,
                 movementType: combinedMovementString,
                 modeOfTravel: travelModeCompiled,
-                activityDescription: desc,
+                activityDescription: finalCombinedDescription, // Sent combined to backend
                 coordinatorId: currentUser.coordinatorId || "",
                 coordinatorName: currentUser.coordinatorName || "",
                 attachmentBase64: "", 
@@ -638,6 +688,7 @@
                     document.getElementById("fa-dynamic-travel-section").innerHTML = "";
                     document.getElementById("fa-dynamic-travel-section").classList.add("hidden");
                     document.getElementById("travel-mode-notice").classList.add("hidden");
+                    document.getElementById("dynamic-approval-display").classList.add("hidden");
                     
                     document.getElementById("fa-mode").value = "";
                     document.getElementById("fa-existing-box").classList.add("hidden");
