@@ -427,7 +427,7 @@
                         <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Enter KM">
                         <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Amount">
                     </div>
-                    <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid per company & railway norms.</p>
+                    <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid as per audit by accounts department/norms.</p>
                 `;
             } else {
                 wrap.innerHTML = `
@@ -567,7 +567,7 @@
                 const saCost = document.getElementById("sa-cost").value;
                 const saNights = document.getElementById("sa-nights").value;
 
-                combinedMovementString = `Accommodation / Stay Booking\nLocation: ${saLoc}`;
+                combinedMovementString = `Accommodation / Stay Log\nLocation: ${saLoc}`;
                 travelModeCompiled = `Stay Type: ${saType} | Est ₹${saCost}/night | Nights: ${saNights}`;
             }
 
