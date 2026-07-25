@@ -123,9 +123,9 @@
             } catch (e) { return dateInput; }
         };
 
-     // FORTIFIED SWITCH ROUTER: Safe script execution without text-leak corruption
-     // ROUTER: Only handles Pending vs History
-     window.switchAdminLeaveTab = function (targetMode) {
+        // FORTIFIED SWITCH ROUTER: Safe script execution without text-leak corruption
+        // ROUTER: Only handles Pending vs History
+        window.switchAdminLeaveTab = function (targetMode) {
             activeSubPortalTabMode = targetMode;
 
             const pendingBtn = document.getElementById("adm-tab-pending-btn");
@@ -229,6 +229,7 @@
                             <div class="col-span-2">Approved Block: <strong class="text-rose-700 font-mono">${item.adminApprovedDate || '--'}</strong></div>
                             <div class="col-span-2">Processed By: <span class="bg-slate-100 border border-slate-300 text-slate-900 font-black px-1.5 py-0.5 rounded">${item.adminName || 'System Admin'}</span></div>
                             <div class="col-span-2 border-t border-slate-200 pt-1">Admin Remark: <span class="text-slate-950 font-bold">"${item.adminRemark || ''}"</span></div>
+                            <div class="col-span-2 text-slate-500 font-mono text-[9px]">Processed On: ${window.formatToIndianDateTimeStr(item.adminTimestamp)}</div>
                         </div>
                     `;
 
@@ -248,7 +249,13 @@
                             <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span><div class="text-slate-950 font-mono mt-1">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</div><span class="text-[11px] text-slate-700 block">Delta: <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>${docLink}
                         </td>
                         <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
-                            <div class="text-slate-950">Rec Path: <span class="text-emerald-700 font-black uppercase text-[11px]">${item.managerRec}</span></div><div class="text-slate-700 text-[10px] mt-0.5 font-bold leading-tight"><div>Rec Days: <strong class="text-slate-950 font-mono">${item.managerDays}</strong></div><div class="truncate max-w-[180px]">Dates: ${item.managerDates}</div><div class="text-slate-600 italic mt-0.5 max-w-[180px] truncate">Note: "${item.managerRemark}"</div></div>
+                            <div class="text-slate-950">Rec Path: <span class="text-emerald-700 font-black uppercase text-[11px]">${item.managerRec}</span></div>
+                            <div class="text-slate-700 text-[10px] mt-0.5 font-bold leading-tight">
+                                <div>Rec Days: <strong class="text-slate-950 font-mono">${item.managerDays}</strong></div>
+                                <div class="truncate max-w-[180px]">Dates: ${item.managerDates}</div>
+                                <div class="text-slate-600 italic mt-0.5 max-w-[180px] truncate">Note: "${item.managerRemark}"</div>
+                                <div class="text-indigo-600 font-mono mt-1 text-[9px] border-t border-slate-200 pt-1">Rec. On: ${window.formatToIndianDateTimeStr(item.managerTimestamp)}</div>
+                            </div>
                         </td>
                         <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-3 lg:pb-0">${actionInteractiveForm}</td>
                         <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 text-center lg:align-middle whitespace-nowrap">${actionDispatchButton}</td>
@@ -260,35 +267,35 @@
 
         
         window.commitAdminFinalDecisionSingleRow = async function (rowSheetIndex, idx, appId, empId, empName) {
-    const decisionType = document.getElementById(`adm_decision_${idx}`).value;
-    const remarkText = document.getElementById(`adm_remark_${idx}`).value.trim();
-    if (!remarkText) { alert("Validation Mismatch: Admin comments are required."); return; }
+            const decisionType = document.getElementById(`adm_decision_${idx}`).value;
+            const remarkText = document.getElementById(`adm_remark_${idx}`).value.trim();
+            if (!remarkText) { alert("Validation Mismatch: Admin comments are required."); return; }
 
-    let targetStatus = "APPROVED";
-    let cacheItem = masterLeaveApplicationsCache.find(i => i.applicationId === appId);
-    
-    // 🎯 NEW LOGIC: If "Approve as Recommended", use manager's data instead of application data
-    let approvedDays = (decisionType === "APPROVE") ? cacheItem.managerDays : cacheItem.leaveDays;
-    let adminApprovedDateString = (decisionType === "APPROVE") ? cacheItem.managerDates : `${window.cleanISOToDashFormat(cacheItem.fromDate)} to ${window.cleanISOToDashFormat(cacheItem.toDate)}`;
-    
-    let descriptiveLabelText = `APPROVE AS RECOMMENDED (${approvedDays} Approved Days: ${adminApprovedDateString})`;
+            let targetStatus = "APPROVED";
+            let cacheItem = masterLeaveApplicationsCache.find(i => i.applicationId === appId);
+            
+            // 🎯 NEW LOGIC: If "Approve as Recommended", use manager's data instead of application data
+            let approvedDays = (decisionType === "APPROVE") ? cacheItem.managerDays : cacheItem.leaveDays;
+            let adminApprovedDateString = (decisionType === "APPROVE") ? cacheItem.managerDates : `${window.cleanISOToDashFormat(cacheItem.fromDate)} to ${window.cleanISOToDashFormat(cacheItem.toDate)}`;
+            
+            let descriptiveLabelText = `APPROVE AS RECOMMENDED (${approvedDays} Approved Days: ${adminApprovedDateString})`;
 
-    if (decisionType === "REJECT") {
-        targetStatus = "REJECTED"; 
-        approvedDays = 0; 
-        adminApprovedDateString = "Rejected / Cancelled";
-        descriptiveLabelText = `COMPLETE REJECTION / DISMISSAL (0 Days)`;
-    } else if (decisionType === "SHORT") {
-        approvedDays = window.calculateAdminApprovedShortLeaveDaysDelta(idx);
-        const fromDateInput = document.getElementById(`adm_rec_from_${idx}`).value;
-        const toDateInput = document.getElementById(`adm_rec_to_${idx}`).value;
-        if (approvedDays <= 0 || isNaN(approvedDays)) { alert("Validation Mismatch: Short Leave approved dates mapping error."); return; }
+            if (decisionType === "REJECT") {
+                targetStatus = "REJECTED"; 
+                approvedDays = 0; 
+                adminApprovedDateString = "Rejected / Cancelled";
+                descriptiveLabelText = `COMPLETE REJECTION / DISMISSAL (0 Days)`;
+            } else if (decisionType === "SHORT") {
+                approvedDays = window.calculateAdminApprovedShortLeaveDaysDelta(idx);
+                const fromDateInput = document.getElementById(`adm_rec_from_${idx}`).value;
+                const toDateInput = document.getElementById(`adm_rec_to_${idx}`).value;
+                if (approvedDays <= 0 || isNaN(approvedDays)) { alert("Validation Mismatch: Short Leave approved dates mapping error."); return; }
 
-        adminApprovedDateString = `${window.cleanISOToDashFormat(fromDateInput)} to ${window.cleanISOToDashFormat(toDateInput)}`;
-        descriptiveLabelText = `OVERRIDE SHORT LEAVE APPROVAL (${approvedDays} Final Approved Days: ${adminApprovedDateString})`;
-    }
-    
-    if (!confirm(`MASTER ADMINISTRATIVE OVERRIDE CLEARANCE\n\nApplicant: ${empName}\nDecision: ${descriptiveLabelText}\nRemarks: "${remarkText}"\n\nCommit this closure state?`)) return;
+                adminApprovedDateString = `${window.cleanISOToDashFormat(fromDateInput)} to ${window.cleanISOToDashFormat(toDateInput)}`;
+                descriptiveLabelText = `OVERRIDE SHORT LEAVE APPROVAL (${approvedDays} Final Approved Days: ${adminApprovedDateString})`;
+            }
+            
+            if (!confirm(`MASTER ADMINISTRATIVE OVERRIDE CLEARANCE\n\nApplicant: ${empName}\nDecision: ${descriptiveLabelText}\nRemarks: "${remarkText}"\n\nCommit this closure state?`)) return;
 
             const payload = { action: "processAdminLeaveApprovalDecision", rowIndex: rowSheetIndex, applicationId: appId, employeeId: empId, status: targetStatus, adminDecision: decisionType, finalApprovedDays: approvedDays, adminRemark: remarkText, adminName: currentUser.employeeName, adminApprovedDateString: adminApprovedDateString };
             try {
@@ -299,3 +306,4 @@
 
         window.syncAdminLeaveMasterData();
     })();
+</script>
