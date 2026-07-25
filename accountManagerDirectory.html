@@ -33,20 +33,21 @@
     <!-- MAIN INTERACTIVE IAM PROVISIONING GRID TABLE -->
     <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-5">
         <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[600px]">
-            <table class="w-full text-left border-collapse table-auto min-w-[1000px]">
+            <table class="w-full text-left border-collapse table-auto min-w-[1150px]">
                 <thead>
                     <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
                         <th class="px-3 py-3.5 w-20 text-center">Profile</th>
-                        <th class="px-3 py-3.5">Identity (Name & ID)</th>
-                        <th class="px-3 py-3.5 w-48">Designation</th>
-                        <th class="px-3 py-3.5 w-56">Appointed Projects</th>
-                        <th class="px-3 py-3.5">Supervisory Line Allocations</th>
+                        <th class="px-3 py-3.5 w-48">Identity (Name & ID)</th>
+                        <th class="px-3 py-3.5 w-55">Contact Info</th>
+                        <th class="px-3 py-3.5 w-40">Designation</th>
+                        <th class="px-3 py-3.5 w-40">Appointed Projects</th>
+                        <th class="px-3 py-3.5  w-56">Supervisory Line Allocations</th>
                         <th class="px-3 py-3.5 w-44">Education Attributes</th>
                     </tr>
                 </thead>
                 <tbody id="acc-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900">
                     <tr>
-                        <td colspan="6" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
+                        <td colspan="7" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
                             Loading employee directory...
                         </td>
                     </tr>
@@ -71,7 +72,7 @@
 
         window.refreshAccConsoleData = async function () {
             const tbody = document.getElementById("acc-matrix-table-body");
-            tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-12 text-center text-slate-700 font-bold">Synchronizing directory...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-12 text-center text-slate-700 font-bold">Synchronizing directory...</td></tr>`;
             document.getElementById("acc-search-input").value = "";
 
             try {
@@ -80,14 +81,14 @@
                 const regResult = await regRes.json();
                 
                 if (!regResult.status) { 
-                    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-rose-700 font-black text-center">Sync rejected by database.</td></tr>`; 
+                    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-rose-700 font-black text-center">Sync rejected by database.</td></tr>`; 
                     return; 
                 }
 
                 employeeRegistryCache = regResult.data;
                 window.renderAccRegistryGridRows(employeeRegistryCache);
             } catch (e) { 
-                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-rose-700 font-black">Governance stack sync crash.</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-rose-700 font-black">Governance stack sync crash.</td></tr>`; 
             }
         };
 
@@ -96,7 +97,7 @@
             const currentYear = new Date().getFullYear();
 
             if(dataArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500 font-bold">No employees match your search.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 font-bold">No employees match your search.</td></tr>`;
                 return;
             }
 
@@ -120,6 +121,10 @@
                         <strong class="text-slate-950 block font-black text-xs">${emp.employeeName}</strong>
                         <span class="font-mono text-[11px] text-slate-700 block font-bold mt-0.5">${emp.employeeId}</span>
                         <span class="text-[10px] text-slate-500 block mt-0.5 font-bold">DOJ: ${displayDoj}</span>
+                    </td>
+                    <td class="px-3 py-3.5 leading-normal">
+                        <div class="flex items-center gap-1.5"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i><span class="text-[11px] font-bold text-slate-800 break-all">${emp.email || 'N/A'}</span></div>
+                        <div class="flex items-center gap-1.5 mt-1.5"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i><span class="text-[11px] font-bold text-slate-800">${emp.phone || 'N/A'}</span></div>
                     </td>
                     <td class="px-3 py-3.5">
                         <span class="block text-slate-900 font-black text-xs">${emp.designation || 'Not Configured'}</span>
