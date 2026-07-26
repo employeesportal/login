@@ -2,11 +2,11 @@
     
     <!-- LEFT SIDE / MOBILE TOP: Profile Information Block -->
     <div class="flex flex-col sm:flex-row items-center sm:items-center gap-3.5 w-full sm:w-auto">
-        <!-- Profile Picture (Hidden on mobile screens using hidden sm:block, preserved on desktop) -->
+        <!-- Profile Picture -->
         <div onclick="if(typeof window.loadTabModule === 'function'){ window.loadTabModule('profile.html', document.querySelector('[onclick*=\'profile.html\']')); }" 
              class="relative group hidden sm:block w-16 h-16 rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden bg-slate-100 shrink-0 transition-transform hover:scale-105 cursor-pointer">
-            <img id="topbar-avatar-img" src="" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden')">
-            <div id="topbar-avatar-fallback" class="w-full h-full bg-slate-300 text-slate-600 flex items-center justify-center">
+            <img src="" class="topbar-avatar-img w-full h-full object-cover hidden">
+            <div class="topbar-avatar-fallback w-full h-full bg-slate-300 text-slate-600 flex items-center justify-center">
                 <i data-lucide="user" class="w-8 h-8"></i>
             </div>
             
@@ -17,10 +17,10 @@
         </div>
 
         <div class="flex flex-col justify-center items-center sm:items-start min-w-0 w-full sm:w-auto">
-            <h4 id="topbar-emp-display-name" class="text-base sm:text-base font-black text-slate-950 leading-tight truncate w-full">-</h4>
-            <div class="font-mono text-xs font-bold text-slate-700 mt-0.5" id="topbar-emp-id-tag">ID: -</div>
-            <div class="mt-1" id="topbar-meta-badge-container">
-                <span id="topbar-emp-designation-tag"></span>
+            <h4 class="topbar-emp-display-name text-base sm:text-base font-black text-slate-950 leading-tight truncate w-full">-</h4>
+            <div class="topbar-emp-id-tag font-mono text-xs font-bold text-slate-700 mt-0.5">ID: -</div>
+            <div class="mt-1 topbar-meta-badge-container">
+                <span class="topbar-emp-designation-tag"></span>
             </div>
         </div>
     </div>
@@ -29,51 +29,52 @@
     <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
         <div class="flex items-center justify-center gap-2 bg-slate-900 text-white border border-slate-800 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm w-full sm:w-auto">
             <div class="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0"></div>
-            <span id="topbar-live-clock" class="text-[11px] sm:text-xs font-mono font-black tracking-wide text-sky-400">
-                Wednesday , 22 July 2026 : 1:00:00 PM
+            <span class="topbar-live-clock text-[11px] sm:text-xs font-mono font-black tracking-wide text-sky-400">
+                Loading Time...
             </span>
         </div>
 
-        <div id="session-timer-badge" class="flex items-center justify-center gap-1 px-3 py-1.5 sm:py-2 bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl text-slate-200 font-mono text-xs font-black shadow-inner w-full sm:w-auto">
-            <span id="timer-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <div class="flex items-center justify-center gap-1 px-3 py-1.5 sm:py-2 bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl text-slate-200 font-mono text-xs font-black shadow-inner w-full sm:w-auto">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
             <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Session:</span>
-            <span id="session-countdown-display" class="text-sky-400 font-black text-[11px] sm:text-xs">30:00</span>
+            <!-- The Global Session Manager from index.html targets this class -->
+            <span class="session-timer-display text-sky-400 font-black text-[11px] sm:text-xs">30:00</span>
         </div>
     </div>
 </header>
 
 <script>
     (() => {
-        // 1. Hydrate identity parameters safely
+        // 1. Hydrate identity parameters safely targeting ALL injected topbars
         if (typeof currentUser !== 'undefined' && currentUser) {
-            const nameNode = document.getElementById("topbar-emp-display-name");
-            const idNode = document.getElementById("topbar-emp-id-tag");
-            if (nameNode) nameNode.innerText = currentUser.employeeName || "-";
-            if (idNode) idNode.innerText = `ID: ${currentUser.employeeId || "-"}`;
+            document.querySelectorAll(".topbar-emp-display-name").forEach(el => el.innerText = currentUser.employeeName || "-");
+            document.querySelectorAll(".topbar-emp-id-tag").forEach(el => el.innerText = `ID: ${currentUser.employeeId || "-"}`);
             
-            const desigNode = document.getElementById("topbar-emp-designation-tag");
-            if (desigNode && currentUser.designation && currentUser.designation.trim() !== "") {
-                desigNode.className = "inline-block bg-blue-600 border border-blue-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase shadow-sm tracking-wider";
-                desigNode.innerText = currentUser.designation;
-            } else if (desigNode) {
-                desigNode.className = "hidden";
-                desigNode.innerText = "";
-            }
+            document.querySelectorAll(".topbar-emp-designation-tag").forEach(desigNode => {
+                if (currentUser.designation && currentUser.designation.trim() !== "") {
+                    desigNode.className = "topbar-emp-designation-tag inline-block bg-blue-600 border border-blue-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase shadow-sm tracking-wider";
+                    desigNode.innerText = currentUser.designation;
+                } else {
+                    desigNode.className = "topbar-emp-designation-tag hidden";
+                    desigNode.innerText = "";
+                }
+            });
 
-            const avatarImg = document.getElementById("topbar-avatar-img");
-            const avatarFallback = document.getElementById("topbar-avatar-fallback");
-            if (currentUser.profilePhoto && currentUser.profilePhoto.trim() !== "" && avatarImg && avatarFallback) {
-                avatarImg.src = currentUser.profilePhoto;
-                avatarFallback.classList.add("hidden");
+            if (currentUser.profilePhoto && currentUser.profilePhoto.trim() !== "") {
+                document.querySelectorAll(".topbar-avatar-img").forEach(img => {
+                    img.src = currentUser.profilePhoto;
+                    img.onload = () => img.classList.remove("hidden");
+                });
+                document.querySelectorAll(".topbar-avatar-fallback").forEach(fb => fb.classList.add("hidden"));
             }
         }
 
-        // 2. Strict Ticking loop engine matching your exact format: Wednesday , 22 July 2026 : time
+        // 2. Strict Ticking loop engine applied to ALL clock nodes
         if (window.topbarClockInterval) clearInterval(window.topbarClockInterval);
         
         window.topbarClockInterval = setInterval(() => {
-            const clockNode = document.getElementById("topbar-live-clock");
-            if (!clockNode) return; 
+            const clockNodes = document.querySelectorAll(".topbar-live-clock");
+            if (clockNodes.length === 0) return; 
             
             const time = new Date();
             const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -92,120 +93,13 @@
             hours = hours ? hours : 12;
             const timeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
             
-            clockNode.innerText = `${dayOfWeek} , ${dayOfMonth} ${month} ${year} : ${timeStr}`;
+            const finalStr = `${dayOfWeek} , ${dayOfMonth} ${month} ${year} : ${timeStr}`;
+            
+            clockNodes.forEach(node => {
+                node.innerText = finalStr;
+            });
         }, 1000);
 
-        // 3. PERSISTENT SESSION COUNTDOWN TIMER LOGIC
-        const SESSION_DURATION_MINUTES = 30; 
-        const PROMPT_WARNING_SECONDS = 30;   
-        let isPromptActive = false;
-
-        window.startOrResetSessionTimer = function() {
-            const currentEpoch = localStorage.getItem("session_expiration_epoch");
-            if (currentEpoch && parseInt(currentEpoch, 10) > Date.now()) {
-                return; 
-            }
-            
-            const expirationEpoch = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
-            localStorage.setItem("session_expiration_epoch", expirationEpoch);
-            localStorage.setItem("session_warned", "false");
-            isPromptActive = false;
-
-            const dot = document.getElementById("timer-dot");
-            if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
-        };
-
-        window.performAutoSessionLogout = function() {
-            alert("Your active session has expired. Redirecting to login window...");
-            localStorage.removeItem("session_expiration_epoch");
-            localStorage.removeItem("session_warned");
-
-            if (typeof window.logout === "function") {
-                window.logout();
-            } else {
-                location.reload();
-            }
-        };
-
-        window.runSessionTickEngine = function() {
-            const display = document.getElementById("session-countdown-display");
-            const dot = document.getElementById("timer-dot");
-            if (!display) return;
-
-            let expirationStr = localStorage.getItem("session_expiration_epoch");
-            if (!expirationStr) {
-                const expirationEpoch = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
-                localStorage.setItem("session_expiration_epoch", expirationEpoch);
-                localStorage.setItem("session_warned", "false");
-                expirationStr = String(expirationEpoch);
-            }
-
-            const expirationEpoch = parseInt(expirationStr, 10);
-            const timeLeftMs = expirationEpoch - Date.now();
-
-            if (timeLeftMs <= 0) {
-                clearInterval(window.topbarSessionInterval);
-                display.innerText = "00:00";
-                window.performAutoSessionLogout();
-                return;
-            }
-
-            const totalSecondsLeft = Math.floor(timeLeftMs / 1000);
-            const minutes = Math.floor(totalSecondsLeft / 60);
-            const seconds = totalSecondsLeft % 60;
-
-            display.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-            if (totalSecondsLeft <= PROMPT_WARNING_SECONDS) {
-                if (dot) dot.className = "w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0";
-
-                if (localStorage.getItem("session_warned") !== "true" && !isPromptActive) {
-                    localStorage.setItem("session_warned", "true");
-                    isPromptActive = true;
-
-                    setTimeout(() => {
-                        const extend = confirm(`Your active workspace session is about to expire in ${totalSecondsLeft} seconds.\n\nClick "OK" to extend your session for another ${SESSION_DURATION_MINUTES} minutes.`);
-                        if (extend) {
-                            const freshEpoch = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
-                            localStorage.setItem("session_expiration_epoch", freshEpoch);
-                            localStorage.setItem("session_warned", "false");
-                            isPromptActive = false;
-                        } else {
-                            isPromptActive = false;
-                        }
-                    }, 10);
-                }
-            } else {
-                if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
-            }
-        };
-
-        window.startOrResetSessionTimer();
-        if (window.topbarSessionInterval) clearInterval(window.topbarSessionInterval);
-        window.runSessionTickEngine();
-        window.topbarSessionInterval = setInterval(window.runSessionTickEngine, 1000);
-
-        window.removeEventListener("focus", window.runSessionTickEngine); 
-        window.addEventListener("focus", window.runSessionTickEngine);
-
-        const interactionEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        interactionEvents.forEach(evt => {
-            document.removeEventListener(evt, window.handleSessionActivitySync);
-            window.handleSessionActivitySync = () => {
-                const expStr = localStorage.getItem("session_expiration_epoch");
-                if (expStr) {
-                    const currentExpiration = parseInt(expStr, 10);
-                    const maxAllowedTime = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
-                    const timeLeftMs = currentExpiration - Date.now();
-
-                    if (timeLeftMs > (PROMPT_WARNING_SECONDS * 1000) && (maxAllowedTime - currentExpiration > 60000)) {
-                        localStorage.setItem("session_expiration_epoch", maxAllowedTime);
-                    }
-                }
-            };
-            document.addEventListener(evt, window.handleSessionActivitySync);
-        });
-
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     })();
 </script>
