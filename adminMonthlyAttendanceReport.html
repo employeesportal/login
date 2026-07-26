@@ -22,8 +22,8 @@
     </div>
 
     <div id="payroll-view-container" class="hidden overflow-auto border border-slate-200 rounded-2xl max-h-[400px] shadow-inner bg-slate-50">
-        <table class="w-full text-[10px] text-left border-collapse">
-            <thead class="bg-slate-950 text-white sticky top-0">
+        <table class="w-full text-[10px] text-left border-collapse min-w-[1200px]">
+            <thead class="bg-slate-950 text-white sticky top-0 z-10">
                 <tr id="payroll-table-head"></tr>
             </thead>
             <tbody id="payroll-table-body" class="divide-y divide-slate-200 text-slate-800 font-bold"></tbody>
@@ -50,6 +50,11 @@
             
             if (!result.status) throw new Error(result.message);
 
+            if (!result.data || result.data.length === 0) {
+                alert("No employee records found for this period.");
+                return;
+            }
+
             if (shouldDownload) {
                 // Download Logic
                 const keys = Object.keys(result.data[0]);
@@ -64,9 +69,9 @@
                 // View Logic
                 container.classList.remove("hidden");
                 const keys = Object.keys(result.data[0]);
-                thead.innerHTML = keys.map(k => `<th class="p-3 uppercase">${k}</th>`).join('');
+                thead.innerHTML = keys.map(k => `<th class="p-3 uppercase tracking-wider">${k}</th>`).join('');
                 tbody.innerHTML = result.data.map(row => 
-                    `<tr>${keys.map(k => `<td class="p-3">${row[k] || '-'}</td>`).join('')}</tr>`
+                    `<tr class="hover:bg-indigo-50">${keys.map(k => `<td class="p-3">${row[k] || '0'}</td>`).join('')}</tr>`
                 ).join('');
             }
         } catch (e) {
@@ -74,7 +79,7 @@
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i data-lucide="download" class="w-4 h-4"></i> Download CSV';
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
     };
     
