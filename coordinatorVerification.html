@@ -96,7 +96,10 @@
 <script>
     (() => {
         let activeRosterDataCache = [];
-        const todayDate = new Date().toISOString().split('T')[0];
+        
+        // 🎯 FIXED: Generate DD-MM-YYYY specifically to match the backend's new logic
+        const d = new Date();
+        const todayDate = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth()+1).padStart(2, '0')}-${d.getFullYear()}`;
 
         window.recalculateRosterStatistics = () => {
             const total = activeRosterDataCache.length;
@@ -106,7 +109,7 @@
                 else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordM++;
                 else if (r.trackingState === "NOT_MARKED") notM++;
             });
-            document.getElementById("stat-date").innerText = todayDate.split("-").reverse().join("/");
+            document.getElementById("stat-date").innerText = todayDate.replace(/-/g, '/');
             document.getElementById("stat-total").innerText = total;
             document.getElementById("stat-emp-marked").innerText = empM;
             document.getElementById("stat-coord-marked").innerText = coordM;
@@ -118,6 +121,7 @@
             document.getElementById("display-date-header").innerText = `Audit Date: ${todayDate}`;
 
             try {
+                // Fetch using the safely formatted DD-MM-YYYY date
                 const res = await fetch(`${API_URL}?action=getRosterForCoordinator&coordinatorId=${currentUser.employeeId}&date=${todayDate}`);
                 const result = await res.json();
 
@@ -277,7 +281,6 @@
 
         window.saveSingleRowDirectly = async function (idx) {
             const r = activeRosterDataCache[idx];
-            const currentSaveDate = new Date().toISOString().split('T')[0];
 
             const selectedProj = document.getElementById(`proj_sel_${idx}`).value;
             let selectedDist = document.getElementById(`dist_sel_${idx}`).value;
@@ -297,7 +300,7 @@
 
             const singleSubmitPayload = {
                 action: "processCoordinatorVerificationData",
-                date: currentSaveDate,
+                date: todayDate, // 🎯 FIXED: Ensures the safe DD-MM-YYYY is saved to the sheet
                 coordinatorId: currentUser.employeeId,
                 coordinatorName: currentUser.employeeName,
                 records: targetRowPayload
@@ -316,7 +319,7 @@
         window.openReportModal = () => {
             const modal = document.getElementById('report-modal');
             const body = document.getElementById('modal-report-body');
-            const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const todayStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             const coordName = currentUser.employeeName || "Coordinator";
 
             body.innerHTML = `
@@ -324,7 +327,7 @@
                     <div class="mb-6 border-b pb-4">
                         <h2 class="text-xl font-black text-slate-800 mb-2">Daily Attendance Verification Report</h2>
                         <div class="flex gap-8 text-xs font-bold text-slate-600">
-                            <p>Report Date: <span class="text-slate-900">${today}</span></p>
+                            <p>Report Date: <span class="text-slate-900">${todayStr}</span></p>
                             <p>Coordinator: <span class="text-slate-900">${coordName}</span></p>
                         </div>
                     </div>
@@ -394,7 +397,7 @@
             const element = document.getElementById('pdf-content-area');
             const opt = {
                 margin: 0.5,
-                filename: `Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                filename: `Audit_Report_${todayDate}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
