@@ -19,7 +19,7 @@
         <div class="flex items-center gap-3">
             <div class="text-right hidden sm:block">
                 <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-black">List of Projects</span>
-                <span id="lbl-l2-allowed-scopes" class="text-[11px] font-mono font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Syncing...</span>
+                <span id="lbl-l2-allowed-scopes" class="text-[11px] font-mono font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 animate-pulse">Syncing...</span>
             </div>
             <button onclick="window.syncL2LeaveMasterData()"
                 class="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -31,7 +31,6 @@
     <!-- Main Viewport Container -->
     <div id="l2-main-content-area">
         <div id="l2-search-filter-card" class="hidden mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl">
-            <!-- ADDED: 3-column grid to accommodate the new Date Picker -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold text-slate-800">
                 <div>
                     <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Search Employee Name / ID</label>
@@ -45,7 +44,6 @@
                         <option value="REJECTED">REJECTED Only</option>
                     </select>
                 </div>
-                <!-- ADDED: The Date Picker Filter -->
                 <div>
                     <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Filter by Applied/Start Date</label>
                     <input type="date" id="l2-filter-date" onchange="window.executeL2FilterQueryPipeline()" class="w-full px-3 py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white font-black">
@@ -124,26 +122,33 @@
 
         window.syncL2LeaveMasterData = async function() {
             const tbody = document.getElementById("l2-leave-table-body");
-            tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-slate-500 animate-pulse font-medium">Synchronizing Secure Data...</td></tr>`;
+            const scopesLabel = document.getElementById("lbl-l2-allowed-scopes");
+            
+            tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-indigo-600 animate-pulse font-black uppercase tracking-wider">Synchronizing Secure Database Layers...</td></tr>`;
+            scopesLabel.classList.add("animate-pulse");
 
             try {
-                // 1. Fetch Project Boundaries
-                const boundRes = await fetch(`${API_URL}?action=getL2AdminProjectBoundaries&managerId=${encodeURIComponent(currentUser.employeeId)}`);
-                const boundText = await boundRes.text();
+                // ⚡ SPEED OPTIMIZATION: Fire both backend API requests simultaneously
+                const [boundRes, lvRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getL2AdminProjectBoundaries&managerId=${encodeURIComponent(currentUser.employeeId)}`),
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`)
+                ]);
                 
+                const boundText = await boundRes.text();
+                const rawText = await lvRes.text();
+                
+                // Parse Project Boundaries
                 try {
                     const boundData = JSON.parse(boundText);
                     allowedProjectBoundaries = boundData.status ? boundData.allowedProjects : [];
-                    document.getElementById("lbl-l2-allowed-scopes").innerText = allowedProjectBoundaries.length > 0 ? allowedProjectBoundaries.join(", ") : "None Configured";
+                    scopesLabel.innerText = allowedProjectBoundaries.length > 0 ? allowedProjectBoundaries.join(", ") : "None Configured";
+                    scopesLabel.classList.remove("animate-pulse");
                 } catch (err) {
                     console.error("Boundary parsing failed, returned HTML:", boundText);
                     throw new Error("Backend returned an HTML error instead of JSON for boundaries.");
                 }
 
-                // 2. Fetch Master Leave Data
-                const res = await fetch(`${API_URL}?action=getAdminLeaveDataBundles`);
-                const rawText = await res.text();
-
+                // Parse Master Leave Data
                 let result;
                 try {
                     result = JSON.parse(rawText);
@@ -175,7 +180,6 @@
             const statusFilter = document.getElementById("l2-filter-status-state")?.value || "ALL";
             const rawDateVal = document.getElementById("l2-filter-date")?.value || "";
 
-            // 🎯 FIXED: Convert HTML Date Picker (YYYY-MM-DD) to Backend Date Format (DD-MM-YYYY)
             let safeQueryDate = "";
             if (rawDateVal) {
                 const dateParts = rawDateVal.split('-');
@@ -241,7 +245,6 @@
                         </td>
                         <td class="px-3 py-4">
                             <span class="block font-black text-indigo-700 uppercase tracking-wider text-[10px] mb-0.5">${item.leaveType}</span>
-                            <!-- 🎯 FIXED: Changed startDate/endDate to fromDate/toDate to correctly pull from backend -->
                             <span class="block text-slate-700 font-medium text-[11px]">${item.fromDate} to ${item.toDate}</span>
                             <span class="text-slate-500 text-[10px] italic line-clamp-2 mt-1" title="${item.reason}">${item.reason || 'No reason provided'}</span>
                         </td>
@@ -306,7 +309,6 @@
             };
 
             try {
-                // Notice we also add the text-parsing safety check here
                 const res = await fetch(API_URL, {
                     method: "POST",
                     body: JSON.stringify(payload)
@@ -333,7 +335,8 @@
             }
         };
 
-        // Initialize default tab
+        // 🎯 FIXED: Auto-Trigger Data Sync instantly upon page load
         window.switchL2LeaveTab('pending');
+        window.syncL2LeaveMasterData();
     })();
 </script>
