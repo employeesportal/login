@@ -326,7 +326,7 @@
                     inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
                 }
             }, () => {
-                alert("Positioning metrics mapping initialization error. Check browser settings.");
+                alert("Could not get your location. Please turn on your device's GPS and allow location access in your browser settings.");
                 inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
             });
         };
