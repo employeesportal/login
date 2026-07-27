@@ -74,13 +74,21 @@
 
                 let outputRows = "";
                 result.data.forEach(row => {
-                    // Transform date from YYYY-MM-DD or similar to DD-MM-YYYY
-                    const dateObj = new Date(row.date);
-                    const formattedDate = dateObj.toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                    }).replace(/\//g, '-');
+                    
+                    // SAFE DATE PARSER: Avoids the "Invalid Date" JS error from strict backend formats
+                    let formattedDate = String(row.date || "-");
+                    try {
+                        let s = formattedDate.trim().split(' ')[0];
+                        if (s.includes('T')) s = s.split('T')[0];
+                        let parts = s.includes('/') ? s.split('/') : s.split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert YYYY-MM-DD to DD-MM-YYYY
+                            } else {
+                                formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`; // Ensure clean DD-MM-YYYY
+                            }
+                        }
+                    } catch(e) { }
 
                     // Match coordinator statuses and comments dynamically
                     let statusBadgeClass = "bg-slate-100 border-slate-200 text-slate-700";
@@ -95,20 +103,20 @@
                     }
 
                     outputRows += `
-        <tr class="hover:bg-slate-50 transition-colors duration-150">
-            <td class="px-4 py-3 text-slate-950 whitespace-nowrap">${formattedDate}</td>
-            <td class="px-4 py-3 font-semibold text-slate-700">${row.currentProject}</td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold text-[11px]">${row.district}</span></td>
-            <td class="px-4 py-3 max-w-xs truncate font-medium text-slate-600" title="${row.todaysPlan}">${row.todaysPlan || '-'}</td>
+        <tr class="hover:bg-slate-50 transition-colors duration-150 align-top">
+            <td class="px-4 py-3 text-slate-950 whitespace-nowrap font-mono">${formattedDate}</td>
+            <td class="px-4 py-3 font-semibold text-slate-700 break-words">${row.currentProject || '-'}</td>
+            <td class="px-4 py-3 whitespace-nowrap"><span class="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold text-[11px]">${row.district || '-'}</span></td>
+            <td class="px-4 py-3 max-w-xs break-words font-medium text-slate-600 italic">"${row.todaysPlan || '-'}"</td>
             <td class="px-4 py-3 font-mono font-black text-emerald-600 whitespace-nowrap text-center">${row.loginTime || '-'}</td>
-            <td class="px-4 py-3 max-w-xs truncate italic text-slate-600 font-medium" title="${row.todaysWorkProgress}">${row.todaysWorkProgress || '-'}</td>
+            <td class="px-4 py-3 max-w-xs break-words italic text-slate-600 font-medium">"${row.todaysWorkProgress || '-'}"</td>
             <td class="px-4 py-3 font-mono font-black text-orange-600 whitespace-nowrap text-center">${row.logoutTime || '-'}</td>
             <td class="px-4 py-3 align-middle">
-                <div class="flex flex-col items-center gap-0.5 max-w-[160px] mx-auto">
+                <div class="flex flex-col items-center gap-1 max-w-[160px] mx-auto">
                     <span class="border px-2 py-0.5 rounded-md text-[10px] w-max uppercase tracking-wider font-black ${statusBadgeClass}">
                         ${row.coordinatorRemark || 'Pending'}
                     </span>
-                    ${row.coordinatorComment ? `<span class="text-[10px] text-slate-500 font-semibold italic text-center truncate max-w-[140px]" title="${row.coordinatorComment}">"${row.coordinatorComment}"</span>` : ''}
+                    ${row.coordinatorComment ? `<span class="text-[10px] text-slate-500 font-semibold italic text-center break-words leading-tight w-full">"${row.coordinatorComment}"</span>` : ''}
                 </div>
             </td>
         </tr>
@@ -128,6 +136,6 @@
         };
 
         window.fetchAndRenderAttendanceHistory();
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
     })();
 </script>
