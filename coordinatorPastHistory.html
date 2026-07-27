@@ -92,24 +92,29 @@
         }
 
         window.fetchArchiveLogs = async function() {
-            const dateVal = dateInput.value;
+            const rawDateVal = dateInput.value;
             const tableBody = document.getElementById("archive-table-body");
             const btnPdf = document.getElementById("btn-print-pdf");
 
-            if (!dateVal) {
+            if (!rawDateVal) {
                 alert("Please select a target date.");
                 return;
             }
 
-            tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 animate-pulse font-medium">Querying log sheets for ${dateVal}...</td></tr>`;
+            // 🎯 FIXED: Convert the YYYY-MM-DD input date into the DD-MM-YYYY required by the backend
+            const dateParts = rawDateVal.split('-');
+            const safeQueryDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+            tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 animate-pulse font-medium">Querying log sheets for ${safeQueryDate}...</td></tr>`;
             btnPdf.classList.add("hidden");
 
             try {
-                const res = await fetch(`${API_URL}?action=getPastAttendanceHistoryArchive&coordinatorId=${currentUser.employeeId}&date=${dateVal}`);
+                // Sent formatted date to backend router
+                const res = await fetch(`${API_URL}?action=getPastAttendanceHistoryArchive&coordinatorId=${currentUser.employeeId}&date=${safeQueryDate}`);
                 const result = await res.json();
 
                 if (!result.data || result.data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 font-medium">No log records found for ${dateVal} mapped to your profile.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="7" class="p-12 text-center text-slate-400 font-medium">No log records found for ${safeQueryDate} mapped to your profile.</td></tr>`;
                     currentArchiveCache = [];
                     return;
                 }
@@ -169,9 +174,12 @@
                 return;
             }
 
-            const dateVal = dateInput.value;
+            const rawDateVal = dateInput.value;
+            const dateParts = rawDateVal.split('-');
+            const safeQueryDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
             document.getElementById("report-coord-lbl").innerText = currentUser.employeeName || "Coordinator";
-            document.getElementById("report-date-lbl").innerText = dateVal;
+            document.getElementById("report-date-lbl").innerText = safeQueryDate;
 
             const metaHeader = document.getElementById("archive-meta-header");
             metaHeader.classList.remove("hidden");
@@ -179,7 +187,7 @@
             const element = document.getElementById("archive-pdf-printable-area");
             const opt = {
                 margin: 0.4,
-                filename: `Attendance_Archive_${dateVal}.pdf`,
+                filename: `Attendance_Archive_${safeQueryDate}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
