@@ -144,7 +144,7 @@
         
         window.syncAdminLeaveMasterData = async function () {
             const tbody = document.getElementById("admin-leave-table-body");
-            tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold block lg:table-cell">Synchronizing Admin L3 leave ledger tracks...</td></tr>`;
+            tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold block lg:table-cell">Synchronizing Admin leave ledger tracks...</td></tr>`;
             try {
                 // 🎯 FIXED: Simultaneously fetch Master Registry to cross-reference Manager Names
                 const [leaveRes, empRes] = await Promise.all([
@@ -302,7 +302,7 @@
                         <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
                             <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span>
                             <div class="text-slate-950 font-mono mt-1">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</div>
-                            <span class="text-[11px] text-slate-700 block mb-1.5">Delta: <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>
+                            <span class="text-[11px] text-slate-700 block mb-1.5">Day(s): <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>
                             
                             <!-- 🎯 FIXED: Fully Scrollable & Wrap-friendly Reason Box -->
                             <div class="text-slate-700 italic text-[11px] bg-white p-2.5 rounded-lg border border-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed shadow-inner" title="Reason">
