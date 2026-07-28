@@ -62,12 +62,19 @@
                     renderMgrTable(mgrCache);
                 }
             } catch (e) {
-                document.getElementById("mgr-tbody").innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load team activity records.</td></tr>`;
+                // 🎯 FIXED: Safeguard check prevents crash if user switched tabs
+                const tbody = document.getElementById("mgr-tbody");
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load team activity records.</td></tr>`;
+                }
             }
         }
 
         function populateMgrJobDropdown(data) {
             const select = document.getElementById("mgr-filter-job");
+            // 🎯 FIXED: Safeguard check
+            if (!select) return; 
+
             const uniqueJobs = [...new Set(data.map(d => d.jobActivityId))];
             select.innerHTML = '<option value="">Filter by Job ID</option>';
             uniqueJobs.forEach(job => {
@@ -77,13 +84,18 @@
         }
 
         window.filterMgrTable = function () {
-            const val = document.getElementById("mgr-filter-job").value;
+            const selectEl = document.getElementById("mgr-filter-job");
+            if (!selectEl) return;
+            const val = selectEl.value;
             const filtered = val ? mgrCache.filter(d => d.jobActivityId === val) : mgrCache;
             renderMgrTable(filtered);
         };
 
         function renderMgrTable(data) {
             const tbody = document.getElementById("mgr-tbody");
+            // 🎯 FIXED: Safeguard check
+            if (!tbody) return; 
+
             if (data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No team field records found.</td></tr>`;
                 return;
@@ -188,14 +200,16 @@
             } catch (e) { alert("Network error."); }
         };
 
-        // FIXED TIMING INITIALIZATION
         setTimeout(() => {
             const tableBody = document.getElementById("mgr-tbody");
             if (tableBody) {
                 initMgrPortal();
             } else {
                 console.warn("DOM not ready. Retrying init...");
-                setTimeout(initMgrPortal, 150);
+                // Keep the safeguard in the retry as well
+                setTimeout(() => {
+                   if(document.getElementById("mgr-tbody")) initMgrPortal(); 
+                }, 150);
             }
         }, 50);
 
