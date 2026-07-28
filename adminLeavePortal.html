@@ -1,9 +1,8 @@
 <div class="w-full glass-panel p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
 
     <div class="border-b border-slate-200 pb-4 mb-6">
-
         <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-            <div class="w-5 h-5 bg-rose-100 text-rose-700  flex items-center justify-center  group-hover:scale-100 transition-transform">
+            <div class="w-5 h-5 bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-100 transition-transform">
                 <i data-lucide="shield" class="w-6 h-6"></i>
             </div>
             Admin Leave Approval Console
@@ -40,7 +39,6 @@
                     placeholder="Enter name or ID match strings..."
                     class="w-full px-3 py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white">
             </div>
-            <!-- FIXED DATE FILTER -->
             <div>
                 <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Filter by Applied/Active Leave Date</label>
                 <input type="date" id="filter-from-date" onchange="window.executeAdminFilterQueryPipeline()"
@@ -66,8 +64,8 @@
                 <thead>
                     <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider hidden lg:table-row sticky top-0 z-10">
                         <th class="px-3 py-3.5 w-44">Applicant Identity</th>
-                        <th class="px-3 py-3.5 w-52">Leave Scope Parameters</th>
-                        <th class="px-3 py-3.5 w-52">Manager Recommendation</th>
+                        <th class="px-3 py-3.5 w-64">Leave Scope Parameters</th>
+                        <th class="px-3 py-3.5 w-48">Manager Recommendation</th>
                         <th class="px-3 py-3.5">Administrative Action Override</th>
                         <th class="px-3 py-3.5 text-center w-28">Action</th>
                     </tr>
@@ -87,12 +85,10 @@
         let masterLeaveApplicationsCache = [];
         let activeSubPortalTabMode = "pending";
 
-        // FIXED UNIFORM CHAR PARSER: Strips timestamps and slash anomalies safely for date pickers
         window.formatToISODateInput = function (dateInput) {
             if (!dateInput) return "";
             let s = String(dateInput).trim().split(' ')[0];
             if (s.includes('T')) s = s.split('T')[0];
-
             let parts = s.includes('/') ? s.split('/') : s.split('-');
             if (parts.length === 3) {
                 if (parts[0].length === 4) return `${parts[0]}-${parts[1]}-${parts[2]}`;
@@ -106,7 +102,6 @@
             if (typeof dateStr === 'string' && dateStr.includes('T')) dateStr = dateStr.split('T')[0];
             let s = String(dateStr).trim().split(' ')[0];
             if (s.includes('/')) return s.replace(/\//g, '-');
-
             let parts = s.split('-');
             if (parts.length === 3 && parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`;
             return s;
@@ -124,8 +119,6 @@
             } catch (e) { return dateInput; }
         };
 
-        // FORTIFIED SWITCH ROUTER: Safe script execution without text-leak corruption
-        // ROUTER: Only handles Pending vs History
         window.switchAdminLeaveTab = function (targetMode) {
             activeSubPortalTabMode = targetMode;
 
@@ -146,17 +139,40 @@
             }
 
             window.executeAdminFilterQueryPipeline();
-            lucide.createIcons();
+            if (window.lucide) window.lucide.createIcons();
         };
         
         window.syncAdminLeaveMasterData = async function () {
             const tbody = document.getElementById("admin-leave-table-body");
             tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold block lg:table-cell">Synchronizing Admin L3 leave ledger tracks...</td></tr>`;
             try {
-                const res = await fetch(`${API_URL}?action=getAdminLeaveDataBundles`);
-                const result = await res.json();
-                if (result.status) { masterLeaveApplicationsCache = result.data; window.executeAdminFilterQueryPipeline(); }
-            } catch (e) { tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-6 text-center text-rose-700 font-black block lg:table-cell">Server error.</td></tr>`; }
+                // 🎯 FIXED: Simultaneously fetch Master Registry to cross-reference Manager Names
+                const [leaveRes, empRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`),
+                    fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`)
+                ]);
+                
+                const leaveData = await leaveRes.json();
+                const empData = await empRes.json();
+
+                if (leaveData.status) { 
+                    let leaves = leaveData.data;
+                    let employees = empData.status ? empData.data : [];
+
+                    // Map missing Manager Names from the Master Registry
+                    leaves.forEach(lv => {
+                        if (lv.managerId && (!lv.managerName || lv.managerName === "N/A")) {
+                            let mgr = employees.find(e => String(e.employeeId).trim().toUpperCase() === String(lv.managerId).trim().toUpperCase());
+                            if (mgr) lv.managerName = mgr.employeeName;
+                        }
+                    });
+
+                    masterLeaveApplicationsCache = leaves; 
+                    window.executeAdminFilterQueryPipeline(); 
+                }
+            } catch (e) { 
+                tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-6 text-center text-rose-700 font-black block lg:table-cell">Server error. Check connection.</td></tr>`; 
+            }
         };
 
         window.calculateAdminApprovedShortLeaveDaysDelta = function (idx) {
@@ -173,7 +189,6 @@
         window.executeAdminFilterQueryPipeline = function () {
             const tbody = document.getElementById("admin-leave-table-body");
 
-            // FIXED STRUCTURAL DATA CONSTRAINTS SEPARATION
             let dataset = [];
             if (activeSubPortalTabMode === "pending") {
                 dataset = masterLeaveApplicationsCache.filter(item => item.status === "PENDING" || item.status === "MGR_RECOMMENDED");
@@ -191,33 +206,29 @@
 
                 if (rawDateVal) {
                     const dateParts = rawDateVal.split('-');
-                    safeQueryDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // DD-MM-YYYY
+                    safeQueryDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; 
                     queryTimestamp = new Date(dateParts[0], parseInt(dateParts[1]) - 1, dateParts[2]).getTime();
                 }
 
                 if (term) dataset = dataset.filter(i => String(i.employeeName).toLowerCase().includes(term) || String(i.employeeId).toLowerCase().includes(term));
                 if (statusState !== "ALL") dataset = dataset.filter(i => i.status === statusState);
                 
-                // 🎯 FIXED: Dynamic Date Range filtering logic
                 if (safeQueryDate && queryTimestamp) {
                     dataset = dataset.filter(i => {
                         let isAppliedMatch = i.appliedOn && i.appliedOn.includes(safeQueryDate);
                         let isInsideDuration = false;
 
-                        // Check if the query date falls BETWEEN the fromDate and toDate
                         if (i.fromDate && i.toDate) {
                             const fParts = String(i.fromDate).split('-');
                             const tParts = String(i.toDate).split('-');
                             if (fParts.length === 3 && tParts.length === 3) {
                                 const startT = new Date(fParts[2], parseInt(fParts[1]) - 1, fParts[0]).getTime();
                                 const endT = new Date(tParts[2], parseInt(tParts[1]) - 1, tParts[0]).getTime();
-                                
                                 if (queryTimestamp >= startT && queryTimestamp <= endT) {
                                     isInsideDuration = true;
                                 }
                             }
                         }
-                        
                         return isInsideDuration || isAppliedMatch || i.fromDate === safeQueryDate;
                     });
                 }
@@ -227,7 +238,7 @@
 
             let outputHtml = "";
             dataset.forEach((item, idx) => {
-                const docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline inline-block mt-1 text-[11px] font-black"><i data-lucide="eye" class="w-3 h-3 inline"></i> View Attachment</a>` : '<span class="text-slate-500 font-black inline-block mt-1 text-[10px] uppercase tracking-wider">No Attachment</span>';
+                const docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline inline-block mt-2 text-[11px] font-black"><i data-lucide="eye" class="w-3 h-3 inline"></i> View Attachment</a>` : '<span class="text-slate-500 font-black inline-block mt-2 text-[10px] uppercase tracking-wider">No Attachment</span>';
                 let actionInteractiveForm = "", actionDispatchButton = "";
 
                 if (activeSubPortalTabMode === "pending") {
@@ -261,7 +272,10 @@
                             <div>Admin Decision: <strong class="text-slate-950 font-black text-xs uppercase">${item.adminDecision || 'APPROVE'}</strong></div>
                             <div>Final Days: <strong class="text-rose-700 font-mono font-black">${item.finalApprovedDays || '0'} Day(s)</strong></div>
                             <div class="col-span-2">Approved Block: <strong class="text-rose-700 font-mono">${item.adminApprovedDate || '--'}</strong></div>
-                            <div class="col-span-2">Processed By: <span class="bg-slate-100 border border-slate-300 text-slate-900 font-black px-1.5 py-0.5 rounded">${item.adminName || 'System Admin'}</span></div>
+                            
+                            <!-- 🎯 FIXED: Display Admin Name prominently -->
+                            <div class="col-span-2 pt-1">Processed By Admin: <span class="bg-indigo-50 border border-indigo-300 text-indigo-900 font-black px-1.5 py-0.5 rounded">${item.adminName || 'System Admin'}</span></div>
+                            
                             <div class="col-span-2 border-t border-slate-200 pt-1">Admin Remark: <span class="text-slate-950 font-bold">"${item.adminRemark || ''}"</span></div>
                             <div class="col-span-2 text-slate-500 font-mono text-[9px]">Processed On: ${window.formatToIndianDateTimeStr(item.adminTimestamp)}</div>
                         </div>
@@ -277,17 +291,41 @@
                 outputHtml += `
                     <tr class="block lg:table-row hover:bg-slate-50/60 transition-colors p-4 mb-4 bg-slate-50 border border-slate-300 lg:border-none rounded-2xl shadow-sm lg:shadow-none">
                         <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
-                            <strong class="text-slate-950 block font-black text-xs">${item.employeeName}</strong><span class="font-mono text-[11px] text-slate-600 block">${item.employeeId}</span><span class="text-[10px] text-slate-600 block mt-0.5 font-bold font-mono">Token: ${item.applicationId}</span>
+                            <strong class="text-slate-950 block font-black text-xs">${item.employeeName}</strong>
+                            <span class="font-mono text-[11px] text-slate-600 block">ID: ${item.employeeId}</span>
+                            <span class="text-[10px] text-slate-600 block mt-0.5 font-bold font-mono">Token: ${item.applicationId}</span>
+                            <div class="mt-2 text-[10px] text-slate-700 bg-slate-100 border border-slate-200 px-2 py-1 rounded leading-tight">
+                                <span class="font-bold text-slate-500">Proj:</span> ${item.project || 'N/A'}<br>
+                                <span class="font-bold text-slate-500">Loc:</span> ${item.location || 'N/A'}
+                            </div>
                         </td>
                         <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
-                            <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span><div class="text-slate-950 font-mono mt-1">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</div><span class="text-[11px] text-slate-700 block">Delta: <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>${docLink}
+                            <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span>
+                            <div class="text-slate-950 font-mono mt-1">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</div>
+                            <span class="text-[11px] text-slate-700 block mb-1.5">Delta: <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>
+                            
+                            <!-- 🎯 FIXED: Fully Scrollable & Wrap-friendly Reason Box -->
+                            <div class="text-slate-700 italic text-[11px] bg-white p-2.5 rounded-lg border border-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed shadow-inner" title="Reason">
+                                <span class="font-black text-slate-400 not-italic uppercase tracking-wider text-[9px] block mb-1">Reason Stated</span>
+                                "${item.reason || 'No reason provided'}"
+                            </div>
+                            
+                            ${docLink}
                         </td>
                         <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
-                            <div class="text-slate-950">Rec Path: <span class="text-emerald-700 font-black uppercase text-[11px]">${item.managerRec}</span></div>
+                            
+                            <!-- 🎯 FIXED: Display Manager Name prominently -->
+                            <div class="text-slate-950 text-[11px] mb-2 bg-emerald-50 border border-emerald-200 p-1.5 rounded">
+                                <span class="font-bold text-emerald-800 text-[9px] uppercase block mb-0.5">Assigned Manager:</span>
+                                <span class="font-black">${item.managerName || 'Pending / N/A'}</span> 
+                                <span class="text-slate-500 font-mono text-[9px]">(${item.managerId || 'N/A'})</span>
+                            </div>
+
+                            <div class="mt-1">Rec Path: <span class="text-emerald-700 font-black uppercase text-[11px]">${item.managerRec}</span></div>
                             <div class="text-slate-700 text-[10px] mt-0.5 font-bold leading-tight">
                                 <div>Rec Days: <strong class="text-slate-950 font-mono">${item.managerDays}</strong></div>
                                 <div class="truncate max-w-[180px]">Dates: ${item.managerDates}</div>
-                                <div class="text-slate-600 italic mt-0.5 max-w-[180px] truncate">Note: "${item.managerRemark}"</div>
+                                <div class="text-slate-600 italic mt-0.5 max-w-[180px] truncate" title="${item.managerRemark}">Note: "${item.managerRemark}"</div>
                                 <div class="text-indigo-600 font-mono mt-1 text-[9px] border-t border-slate-200 pt-1">Rec. On: ${window.formatToIndianDateTimeStr(item.managerTimestamp)}</div>
                             </div>
                         </td>
@@ -296,10 +334,10 @@
                     </tr>
                 `;
             });
-            tbody.innerHTML = outputHtml; lucide.createIcons();
+            tbody.innerHTML = outputHtml; 
+            if (window.lucide) window.lucide.createIcons();
         };
 
-        
         window.commitAdminFinalDecisionSingleRow = async function (rowSheetIndex, idx, appId, empId, empName) {
             const decisionType = document.getElementById(`adm_decision_${idx}`).value;
             const remarkText = document.getElementById(`adm_remark_${idx}`).value.trim();
@@ -308,7 +346,6 @@
             let targetStatus = "APPROVED";
             let cacheItem = masterLeaveApplicationsCache.find(i => i.applicationId === appId);
             
-            // 🎯 NEW LOGIC: If "Approve as Recommended", use manager's data instead of application data
             let approvedDays = (decisionType === "APPROVE") ? cacheItem.managerDays : cacheItem.leaveDays;
             let adminApprovedDateString = (decisionType === "APPROVE") ? cacheItem.managerDates : `${window.cleanISOToDashFormat(cacheItem.fromDate)} to ${window.cleanISOToDashFormat(cacheItem.toDate)}`;
             
@@ -338,6 +375,12 @@
             } catch (e) { alert("Pipeline dropped out."); }
         };
 
-        window.syncAdminLeaveMasterData();
+        // SAFETY INIT
+        setTimeout(() => {
+            if (document.getElementById("admin-leave-table-body")) {
+                window.syncAdminLeaveMasterData();
+            }
+        }, 50);
+
     })();
 </script>
