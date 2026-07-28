@@ -126,7 +126,8 @@
             window.startGlobalSessionManager();
         }
 
-        window.showWelcomeMessage = async function () {
+        // 🎯 OPTIMIZED: Synchronous load without backend API checks
+        window.showWelcomeMessage = function () {
             document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
             const view = document.getElementById("view-port");
 
@@ -135,100 +136,6 @@
                     ${currentUser.designation}
                 </span>
             ` : '';
-
-            // Render a loading state briefly while we fetch attendance status
-            view.innerHTML = `
-                <div class="text-center max-w-md p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full animate-pulse">
-                    <h2 class="text-lg font-black text-slate-500">Checking portal dependencies...</h2>
-                </div>
-            `;
-
-            let dynamicWarningHtml = "";
-            let profileWarningHtml = "";
-
-            // --- CHECK FOR MISSING EMAIL OR PHONE ---
-            const isEmailMissing = !currentUser.email || String(currentUser.email).trim() === "";
-            const isPhoneMissing = !currentUser.phone || String(currentUser.phone).trim() === "";
-
-            if (isEmailMissing || isPhoneMissing) {
-                profileWarningHtml = `
-                    <!-- PROFILE UPDATE WARNING -->
-                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                        <div class="flex items-start gap-3">
-                            <span class="text-indigo-600 text-xl leading-none mt-0.5">🔔</span>
-                            <div class="w-full">
-                                <h4 class="text-sm font-black uppercase tracking-wider text-indigo-900 mb-1">Update Contact Information</h4>
-                                <p class="text-[11px] font-bold text-indigo-950 leading-relaxed uppercase mb-3">
-                                    YOUR EMAIL ID OR PHONE NUMBER IS CURRENTLY MISSING FROM YOUR PROFILE. PLEASE UPDATE YOUR CONTACT DETAILS TO ENSURE YOU RECEIVE SYSTEM NOTIFICATIONS AND CREDENTIAL RECOVERY ACCESS.
-                                </p>
-                                <button onclick="loadTabModule('profile.html', document.querySelectorAll('.nav-btn')[0])" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition shadow-sm cursor-pointer w-max">
-                                    Update Profile Now
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            try {
-                // Fetch attendance status to determine which warning to show
-                const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
-                const state = await res.json();
-
-                if (state.status === "NONE") {
-                    dynamicWarningHtml = `
-                        <!-- PENDING LOG-IN WARNING -->
-                        <div class="bg-rose-50 border-l-4 border-rose-600 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                            <div class="flex items-start gap-3">
-                                <span class="text-rose-600 text-xl leading-none mt-0.5">⚠️</span>
-                                <div>
-                                    <h4 class="text-sm font-black uppercase tracking-wider text-rose-900 mb-1">ACTION REQUIRED: MISSING LOG-IN</h4>
-                                    <p class="text-[11px] font-black text-rose-950 leading-relaxed uppercase">
-                                        YOU HAVE NOT MARKED YOUR ATTENDANCE LOG-IN FOR TODAY. PLEASE MARK IT IMMEDIATELY, OTHERWISE YOU WILL BE MARKED ABSENT FOR THE DAY.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else if (state.status === "LOGGED_IN") {
-                    // Check if it's past 6 PM (18:00)
-                    const currentHour = new Date().getHours();
-                    
-                    if (currentHour < 18) {
-                        dynamicWarningHtml = `
-                            <!-- SUCCESSFUL LOG-IN (BEFORE 6 PM) -->
-                            <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-emerald-600 text-xl leading-none mt-0.5">✅</span>
-                                    <div>
-                                        <h4 class="text-sm font-black uppercase tracking-wider text-emerald-900 mb-1">LOG-IN RECORDED SUCCESSFULLY</h4>
-                                        <p class="text-[11px] font-black text-emerald-950 leading-relaxed uppercase">
-                                            YOUR ATTENDANCE LOG-IN FOR TODAY IS ACTIVE. PLEASE REMEMBER TO SUBMIT YOUR END-OF-DAY PROGRESS AND MARK YOUR LOG-OUT AT THE END OF YOUR SHIFT.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        dynamicWarningHtml = `
-                            <!-- PENDING LOG-OUT WARNING (AFTER 6 PM) -->
-                            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-amber-600 text-xl leading-none mt-0.5">⚠️</span>
-                                    <div>
-                                        <h4 class="text-sm font-black uppercase tracking-wider text-amber-900 mb-1">ACTION REQUIRED: MISSING LOG-OUT</h4>
-                                        <p class="text-[11px] font-black text-amber-950 leading-relaxed uppercase">
-                                            YOU HAVE NOT MARKED YOUR ATTENDANCE LOG-OUT FOR TODAY. FAILURE TO SUBMIT YOUR END-OF-DAY PROGRESS AND LOG-OUT WILL INVALIDATE YOUR ATTENDANCE AND YOU WILL BE MARKED ABSENT.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to fetch attendance state for warning banner", e);
-            }
 
             view.innerHTML = `
                 <div class="text-center max-w-md p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full">
@@ -245,8 +152,19 @@
                         Select a module from the left bar layout panel to begin managing your day.
                     </p>
                
-                    ${profileWarningHtml}
-                    ${dynamicWarningHtml}
+                    <!-- STATIC REMINDER BANNER -->
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
+                        <div class="flex items-start gap-3">
+                            <span class="text-indigo-600 text-xl leading-none mt-0.5">🔔</span>
+                            <div class="w-full">
+                                <h4 class="text-sm font-black uppercase tracking-wider text-indigo-900 mb-2">Daily Reminders</h4>
+                                <ul class="text-[11px] font-bold text-indigo-950 leading-relaxed uppercase space-y-2">
+                                    <li>👉 <strong class="text-indigo-700">Update Contact Info:</strong> Ensure your Email and Phone Number are up to date in the "My Account Profile" tab.</li>
+                                    <li>👉 <strong class="text-indigo-700">Mark Attendance:</strong> Do not forget to submit your Log-In and Log-Out daily in the "Mark Attendance" module.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- MANDATORY NOTICE BANNER -->
                     <div class="bg-slate-50 border-l-4 border-slate-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
