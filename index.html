@@ -268,6 +268,16 @@
                 `;
             }
 
+            
+            if (isL3Admin) {
+                outputHtml += `
+                    <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">ADMIN CONSOLE FOR FIELD ACTIVITY APPROVAL</span></div>
+                    <button onclick="loadTabModule('adminFieldPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                        <i data-lucide="shield" class="w-4 h-4 text-rose-500 shrink-0"></i> Employees Field Activity
+                    </button>
+                `;
+            }
+
             if (isL2Admin) {
                 outputHtml += `
                     <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4">
