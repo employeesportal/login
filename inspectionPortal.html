@@ -6,7 +6,7 @@
             <h3 class="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                 <i data-lucide="map" class="text-indigo-600 w-6 h-6"></i> Inspection Tracking Portal
             </h3>
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">Item ➔ Feeder ➔ Sub-Location Dashboard</p>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">District/Phase ➔ TKC ➔ Item ➔ Feeder Dashboard</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -71,7 +71,7 @@
                 <select id="t-item-unit" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900">
                     <option value="Nos">Nos (Numbers)</option>
                     <option value="Kms">Kms (Kilometers)</option>
-                    <option value="CKms">Kms (Circuit-Kilometers)</option>
+                    <option value="Kms">CKms (Circuit-Kilometers)</option>
                     <option value="Mtrs">Mtrs (Meters)</option>
                     <option value="Sets">Sets</option>
                     <option value="Lot">Lot</option>
@@ -141,7 +141,6 @@
 <script>
     (() => {
         let currentTargetData = {};
-        let currentHierarchy = {}; 
         
         const rawRoles = (currentUser.role || "").split(",").map(r => String(r).trim().toUpperCase().replace(/[^A-Z0-9]/g, ""));
         const isCoordinator = rawRoles.some(r => ["DATACOORDINATOR", "ADMIN", "GLOBALADMIN"].includes(r));
@@ -214,7 +213,7 @@
                 const result = await res.json();
                 
                 if (result.status) {
-                    processAndRenderHierarchicalData(result.data);
+                    processAndRenderData(result.data);
                 } else {
                     container.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold border border-slate-200 rounded-2xl bg-white">Error loading data.</div>`;
                 }
@@ -223,9 +222,8 @@
             }
         };
 
-        function processAndRenderHierarchicalData(rows) {
+        function processAndRenderData(rows) {
             currentTargetData = {};
-            currentHierarchy = {};
             
             let uniqueDistricts = new Set();
             let uniquePhases = new Set();
@@ -283,22 +281,6 @@
                 phaseDropdown.value = "ALL";
             }
 
-            Object.keys(currentTargetData).forEach(key => {
-                const t = currentTargetData[key];
-                const dist = t.District ? t.District.trim() : "Unassigned";
-                const phase = t.Phase ? t.Phase.trim() : "1st Phase";
-                const item = t.Item_Type ? t.Item_Type.trim() : "Unknown";
-                
-                const distPhaseKey = `${dist}_${phase}`;
-                
-                if(!currentHierarchy[distPhaseKey]) currentHierarchy[distPhaseKey] = { district: dist, phase: phase, items: {} };
-                if(!currentHierarchy[distPhaseKey].items[item]) currentHierarchy[distPhaseKey].items[item] = { targets: [], totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
-                
-                currentHierarchy[distPhaseKey].items[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
-                currentHierarchy[distPhaseKey].items[item].totalInspected += t.totalInspected;
-                currentHierarchy[distPhaseKey].items[item].targets.push(t);
-            });
-
             window.applyFilters();
         }
 
@@ -307,36 +289,72 @@
             const phaseVal = document.getElementById("ins-phase-filter").value;
             const container = document.getElementById("ins-accordion-container");
             
-            if (Object.keys(currentHierarchy).length === 0) {
-                container.innerHTML = `<div class="p-12 text-center text-slate-400 font-bold border border-slate-200 rounded-2xl bg-white shadow-inner">No inspection targets created for this project yet.</div>`;
+            // 🎯 NEW HIERARCHY: District & Phase ➔ TKC ➔ Item
+            let filteredHierarchy = {};
+
+            Object.keys(currentTargetData).forEach(key => {
+                const t = currentTargetData[key];
+                const dist = t.District ? t.District.trim() : "Unassigned";
+                const phase = t.Phase ? t.Phase.trim() : "1st Phase";
+                const tkc = t.TKC_Name ? t.TKC_Name.trim() : "Unknown TKC";
+                const item = t.Item_Type ? t.Item_Type.trim() : "Unknown";
+                
+                if (distVal !== "ALL" && dist !== distVal) return;
+                if (phaseVal !== "ALL" && phase !== phaseVal) return;
+
+                const dpKey = `${dist}_${phase}`;
+                
+                if (!filteredHierarchy[dpKey]) filteredHierarchy[dpKey] = { district: dist, phase: phase, tkcs: {}, summaryItems: {} };
+                
+                // Aggregating top-level District+Phase item summary
+                if (!filteredHierarchy[dpKey].summaryItems[item]) {
+                    filteredHierarchy[dpKey].summaryItems[item] = { totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
+                }
+                filteredHierarchy[dpKey].summaryItems[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
+                filteredHierarchy[dpKey].summaryItems[item].totalInspected += t.totalInspected;
+
+                // Create TKC level
+                if (!filteredHierarchy[dpKey].tkcs[tkc]) {
+                    filteredHierarchy[dpKey].tkcs[tkc] = { items: {} };
+                }
+
+                // Create Item level inside TKC
+                if (!filteredHierarchy[dpKey].tkcs[tkc].items[item]) {
+                    filteredHierarchy[dpKey].tkcs[tkc].items[item] = { targets: [], totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
+                }
+                
+                filteredHierarchy[dpKey].tkcs[tkc].items[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
+                filteredHierarchy[dpKey].tkcs[tkc].items[item].totalInspected += t.totalInspected;
+                filteredHierarchy[dpKey].tkcs[tkc].items[item].targets.push(t);
+            });
+            
+            if (Object.keys(filteredHierarchy).length === 0) {
+                container.innerHTML = `<div class="p-12 text-center text-slate-400 font-bold border border-slate-200 rounded-2xl bg-white shadow-inner">No targets found for the selected filters.</div>`;
                 return;
             }
 
             let html = "";
-            Object.keys(currentHierarchy).forEach(dpKey => {
-                const dData = currentHierarchy[dpKey];
+            Object.keys(filteredHierarchy).forEach(dpKey => {
+                const dpData = filteredHierarchy[dpKey];
+                const safeDpId = 'dp_' + dpKey.replace(/[^a-zA-Z0-9]/g, '_');
                 
-                if (distVal !== "ALL" && dData.district !== distVal) return;
-                if (phaseVal !== "ALL" && dData.phase !== phaseVal) return;
-
-                const safeDistId = 'd_' + dpKey.replace(/[^a-zA-Z0-9]/g, '_');
-                
-                let districtSummaryArr = [];
-                Object.keys(dData.items).forEach(item => {
-                    const iData = dData.items[item];
-                    districtSummaryArr.push(`<span class="text-indigo-400">${item}:</span> ${formatQty(iData.totalInspected)} / ${formatQty(iData.totalTarget)} ${iData.unit}`);
+                let distSummaryArr = [];
+                Object.keys(dpData.summaryItems).forEach(item => {
+                    const sItem = dpData.summaryItems[item];
+                    distSummaryArr.push(`<span class="text-indigo-400">${item}:</span> ${formatQty(sItem.totalInspected)} / ${formatQty(sItem.totalTarget)} ${sItem.unit}`);
                 });
-                const distSummaryStr = districtSummaryArr.join(' <span class="text-slate-600 font-black">|</span> ');
+                const distSummaryStr = distSummaryArr.join(' <span class="text-slate-600 font-black">|</span> ');
                 
                 html += `
                 <div class="mb-4 bg-white border border-slate-300 rounded-2xl shadow-sm overflow-hidden animate-fade-in">
-                    <div class="px-5 py-4 bg-slate-950 text-white flex justify-between items-center cursor-pointer hover:bg-slate-900 transition" onclick="window.toggleAccordion('${safeDistId}')">
+                    <!-- TIER 1: District & Phase -->
+                    <div class="px-5 py-4 bg-slate-950 text-white flex justify-between items-center cursor-pointer hover:bg-slate-900 transition" onclick="window.toggleAccordion('${safeDpId}')">
                         <div class="flex items-center gap-3">
                             <i data-lucide="map-pin" class="w-5 h-5 text-rose-500"></i>
                             <div>
                                 <h4 class="text-sm font-black uppercase tracking-wider">
-                                    District: ${dData.district} 
-                                    <span class="bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded ml-2 text-[10px]">Phase: ${dData.phase}</span>
+                                    ${dpData.district} 
+                                    <span class="bg-rose-600 border border-rose-500 text-white px-2 py-0.5 rounded ml-2 text-[10px]">Phase: ${dpData.phase}</span>
                                 </h4>
                                 <div class="text-[10px] text-slate-300 font-mono mt-1 leading-relaxed">${distSummaryStr}</div>
                             </div>
@@ -344,150 +362,173 @@
                         <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 shrink-0"></i>
                     </div>
                     
-                    <div id="${safeDistId}" class="hidden p-4 space-y-4 bg-slate-50">
+                    <div id="${safeDpId}" class="hidden p-4 space-y-4 bg-slate-50">
                 `;
 
-                Object.keys(dData.items).forEach(item => {
-                    const iData = dData.items[item];
-                    const safeItemId = safeDistId + '_i_' + item.replace(/[^a-zA-Z0-9]/g, '_');
-                    const unitStr = iData.unit ? ` ${iData.unit}` : '';
+                Object.keys(dpData.tkcs).forEach(tkcKey => {
+                    const tkcData = dpData.tkcs[tkcKey];
+                    const safeTkcId = safeDpId + '_tkc_' + tkcKey.replace(/[^a-zA-Z0-9]/g, '_');
 
                     html += `
+                        <!-- TIER 2: TKC Level -->
                         <div class="border border-indigo-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                            <div class="px-4 py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeItemId}')">
+                            <div class="px-4 py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="box" class="w-4 h-4 text-indigo-600"></i>
+                                    <i data-lucide="briefcase" class="w-4 h-4 text-indigo-600"></i>
                                     <div>
-                                        <h5 class="text-xs font-black text-indigo-900 uppercase tracking-wider">Item: ${item}</h5>
+                                        <h5 class="text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
                                     </div>
                                 </div>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-indigo-400 shrink-0"></i>
                             </div>
                             
-                            <div id="${safeItemId}" class="hidden overflow-x-auto">
-                                <table class="w-full text-left text-xs border-collapse min-w-[1000px]">
-                                    <thead class="bg-slate-100 text-slate-600 uppercase text-[9px] font-black border-y border-slate-200">
-                                        <tr>
-                                            <th class="p-3 w-48">Item Details & TKC</th>
-                                            <th class="p-3 w-48 text-center">Master Target Status</th>
-                                            <th class="p-3 text-center w-48">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
+                            <div id="${safeTkcId}" class="hidden p-3 space-y-3 bg-indigo-50/30">
                     `;
 
-                    iData.targets.forEach(t => {
-                        const tUnitStr = t.Item_Unit ? ` ${t.Item_Unit}` : '';
-                        const progressPct = t.Target_Inspect_Qty > 0 ? Math.min(100, (t.totalInspected / t.Target_Inspect_Qty) * 100) : 0;
-                        let progressColor = progressPct >= 100 ? "bg-emerald-500" : "bg-indigo-500";
-                        
-                        const feedersArray = t.Feeder_Name ? t.Feeder_Name.split(',').map(f => f.trim()).filter(f=>f) : ["General"];
-                        let feederDict = {};
-                        feedersArray.forEach(f => feederDict[f] = { total: 0, logs: [] });
-                        
-                        t.logs.forEach(l => {
-                            const fName = l.Feeder_Name || feedersArray[0];
-                            if(!feederDict[fName]) feederDict[fName] = { total: 0, logs: [] };
-                            feederDict[fName].logs.push(l);
-                            feederDict[fName].total += Number(l.Inspected_Qty || 0);
-                        });
+                    Object.keys(tkcData.items).forEach(item => {
+                        const iData = tkcData.items[item];
+                        const safeItemId = safeTkcId + '_i_' + item.replace(/[^a-zA-Z0-9]/g, '_');
+                        const iProg = iData.totalTarget > 0 ? Math.min(100, (iData.totalInspected / iData.totalTarget) * 100) : 0;
+                        const unitStr = iData.unit ? ` ${iData.unit}` : '';
 
-                        let feedersHtml = `<tr id="feeders-${t.Call_ID}" class="hidden bg-slate-50/50 border-b border-slate-200"><td colspan="3" class="p-0">
-                            <div class="px-4 md:px-8 py-4 bg-slate-50 shadow-inner">
-                                <h6 class="text-[10px] uppercase font-black text-slate-500 mb-2 tracking-wider">Feeder-wise Inspection Breakdown</h6>
-                                <table class="w-full text-[10px] text-left border border-slate-200 bg-white rounded-lg overflow-hidden mb-2">
-                                    <thead class="bg-indigo-50 text-indigo-900 uppercase">
-                                        <tr><th class="p-2 w-1/3">Feeder Name</th><th class="p-2 w-1/3 text-center">Total Inspected</th><th class="p-2 w-1/3 text-center">Detailed Logs</th></tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">`;
-                        
-                        Object.keys(feederDict).forEach(fKey => {
-                            const fData = feederDict[fKey];
-                            const safeFeederId = `log_${t.Call_ID}_${fKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        html += `
+                            <!-- TIER 3: Item Level -->
+                            <div class="border border-sky-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                                <div class="px-3 py-2 bg-sky-100 flex justify-between items-center cursor-pointer hover:bg-sky-200 transition" onclick="window.toggleAccordion('${safeItemId}')">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="box" class="w-3.5 h-3.5 text-sky-700"></i>
+                                        <div>
+                                            <h6 class="text-[11px] font-black text-sky-900 uppercase tracking-wider">${item}</h6>
+                                            <div class="text-[9px] text-sky-700 font-mono mt-0.5">Target: ${formatQty(iData.totalTarget)}${unitStr} | Inspected: ${formatQty(iData.totalInspected)}${unitStr} (${iProg.toFixed(1)}%)</div>
+                                        </div>
+                                    </div>
+                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-sky-600 shrink-0"></i>
+                                </div>
+                                
+                                <div id="${safeItemId}" class="hidden overflow-x-auto">
+                                    <table class="w-full text-left text-xs border-collapse min-w-[1000px]">
+                                        <thead class="bg-slate-100 text-slate-600 uppercase text-[9px] font-black border-y border-slate-200">
+                                            <tr>
+                                                <th class="p-3 w-48">Target Ref & Details</th>
+                                                <th class="p-3 w-48 text-center">Master Target Status</th>
+                                                <th class="p-3 text-center w-48">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                        `;
+
+                        iData.targets.forEach(t => {
+                            const tUnitStr = t.Item_Unit ? ` ${t.Item_Unit}` : '';
+                            const progressPct = t.Target_Inspect_Qty > 0 ? Math.min(100, (t.totalInspected / t.Target_Inspect_Qty) * 100) : 0;
+                            let progressColor = progressPct >= 100 ? "bg-emerald-500" : "bg-indigo-500";
                             
-                            let specificLogsHtml = "";
-                            if (fData.logs.length > 0) {
-                                // 🎯 NEW: Dynamic Headers based on Role
-                                const remarkHeader = isCoordinator ? "Location & Remark" : "Location";
-                                const timeHeader = isCoordinator ? '<th class="p-1.5">Timestamp</th>' : '';
-                                const delHeader = isCoordinator ? '<th class="p-1.5 text-center">Del</th>' : '';
-                                
-                                specificLogsHtml = `<tr id="${safeFeederId}" class="hidden bg-slate-100/50"><td colspan="3" class="p-0">
-                                    <div class="px-6 py-2 shadow-inner border-y border-slate-200 bg-white">
-                                        <table class="w-full text-[9px] text-left border border-slate-200 rounded overflow-hidden">
-                                            <thead class="bg-slate-200 text-slate-600 uppercase">
-                                                <tr><th class="p-1.5">${remarkHeader}</th><th class="p-1.5 text-center">Qty Inspected</th><th class="p-1.5">Employee</th>${timeHeader}${delHeader}</tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-slate-100">`;
-                                
-                                fData.logs.forEach(l => {
-                                    const rawDate = String(l.Timestamp || '');
-                                    
-                                    // 🎯 NEW: Complete Timestamp Column only visible to Admins/Coordinators
-                                    const timeCol = isCoordinator ? `<td class="p-1.5 text-slate-400 font-mono">${rawDate}</td>` : '';
-                                    
-                                    const delBtn = isCoordinator ? `<td class="p-1.5 text-center"><button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:text-rose-700 font-bold"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></td>` : '';
-                                    const rawRemark = String(l.Remark || l.Remarks || '').trim();
-                                    const remarkHtml = (isCoordinator && rawRemark !== "") ? `<div class="text-[9px] text-amber-700 font-bold italic mt-1 bg-amber-50 p-1 rounded border border-amber-200 leading-tight">Remark: ${rawRemark}</div>` : '';
+                            const feedersArray = t.Feeder_Name ? t.Feeder_Name.split(',').map(f => f.trim()).filter(f=>f) : ["General"];
+                            let feederDict = {};
+                            feedersArray.forEach(f => feederDict[f] = { total: 0, logs: [] });
+                            
+                            t.logs.forEach(l => {
+                                const fName = l.Feeder_Name || feedersArray[0];
+                                if(!feederDict[fName]) feederDict[fName] = { total: 0, logs: [] };
+                                feederDict[fName].logs.push(l);
+                                feederDict[fName].total += Number(l.Inspected_Qty || 0);
+                            });
 
-                                    specificLogsHtml += `<tr>
-                                        <td class="p-1.5"><span class="font-bold text-slate-800">${l.Location_Name}</span>${remarkHtml}</td>
-                                        <td class="p-1.5 text-center font-mono text-emerald-700 font-bold">+${formatQty(l.Inspected_Qty)}</td>
-                                        <td class="p-1.5 text-slate-500">${l.Submitted_By_Name}</td>
-                                        ${timeCol}
-                                        ${delBtn}
-                                    </tr>`;
-                                });
-                                specificLogsHtml += `</tbody></table></div></td></tr>`;
-                            }
+                            let feedersHtml = `<tr id="feeders-${t.Call_ID}" class="hidden bg-slate-50/50 border-b border-slate-200"><td colspan="3" class="p-0">
+                                <div class="px-4 md:px-8 py-4 bg-slate-50 shadow-inner">
+                                    <h6 class="text-[10px] uppercase font-black text-slate-500 mb-2 tracking-wider">Feeder-wise Inspection Breakdown</h6>
+                                    <table class="w-full text-[10px] text-left border border-slate-200 bg-white rounded-lg overflow-hidden mb-2">
+                                        <thead class="bg-indigo-50 text-indigo-900 uppercase">
+                                            <tr><th class="p-2 w-1/3">Feeder Name</th><th class="p-2 w-1/3 text-center">Total Inspected</th><th class="p-2 w-1/3 text-center">Detailed Logs</th></tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">`;
+                            
+                            Object.keys(feederDict).forEach(fKey => {
+                                const fData = feederDict[fKey];
+                                const safeFeederId = `log_${t.Call_ID}_${fKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                                
+                                let specificLogsHtml = "";
+                                if (fData.logs.length > 0) {
+                                    const remarkHeader = isCoordinator ? "Location & Remark" : "Location";
+                                    const timeHeader = isCoordinator ? '<th class="p-1.5">Timestamp</th>' : '';
+                                    const delHeader = isCoordinator ? '<th class="p-1.5 text-center">Del</th>' : '';
+                                    
+                                    specificLogsHtml = `<tr id="${safeFeederId}" class="hidden bg-slate-100/50"><td colspan="3" class="p-0">
+                                        <div class="px-6 py-2 shadow-inner border-y border-slate-200 bg-white">
+                                            <table class="w-full text-[9px] text-left border border-slate-200 rounded overflow-hidden">
+                                                <thead class="bg-slate-200 text-slate-600 uppercase">
+                                                    <tr><th class="p-1.5">${remarkHeader}</th><th class="p-1.5 text-center">Qty Logged</th><th class="p-1.5">Employee</th>${timeHeader}${delHeader}</tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-100">`;
+                                    
+                                    fData.logs.forEach(l => {
+                                        let rawDate = String(l.Timestamp || '');
+                                        let dStr = rawDate.includes(' ') ? rawDate.split(' ')[0] : rawDate;
+                                        
+                                        const timeCol = isCoordinator ? `<td class="p-1.5 text-slate-400 font-mono">${rawDate}</td>` : '';
+                                        const delBtn = isCoordinator ? `<td class="p-1.5 text-center"><button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:text-rose-700 font-bold"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></td>` : '';
+                                        const rawRemark = String(l.Remark || l.Remarks || '').trim();
+                                        const remarkHtml = (isCoordinator && rawRemark !== "") ? `<div class="text-[9px] text-amber-700 font-bold italic mt-1 bg-amber-50 p-1 rounded border border-amber-200 leading-tight">Remark: ${rawRemark}</div>` : '';
 
-                            feedersHtml += `
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-2 font-black text-slate-700">${fKey}</td>
-                                    <td class="p-2 text-center font-mono text-emerald-600 font-bold">${formatQty(fData.total)}${tUnitStr}</td>
-                                    <td class="p-2 text-center">
-                                        ${fData.logs.length > 0 ? `<button onclick="window.toggleAccordion('${safeFeederId}')" class="text-indigo-600 text-[9px] font-black uppercase hover:underline shadow-sm px-2 py-1 bg-indigo-50 rounded">Logs (${fData.logs.length})</button>` : `<span class="text-slate-300 text-[9px] uppercase font-bold">No Logs</span>`}
+                                        specificLogsHtml += `<tr>
+                                            <td class="p-1.5"><span class="font-bold text-slate-800">${l.Location_Name}</span>${remarkHtml}</td>
+                                            <td class="p-1.5 text-center font-mono text-emerald-700 font-bold">+${formatQty(l.Inspected_Qty)}</td>
+                                            <td class="p-1.5 text-slate-500">${l.Submitted_By_Name}</td>
+                                            ${timeCol}
+                                            ${delBtn}
+                                        </tr>`;
+                                    });
+                                    specificLogsHtml += `</tbody></table></div></td></tr>`;
+                                }
+
+                                feedersHtml += `
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-2 font-black text-slate-700">${fKey}</td>
+                                        <td class="p-2 text-center font-mono text-emerald-600 font-bold">${formatQty(fData.total)}${tUnitStr}</td>
+                                        <td class="p-2 text-center">
+                                            ${fData.logs.length > 0 ? `<button onclick="window.toggleAccordion('${safeFeederId}')" class="text-indigo-600 text-[9px] font-black uppercase hover:underline shadow-sm px-2 py-1 bg-indigo-50 rounded">Logs (${fData.logs.length})</button>` : `<span class="text-slate-300 text-[9px] uppercase font-bold">No Logs</span>`}
+                                        </td>
+                                    </tr>
+                                    ${specificLogsHtml}
+                                `;
+                            });
+
+                            feedersHtml += `</tbody></table></div></td></tr>`;
+
+                            html += `
+                                <tr class="hover:bg-slate-50 align-top">
+                                    <td class="p-3">
+                                        <div class="font-bold text-slate-900">${t.Item_Type}</div>
+                                        <div class="text-[10px] text-slate-500 mt-1">Phase: <strong>${t.Phase}</strong></div>
+                                        <div class="text-[9px] text-slate-400 font-mono mt-1">Call: ${t.Call_ID}</div>
+                                    </td>
+                                    <td class="p-3">
+                                        <div class="text-[10px] font-black text-slate-500 mb-1 border-b border-slate-100 pb-1">
+                                            Sanctioned: <span class="text-slate-800">${formatQty(t.Sanctioned_Qty)}${tUnitStr}</span>
+                                        </div>
+                                        <div class="flex justify-between text-[10px] font-black mb-1">
+                                            <span class="text-slate-500">Target: <span class="text-indigo-900">${formatQty(t.Target_Inspect_Qty)}${tUnitStr}</span></span>
+                                            <span class="text-slate-500">Done: <span class="${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'}">${formatQty(t.totalInspected)}</span></span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner mb-1">
+                                            <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                                        </div>
+                                        <div class="text-[9px] text-right ${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'} font-bold">${progressPct.toFixed(1)}% Complete</div>
+                                    </td>
+                                    <td class="p-3 space-y-2">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-[9px] font-black uppercase rounded border border-slate-300">Edit</button>` : '<div></div>'}
+                                            ${progressPct < 100 ? `<button onclick="window.openLogModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase rounded shadow-sm"><i data-lucide="plus" class="w-3 h-3 inline"></i> Log Area</button>` : ''}
+                                        </div>
+                                        <button onclick="window.toggleAccordion('feeders-${t.Call_ID}')" class="w-full px-2 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider rounded border border-indigo-200 shadow-sm transition">Feeders Breakdown <i data-lucide="chevron-down" class="w-3 h-3 inline ml-1"></i></button>
                                     </td>
                                 </tr>
-                                ${specificLogsHtml}
+                                ${feedersHtml}
                             `;
                         });
 
-                        feedersHtml += `</tbody></table></div></td></tr>`;
-
-                        html += `
-                            <tr class="hover:bg-slate-50 align-top">
-                                <td class="p-3">
-                                    <div class="font-bold text-slate-900">${t.Item_Type}</div>
-                                    <div class="text-[10px] text-slate-500 mt-1">TKC: <strong>${t.TKC_Name}</strong></div>
-                                    <div class="text-[9px] text-slate-400 font-mono mt-1">Call: ${t.Call_ID}</div>
-                                </td>
-                                <td class="p-3">
-                                    <div class="text-[10px] font-black text-slate-500 mb-1 border-b border-slate-100 pb-1">
-                                        Sanctioned: <span class="text-slate-800">${formatQty(t.Sanctioned_Qty)}${tUnitStr}</span>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] font-black mb-1">
-                                        <span class="text-slate-500">Target: <span class="text-indigo-900">${formatQty(t.Target_Inspect_Qty)}${tUnitStr}</span></span>
-                                        <span class="text-slate-500">Done: <span class="${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'}">${formatQty(t.totalInspected)}</span></span>
-                                    </div>
-                                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner mb-1">
-                                        <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
-                                    </div>
-                                    <div class="text-[9px] text-right ${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'} font-bold">${progressPct.toFixed(1)}% Complete</div>
-                                </td>
-                                <td class="p-3 space-y-2">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-[9px] font-black uppercase rounded border border-slate-300">Edit</button>` : '<div></div>'}
-                                        ${progressPct < 100 ? `<button onclick="window.openLogModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase rounded shadow-sm"><i data-lucide="plus" class="w-3 h-3 inline"></i> Log Area</button>` : ''}
-                                    </div>
-                                    <button onclick="window.toggleAccordion('feeders-${t.Call_ID}')" class="w-full px-2 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider rounded border border-indigo-200 shadow-sm transition">Feeders Breakdown <i data-lucide="chevron-down" class="w-3 h-3 inline ml-1"></i></button>
-                                </td>
-                            </tr>
-                            ${feedersHtml}
-                        `;
+                        html += `</tbody></table></div></div>`;
                     });
-
-                    html += `</tbody></table></div></div>`;
+                    html += `</div></div>`;
                 });
                 html += `</div></div>`;
             });
@@ -511,7 +552,8 @@
                 return; 
             }
 
-            const printUrl = `printInspectionReport.html?project=${encodeURIComponent(project)}&district=${encodeURIComponent(distFilter)}&phase=${encodeURIComponent(phaseFilter)}&apiUrl=${encodeURIComponent(API_URL)}`;
+            // 🎯 NEW: Added the isCoord flag to the URL so the print page knows who is viewing it
+            const printUrl = `printInspectionReport.html?project=${encodeURIComponent(project)}&district=${encodeURIComponent(distFilter)}&phase=${encodeURIComponent(phaseFilter)}&apiUrl=${encodeURIComponent(API_URL)}&isCoord=${isCoordinator}`;
             window.open(printUrl, '_blank');
         };
 
