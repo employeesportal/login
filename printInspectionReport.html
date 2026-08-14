@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspection Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            @page { margin: 15mm; }
+        }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8fafc; }
+        .print-container { max-w-[1000px]; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f5f9; font-weight: bold; text-transform: uppercase; color: #475569; font-size: 10px; }
+        .log-item { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; font-size: 10px; color: #475569; }
+        .log-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    </style>
+</head>
+<body>
+    
+    <div class="no-print p-4 flex justify-end">
+        <button onclick="window.print()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition">Print / Save PDF</button>
+    </div>
+
+    <div class="print-container">
+        <h2 class="text-center border-b-2 border-indigo-600 pb-4 mb-6 text-slate-900 uppercase text-lg font-black tracking-widest">Material Inspection & Tracking Report</h2>
+        
+        <div class="flex justify-between text-xs mb-6 font-bold bg-slate-50 p-4 border border-slate-200 rounded-lg">
+            <span>Project: <span id="lbl-proj" class="text-indigo-600"></span></span>
+            <span>District: <span id="lbl-dist" class="text-indigo-600"></span></span>
+            <span>Phase: <span id="lbl-phase" class="text-indigo-600"></span></span>
+            <span>Generated: <span id="lbl-date" class="text-indigo-600"></span></span>
+        </div>
+
+        <div id="report-body" class="text-center mt-10 mb-10 text-indigo-600 font-bold animate-pulse">
+            Synchronizing reporting data from server...
+        </div>
+
+        <div class="mt-8 text-center text-[10px] text-slate-400">
+            * This is a system-generated report. All sub-location log entries are digitally stamped and verified by the authorized coordinator.
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const project = urlParams.get('project');
+        const district = urlParams.get('district');
+        const phase = urlParams.get('phase');
+        const apiUrl = urlParams.get('apiUrl');
+
+        document.getElementById('lbl-proj').innerText = project;
+        document.getElementById('lbl-dist').innerText = district;
+        document.getElementById('lbl-phase').innerText = phase === 'ALL' ? 'All Phases' : phase;
+        document.getElementById('lbl-date').innerText = new Date().toLocaleString('en-IN');
+
+        function formatQty(qty) { return Number(qty || 0).toFixed(3); }
+
+        async function loadReportData() {
+            try {
+                const res = await fetch(apiUrl, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "getInspectionData", project: project })
+                });
+                const result = await res.json();
+                
+                if (result.status) {
+                    renderReport(result.data);
+                    setTimeout(function() { window.print(); }, 800);
+                } else {
+                    document.getElementById('report-body').innerHTML = '<div class="text-rose-600">Error loading data.</div>';
+                }
+            } catch (e) {
+                document.getElementById('report-body').innerHTML = '<div class="text-rose-600">Failed to connect to the server.</div>';
+            }
+        }
+
+        function renderReport(rows) {
+            let targets = {};
+            
+            rows.forEach(function(r) {
+                if (r.Entry_Type === "TARGET") {
+                    if (r.District === district && (phase === 'ALL' || r.Phase === phase)) {
+                        targets[r.Call_ID] = Object.assign({}, r, { logs: [], totalInspected: 0 });
+                    }
+                }
+            });
+
+            rows.forEach(function(r) {
+                if (r.Entry_Type === "LOG" && targets[r.Call_ID]) {
+                    targets[r.Call_ID].logs.push(r);
+                    targets[r.Call_ID].totalInspected += Number(r.Inspected_Qty || 0);
+                }
+            });
+
+            const keys = Object.keys(targets);
+            if (keys.length === 0) {
+                document.getElementById('report-body').innerHTML = '<div class="text-slate-500 py-10">No data available for the selected filters.</div>';
+                return;
+            }
+
+            // Using strict string concatenation to completely bypass VS Code HTML Linting errors
+            let html = "";
+            html += "<table>";
+            html += "<thead><tr>";
+            html += "<th style='width: 25%'>Feeder & TKC Details</th>";
+            html += "<th style='width: 15%'>Item Type</th>";
+            html += "<th style='width: 20%'>Target vs Progress</th>";
+            html += "<th style='width: 40%'>Inspected Locations Breakdown</th>";
+            html += "</tr></thead><tbody>";
+
+            keys.forEach(function(key) {
+                const t = targets[key];
+                const unit = t.Item_Unit ? " " + t.Item_Unit : "";
+                const pct = t.Target_Inspect_Qty > 0 ? ((t.totalInspected / t.Target_Inspect_Qty) * 100).toFixed(1) : 0;
+                const pctColor = pct >= 100 ? "#059669" : "#ea580c";
+
+                let logsHtml = "";
+                t.logs.forEach(function(l) {
+                    const rawRemark = String(l.Remark || l.Remarks || "").trim();
+                    const rmkHtml = rawRemark ? "<br><i style='color:#64748b; font-size:9px;'>Remark: " + rawRemark + "</i>" : "";
+                    const dStr = new Date(l.Timestamp).toLocaleDateString('en-IN');
+                    const subName = l.Submitted_By_Name || "Unknown";
+                    
+                    logsHtml += "<div class='log-item'>";
+                    logsHtml += "<strong>" + l.Location_Name + "</strong> : ";
+                    logsHtml += "<span style='color:#059669; font-weight:bold;'>+" + formatQty(l.Inspected_Qty) + unit + "</span> ";
+                    logsHtml += "<span style='color:#94a3b8; font-size:9px;'>(By: " + subName + ")</span>";
+                    logsHtml += rmkHtml;
+                    logsHtml += "</div>";
+                });
+
+                if (logsHtml === "") {
+                    logsHtml = "<i style='color:#94a3b8;'>No locations logged yet.</i>";
+                }
+
+                html += "<tr>";
+                html += "<td><strong style='color:#0f172a; font-size:12px;'>" + t.Feeder_Name + "</strong><br>";
+                html += "<span style='color:#64748b; font-size:10px;'>TKC: " + t.TKC_Name + "</span><br>";
+                html += "<span style='color:#94a3b8; font-size:9px;'>Call ID: " + t.Call_ID + "</span></td>";
+                
+                html += "<td><strong style='color:#4f46e5; font-size:12px;'>" + t.Item_Type + "</strong></td>";
+                
+                html += "<td style='line-height: 1.6;'>";
+                html += "Sanctioned: <strong>" + formatQty(t.Sanctioned_Qty) + unit + "</strong><br>";
+                html += "Target: <strong style='color:#0f172a;'>" + formatQty(t.Target_Inspect_Qty) + unit + "</strong><br>";
+                html += "Inspected: <strong style='color:#059669;'>" + formatQty(t.totalInspected) + unit + "</strong> ";
+                html += "<span style='color:" + pctColor + "; font-weight:bold;'>(" + pct + "%)</span>";
+                html += "</td>";
+                
+                html += "<td>" + logsHtml + "</td>";
+                html += "</tr>";
+            });
+
+            html += "</tbody></table>";
+            
+            document.getElementById('report-body').innerHTML = html;
+            document.getElementById('report-body').classList.remove('animate-pulse', 'text-center', 'text-indigo-600');
+        }
+
+        loadReportData();
+    </script>
+</body>
+</html>
