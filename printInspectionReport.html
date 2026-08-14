@@ -16,6 +16,9 @@
         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
         th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; vertical-align: top; }
         th { background-color: #f1f5f9; font-weight: bold; text-transform: uppercase; color: #475569; font-size: 10px; }
+        .feeder-block { margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background-color: #f8fafc; overflow: hidden; }
+        .feeder-header { background-color: #eef2ff; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #312e81; font-size: 11px; display: flex; justify-content: space-between; }
+        .feeder-body { padding: 8px 10px; }
         .log-item { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; font-size: 10px; color: #475569; }
         .log-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     </style>
@@ -102,14 +105,12 @@
                 return;
             }
 
-            // Using strict string concatenation to completely bypass VS Code HTML Linting errors
             let html = "";
             html += "<table>";
             html += "<thead><tr>";
-            html += "<th style='width: 25%'>Feeder & TKC Details</th>";
-            html += "<th style='width: 15%'>Item Type</th>";
-            html += "<th style='width: 20%'>Target vs Progress</th>";
-            html += "<th style='width: 40%'>Inspected Locations Breakdown</th>";
+            html += "<th style='width: 25%'>Item Details & TKC</th>";
+            html += "<th style='width: 25%'>Master Target Status</th>";
+            html += "<th style='width: 50%'>Feeder-wise Inspection Breakdown</th>";
             html += "</tr></thead><tbody>";
 
             keys.forEach(function(key) {
@@ -118,40 +119,82 @@
                 const pct = t.Target_Inspect_Qty > 0 ? ((t.totalInspected / t.Target_Inspect_Qty) * 100).toFixed(1) : 0;
                 const pctColor = pct >= 100 ? "#059669" : "#ea580c";
 
-                let logsHtml = "";
+                // Map feeders from comma-separated string
+                let feedersArray = [];
+                if (t.Feeder_Name) {
+                    const rawSplit = t.Feeder_Name.split(',');
+                    for(let i=0; i<rawSplit.length; i++) {
+                        let trimmed = rawSplit[i].trim();
+                        if (trimmed) feedersArray.push(trimmed);
+                    }
+                }
+                if (feedersArray.length === 0) feedersArray = ["General"];
+
+                let feederDict = {};
+                feedersArray.forEach(function(f) { feederDict[f] = { total: 0, logs: [] }; });
+
+                // Assign logs to specific feeders
                 t.logs.forEach(function(l) {
-                    const rawRemark = String(l.Remark || l.Remarks || "").trim();
-                    const rmkHtml = rawRemark ? "<br><i style='color:#64748b; font-size:9px;'>Remark: " + rawRemark + "</i>" : "";
-                    const dStr = new Date(l.Timestamp).toLocaleDateString('en-IN');
-                    const subName = l.Submitted_By_Name || "Unknown";
-                    
-                    logsHtml += "<div class='log-item'>";
-                    logsHtml += "<strong>" + l.Location_Name + "</strong> : ";
-                    logsHtml += "<span style='color:#059669; font-weight:bold;'>+" + formatQty(l.Inspected_Qty) + unit + "</span> ";
-                    logsHtml += "<span style='color:#94a3b8; font-size:9px;'>(By: " + subName + ")</span>";
-                    logsHtml += rmkHtml;
-                    logsHtml += "</div>";
+                    const fName = l.Feeder_Name || feedersArray[0];
+                    if (!feederDict[fName]) feederDict[fName] = { total: 0, logs: [] };
+                    feederDict[fName].logs.push(l);
+                    feederDict[fName].total += Number(l.Inspected_Qty || 0);
                 });
 
-                if (logsHtml === "") {
-                    logsHtml = "<i style='color:#94a3b8;'>No locations logged yet.</i>";
-                }
+                // Build Feeder Cards inside the 3rd column
+                let feedersHtml = "";
+                Object.keys(feederDict).forEach(function(fKey) {
+                    const fData = feederDict[fKey];
+                    
+                    feedersHtml += "<div class='feeder-block'>";
+                    feedersHtml += "<div class='feeder-header'>";
+                    feedersHtml += "<span>" + fKey + "</span>";
+                    feedersHtml += "<span style='color: #059669;'>Inspected: " + formatQty(fData.total) + unit + "</span>";
+                    feedersHtml += "</div>";
+                    feedersHtml += "<div class='feeder-body'>";
 
-                html += "<tr>";
-                html += "<td><strong style='color:#0f172a; font-size:12px;'>" + t.Feeder_Name + "</strong><br>";
-                html += "<span style='color:#64748b; font-size:10px;'>TKC: " + t.TKC_Name + "</span><br>";
-                html += "<span style='color:#94a3b8; font-size:9px;'>Call ID: " + t.Call_ID + "</span></td>";
+                    let logsHtml = "";
+                    if (fData.logs.length > 0) {
+                        fData.logs.forEach(function(l) {
+                            const rawRemark = String(l.Remark || l.Remarks || "").trim();
+                            const rmkHtml = rawRemark ? "<br><i style='color:#64748b; font-size:9px;'>Remark: " + rawRemark + "</i>" : "";
+                            const subName = l.Submitted_By_Name || "Unknown";
+                            
+                            logsHtml += "<div class='log-item'>";
+                            logsHtml += "<strong style='color:#0f172a; font-size:11px;'>" + l.Location_Name + "</strong> : ";
+                            logsHtml += "<span style='color:#059669; font-weight:bold;'>+" + formatQty(l.Inspected_Qty) + unit + "</span> ";
+                            logsHtml += "<span style='color:#94a3b8; font-size:9px;'>(By: " + subName + ")</span>";
+                            logsHtml += rmkHtml;
+                            logsHtml += "</div>";
+                        });
+                    } else {
+                        logsHtml = "<i style='color:#94a3b8;'>No locations logged under this feeder yet.</i>";
+                    }
+
+                    feedersHtml += logsHtml;
+                    feedersHtml += "</div></div>"; // Close body & block
+                });
+
+                // Build Final Row
+                html += "<tr style='page-break-inside: avoid;'>";
                 
-                html += "<td><strong style='color:#4f46e5; font-size:12px;'>" + t.Item_Type + "</strong></td>";
-                
-                html += "<td style='line-height: 1.6;'>";
-                html += "Sanctioned: <strong>" + formatQty(t.Sanctioned_Qty) + unit + "</strong><br>";
-                html += "Target: <strong style='color:#0f172a;'>" + formatQty(t.Target_Inspect_Qty) + unit + "</strong><br>";
-                html += "Inspected: <strong style='color:#059669;'>" + formatQty(t.totalInspected) + unit + "</strong> ";
-                html += "<span style='color:" + pctColor + "; font-weight:bold;'>(" + pct + "%)</span>";
+                // Column 1
+                html += "<td>";
+                html += "<strong style='color:#4f46e5; font-size:14px;'>" + t.Item_Type + "</strong><br><br>";
+                html += "<span style='color:#64748b; font-size:10px;'>TKC: <strong style='color:#0f172a;'>" + t.TKC_Name + "</strong></span><br>";
+                html += "<span style='color:#94a3b8; font-size:9px;'>Call ID: " + t.Call_ID + "</span>";
                 html += "</td>";
                 
-                html += "<td>" + logsHtml + "</td>";
+                // Column 2
+                html += "<td style='line-height: 1.8;'>";
+                html += "Sanctioned: <strong>" + formatQty(t.Sanctioned_Qty) + unit + "</strong><br>";
+                html += "Target: <strong style='color:#0f172a;'>" + formatQty(t.Target_Inspect_Qty) + unit + "</strong><br>";
+                html += "Inspected: <strong style='color:#059669;'>" + formatQty(t.totalInspected) + unit + "</strong><br><br>";
+                html += "Progress: <span style='color:" + pctColor + "; font-weight:bold;'>" + pct + "% Complete</span>";
+                html += "</td>";
+                
+                // Column 3
+                html += "<td>" + feedersHtml + "</td>";
                 html += "</tr>";
             });
 
