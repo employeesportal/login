@@ -339,12 +339,13 @@
                     <div class="px-4 py-3 sm:px-5 sm:py-4 bg-slate-950 text-white flex justify-between items-center cursor-pointer hover:bg-slate-900 transition" onclick="window.toggleAccordion('${safeDpId}')">
                         <div class="flex items-start sm:items-center gap-3 w-[90%]">
                             <i data-lucide="map-pin" class="w-5 h-5 text-rose-500 shrink-0 mt-0.5 sm:mt-0"></i>
-                            <div class="w-full">
+                            <div class="w-full pr-2">
                                 <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider flex flex-wrap items-center gap-2">
                                     ${dpData.district} 
                                     <span class="bg-rose-600 border border-rose-500 text-white px-1.5 py-0.5 rounded text-[9px] sm:text-[10px]">Phase: ${dpData.phase}</span>
                                 </h4>
-                                <div class="text-[9px] sm:text-[10px] text-slate-300 font-mono mt-1 leading-relaxed truncate overflow-hidden text-ellipsis w-full">${distSummaryStr}</div>
+                                <!-- 🎯 FIX: Changed truncate to whitespace-normal so text wraps on mobile -->
+                                <div class="text-[9px] sm:text-[10px] text-slate-300 font-mono mt-1 leading-relaxed whitespace-normal break-words w-full pr-2">${distSummaryStr}</div>
                             </div>
                         </div>
                         <i data-lucide="chevron-down" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 shrink-0"></i>
