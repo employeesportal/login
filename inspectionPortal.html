@@ -1,41 +1,40 @@
-<div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+<div class="w-full max-w-7xl mx-auto glass-panel p-3 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
     
     <!-- Header & Controls -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 mb-6 gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 mb-4 sm:mb-6 gap-4">
         <div>
             <h3 class="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-                <i data-lucide="map" class="text-indigo-600 w-6 h-6"></i> Inspection Tracking Portal
+                <i data-lucide="map" class="text-indigo-600 w-6 h-6"></i> Inspection Tracking
             </h3>
             <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">District/Phase ➔ TKC ➔ Item ➔ Feeder Dashboard</p>
         </div>
         
-        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <select id="ins-project-select" onchange="window.fetchInspectionData()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 font-black focus:ring-1 focus:ring-indigo-500 transition">
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+            <select id="ins-project-select" onchange="window.fetchInspectionData()" class="col-span-2 px-3 py-2 sm:px-4 border border-slate-300 rounded-xl text-xs bg-slate-50 font-black focus:ring-1 focus:ring-indigo-500 transition">
                 <option value="">-- Select Project --</option>
             </select>
             
-            <select id="ins-district-filter" onchange="window.applyFilters()" class="hidden px-4 py-2 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-1 focus:ring-indigo-500 shadow-sm transition">
+            <select id="ins-district-filter" onchange="window.applyFilters()" class="hidden px-3 py-2 sm:px-4 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-1 focus:ring-indigo-500 shadow-sm transition">
                 <option value="ALL">All Districts</option>
             </select>
 
-            <select id="ins-phase-filter" onchange="window.applyFilters()" class="hidden px-4 py-2 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-1 focus:ring-indigo-500 shadow-sm transition">
+            <select id="ins-phase-filter" onchange="window.applyFilters()" class="hidden px-3 py-2 sm:px-4 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-1 focus:ring-indigo-500 shadow-sm transition">
                 <option value="ALL">All Phases</option>
             </select>
 
-            <button id="btn-print-report" onclick="window.generatePrintableReport()" class="hidden px-4 py-2 bg-slate-800 hover:bg-slate-950 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition shrink-0">
-                <i data-lucide="printer" class="w-3.5 h-3.5 inline mr-1"></i> Export PDF
+            <button id="btn-print-report" onclick="window.generatePrintableReport()" class="hidden col-span-2 sm:col-span-1 px-4 py-2 bg-slate-800 hover:bg-slate-950 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex justify-center items-center">
+                <i data-lucide="printer" class="w-3.5 h-3.5 mr-1.5"></i> Export PDF
             </button>
 
-            <button id="btn-create-target" onclick="window.openTargetModal()" class="hidden px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition shrink-0">
-                <i data-lucide="plus-circle" class="w-3.5 h-3.5 inline mr-1"></i> New Target
+            <button id="btn-create-target" onclick="window.openTargetModal()" class="hidden col-span-2 sm:col-span-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm transition flex justify-center items-center">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5 mr-1.5"></i> New Target
             </button>
         </div>
     </div>
 
     <!-- DETAILED CALL TRACKERS -->
-    <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-3 ml-2">Detailed Call Trackers & Sub-Locations</h4>
     <div id="ins-accordion-container" class="w-full">
-        <div class="p-12 text-center text-slate-400 italic border border-slate-200 rounded-2xl bg-white shadow-inner">
+        <div class="p-10 text-center text-slate-400 italic border border-slate-200 rounded-2xl bg-white shadow-inner">
             Select an assigned project above to view inspection trackers.
         </div>
     </div>
@@ -44,15 +43,14 @@
 <!-- AUTOCOMPLETE DATALISTS -->
 <datalist id="existing-districts"></datalist>
 <datalist id="existing-items"></datalist>
-<datalist id="existing-units"></datalist>
 <datalist id="existing-tkcs"></datalist>
 
 <!-- Modal: Create / Edit Target (DataCoordinator Only) -->
-<div id="modal-target" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 relative">
+<div id="modal-target" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-2xl max-h-[95vh] overflow-y-auto rounded-3xl shadow-2xl p-5 sm:p-6 relative">
         <h3 id="target-modal-title" class="text-lg font-black text-slate-900 border-b pb-3 mb-4">Create Inspection Target</h3>
         <input type="hidden" id="target-row-index">
-        <div class="grid grid-cols-2 gap-4 text-xs font-bold text-slate-700">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold text-slate-700">
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500">District</label><input type="text" id="t-district" list="existing-districts" autocomplete="off" class="w-full p-2 border rounded-lg bg-slate-50"></div>
             <div>
                 <label class="block mb-1 text-[10px] uppercase text-slate-500">Phase</label>
@@ -71,19 +69,18 @@
                 <select id="t-item-unit" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900">
                     <option value="Nos">Nos (Numbers)</option>
                     <option value="Kms">Kms (Kilometers)</option>
-                    <option value="Kms">CKms (Circuit-Kilometers)</option>
                     <option value="Mtrs">Mtrs (Meters)</option>
                     <option value="Sets">Sets</option>
                     <option value="Lot">Lot</option>
                 </select>
             </div>
-            <div></div> <!-- empty spacer -->
+            <div class="hidden sm:block"></div> <!-- empty spacer -->
 
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500">Total Sanctioned Qty</label><input type="number" step="0.001" id="t-sanc-qty" class="w-full p-2 border rounded-lg bg-slate-50"></div>
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500 text-indigo-600">Target Qty to Inspect</label><input type="number" step="0.001" id="t-target-qty" class="w-full p-2 border border-indigo-200 rounded-lg bg-indigo-50 text-indigo-900"></div>
             
-            <div class="col-span-2 border-t border-slate-200 pt-4 mt-2">
-                <div class="flex justify-between items-end mb-3">
+            <div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-3 gap-2">
                     <div>
                         <label class="block text-xs uppercase text-slate-800 font-black tracking-wider">Feeders List</label>
                         <p class="text-[9px] text-slate-400 font-normal">Declare the feeders associated with this target.</p>
@@ -93,21 +90,21 @@
                         <input type="number" id="t-feeder-count" value="1" min="1" max="50" onchange="window.renderFeederInputs()" class="w-16 p-1.5 border border-slate-300 rounded text-center text-xs font-bold focus:ring-1 focus:ring-indigo-500">
                     </div>
                 </div>
-                <div id="t-feeder-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div id="t-feeder-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <!-- Dynamic inputs inject here -->
                 </div>
             </div>
         </div>
         <div class="flex justify-end gap-3 mt-6 pt-4 border-t sticky bottom-0 bg-white">
             <button onclick="document.getElementById('modal-target').classList.add('hidden')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase">Cancel</button>
-            <button onclick="window.saveTargetAction()" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase shadow-md hover:bg-indigo-700">Save Target</button>
+            <button onclick="window.saveTargetAction()" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase shadow-md hover:bg-indigo-700">Save</button>
         </div>
     </div>
 </div>
 
 <!-- Modal: Add Location Log (Everyone) -->
-<div id="modal-log" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative">
+<div id="modal-log" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-5 sm:p-6 relative">
         <h3 class="text-lg font-black text-slate-900 border-b pb-3 mb-4">Log Inspected Location</h3>
         <input type="hidden" id="log-call-id">
         <div class="space-y-4 text-xs font-bold text-slate-700">
@@ -123,7 +120,7 @@
                 <input type="text" id="l-location" placeholder="E.g., Chandrapur Village Site" class="w-full p-2.5 border rounded-xl bg-slate-50 focus:ring-1 focus:ring-emerald-500">
             </div>
             <div>
-                <label class="block mb-1 text-[10px] uppercase text-slate-500 text-emerald-600">Quantity Inspected Here (3 Decimal Precision)</label>
+                <label class="block mb-1 text-[10px] uppercase text-slate-500 text-emerald-600">Quantity Inspected Here</label>
                 <input type="number" step="0.001" id="l-qty" placeholder="0.000" class="w-full p-2.5 border border-emerald-200 rounded-xl bg-emerald-50 text-emerald-900 font-mono text-lg">
             </div>
             <div id="remark-input-container">
@@ -133,7 +130,7 @@
         </div>
         <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
             <button onclick="document.getElementById('modal-log').classList.add('hidden')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-black text-xs uppercase">Cancel</button>
-            <button onclick="window.saveLogAction()" class="px-6 py-2 bg-emerald-600 text-white rounded-xl font-black text-xs uppercase shadow-md hover:bg-emerald-700">Lock & Submit</button>
+            <button onclick="window.saveLogAction()" class="px-6 py-2 bg-emerald-600 text-white rounded-xl font-black text-xs uppercase shadow-md hover:bg-emerald-700">Submit</button>
         </div>
     </div>
 </div>
@@ -228,7 +225,6 @@
             let uniqueDistricts = new Set();
             let uniquePhases = new Set();
             let uniqueItems = new Set();
-            let uniqueUnits = new Set();
             let uniqueTkcs = new Set();
             
             rows.forEach(r => {
@@ -238,7 +234,6 @@
                     if (r.District) uniqueDistricts.add(r.District.trim());
                     if (r.Phase) uniquePhases.add(r.Phase.trim());
                     if (r.Item_Type) uniqueItems.add(r.Item_Type.trim());
-                    if (r.Item_Unit) uniqueUnits.add(r.Item_Unit.trim());
                     if (r.TKC_Name) uniqueTkcs.add(r.TKC_Name.trim());
                 }
             });
@@ -256,9 +251,6 @@
             
             const dlItems = document.getElementById("existing-items");
             if (dlItems) dlItems.innerHTML = Array.from(uniqueItems).map(i => `<option value="${i}">`).join('');
-            
-            const dlUnits = document.getElementById("existing-units");
-            if (dlUnits) dlUnits.innerHTML = Array.from(uniqueUnits).map(u => `<option value="${u}">`).join('');
             
             const dlTkcs = document.getElementById("existing-tkcs");
             if (dlTkcs) dlTkcs.innerHTML = Array.from(uniqueTkcs).map(tkc => `<option value="${tkc}">`).join('');
@@ -289,7 +281,6 @@
             const phaseVal = document.getElementById("ins-phase-filter").value;
             const container = document.getElementById("ins-accordion-container");
             
-            // 🎯 NEW HIERARCHY: District & Phase ➔ TKC ➔ Item
             let filteredHierarchy = {};
 
             Object.keys(currentTargetData).forEach(key => {
@@ -306,19 +297,16 @@
                 
                 if (!filteredHierarchy[dpKey]) filteredHierarchy[dpKey] = { district: dist, phase: phase, tkcs: {}, summaryItems: {} };
                 
-                // Aggregating top-level District+Phase item summary
                 if (!filteredHierarchy[dpKey].summaryItems[item]) {
                     filteredHierarchy[dpKey].summaryItems[item] = { totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
                 }
                 filteredHierarchy[dpKey].summaryItems[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
                 filteredHierarchy[dpKey].summaryItems[item].totalInspected += t.totalInspected;
 
-                // Create TKC level
                 if (!filteredHierarchy[dpKey].tkcs[tkc]) {
                     filteredHierarchy[dpKey].tkcs[tkc] = { items: {} };
                 }
 
-                // Create Item level inside TKC
                 if (!filteredHierarchy[dpKey].tkcs[tkc].items[item]) {
                     filteredHierarchy[dpKey].tkcs[tkc].items[item] = { targets: [], totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
                 }
@@ -343,26 +331,26 @@
                     const sItem = dpData.summaryItems[item];
                     distSummaryArr.push(`<span class="text-indigo-400">${item}:</span> ${formatQty(sItem.totalInspected)} / ${formatQty(sItem.totalTarget)} ${sItem.unit}`);
                 });
-                const distSummaryStr = distSummaryArr.join(' <span class="text-slate-600 font-black">|</span> ');
+                const distSummaryStr = distSummaryArr.join(' <span class="text-slate-600 font-black px-1">|</span> ');
                 
                 html += `
-                <div class="mb-4 bg-white border border-slate-300 rounded-2xl shadow-sm overflow-hidden animate-fade-in">
+                <div class="mb-4 bg-white border border-slate-300 rounded-xl sm:rounded-2xl shadow-sm overflow-hidden animate-fade-in">
                     <!-- TIER 1: District & Phase -->
-                    <div class="px-5 py-4 bg-slate-950 text-white flex justify-between items-center cursor-pointer hover:bg-slate-900 transition" onclick="window.toggleAccordion('${safeDpId}')">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="map-pin" class="w-5 h-5 text-rose-500"></i>
-                            <div>
-                                <h4 class="text-sm font-black uppercase tracking-wider">
+                    <div class="px-4 py-3 sm:px-5 sm:py-4 bg-slate-950 text-white flex justify-between items-center cursor-pointer hover:bg-slate-900 transition" onclick="window.toggleAccordion('${safeDpId}')">
+                        <div class="flex items-start sm:items-center gap-3 w-[90%]">
+                            <i data-lucide="map-pin" class="w-5 h-5 text-rose-500 shrink-0 mt-0.5 sm:mt-0"></i>
+                            <div class="w-full">
+                                <h4 class="text-xs sm:text-sm font-black uppercase tracking-wider flex flex-wrap items-center gap-2">
                                     ${dpData.district} 
-                                    <span class="bg-rose-600 border border-rose-500 text-white px-2 py-0.5 rounded ml-2 text-[10px]">Phase: ${dpData.phase}</span>
+                                    <span class="bg-rose-600 border border-rose-500 text-white px-1.5 py-0.5 rounded text-[9px] sm:text-[10px]">Phase: ${dpData.phase}</span>
                                 </h4>
-                                <div class="text-[10px] text-slate-300 font-mono mt-1 leading-relaxed">${distSummaryStr}</div>
+                                <div class="text-[9px] sm:text-[10px] text-slate-300 font-mono mt-1 leading-relaxed truncate overflow-hidden text-ellipsis w-full">${distSummaryStr}</div>
                             </div>
                         </div>
-                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-500 shrink-0"></i>
+                        <i data-lucide="chevron-down" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 shrink-0"></i>
                     </div>
                     
-                    <div id="${safeDpId}" class="hidden p-4 space-y-4 bg-slate-50">
+                    <div id="${safeDpId}" class="hidden p-2 sm:p-4 space-y-3 sm:space-y-4 bg-slate-50">
                 `;
 
                 Object.keys(dpData.tkcs).forEach(tkcKey => {
@@ -371,18 +359,18 @@
 
                     html += `
                         <!-- TIER 2: TKC Level -->
-                        <div class="border border-indigo-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                            <div class="px-4 py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
+                        <div class="border border-indigo-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                            <div class="px-3 py-2 sm:px-4 sm:py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="briefcase" class="w-4 h-4 text-indigo-600"></i>
+                                    <i data-lucide="briefcase" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600"></i>
                                     <div>
-                                        <h5 class="text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
+                                        <h5 class="text-[11px] sm:text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
                                     </div>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0"></i>
                             </div>
                             
-                            <div id="${safeTkcId}" class="hidden p-3 space-y-3 bg-indigo-50/30">
+                            <div id="${safeTkcId}" class="hidden p-2 sm:p-3 space-y-2 sm:space-y-3 bg-indigo-50/30">
                     `;
 
                     Object.keys(tkcData.items).forEach(item => {
@@ -392,29 +380,20 @@
                         const unitStr = iData.unit ? ` ${iData.unit}` : '';
 
                         html += `
-                            <!-- TIER 3: Item Level -->
+                            <!-- TIER 3: Item Level (RESPONSIVE CARDS) -->
                             <div class="border border-sky-200 rounded-lg overflow-hidden bg-white shadow-sm">
                                 <div class="px-3 py-2 bg-sky-100 flex justify-between items-center cursor-pointer hover:bg-sky-200 transition" onclick="window.toggleAccordion('${safeItemId}')">
-                                    <div class="flex items-center gap-2">
-                                        <i data-lucide="box" class="w-3.5 h-3.5 text-sky-700"></i>
+                                    <div class="flex items-start gap-2">
+                                        <i data-lucide="box" class="w-3.5 h-3.5 text-sky-700 shrink-0 mt-0.5"></i>
                                         <div>
-                                            <h6 class="text-[11px] font-black text-sky-900 uppercase tracking-wider">${item}</h6>
+                                            <h6 class="text-[10px] sm:text-[11px] font-black text-sky-900 uppercase tracking-wider">${item}</h6>
                                             <div class="text-[9px] text-sky-700 font-mono mt-0.5">Target: ${formatQty(iData.totalTarget)}${unitStr} | Inspected: ${formatQty(iData.totalInspected)}${unitStr} (${iProg.toFixed(1)}%)</div>
                                         </div>
                                     </div>
                                     <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-sky-600 shrink-0"></i>
                                 </div>
                                 
-                                <div id="${safeItemId}" class="hidden overflow-x-auto">
-                                    <table class="w-full text-left text-xs border-collapse min-w-[1000px]">
-                                        <thead class="bg-slate-100 text-slate-600 uppercase text-[9px] font-black border-y border-slate-200">
-                                            <tr>
-                                                <th class="p-3 w-48">Target Ref & Details</th>
-                                                <th class="p-3 w-48 text-center">Master Target Status</th>
-                                                <th class="p-3 text-center w-48">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100">
+                                <div id="${safeItemId}" class="hidden p-2 sm:p-3 bg-slate-50/50 space-y-3">
                         `;
 
                         iData.targets.forEach(t => {
@@ -433,14 +412,11 @@
                                 feederDict[fName].total += Number(l.Inspected_Qty || 0);
                             });
 
-                            let feedersHtml = `<tr id="feeders-${t.Call_ID}" class="hidden bg-slate-50/50 border-b border-slate-200"><td colspan="3" class="p-0">
-                                <div class="px-4 md:px-8 py-4 bg-slate-50 shadow-inner">
-                                    <h6 class="text-[10px] uppercase font-black text-slate-500 mb-2 tracking-wider">Feeder-wise Inspection Breakdown</h6>
-                                    <table class="w-full text-[10px] text-left border border-slate-200 bg-white rounded-lg overflow-hidden mb-2">
-                                        <thead class="bg-indigo-50 text-indigo-900 uppercase">
-                                            <tr><th class="p-2 w-1/3">Feeder Name</th><th class="p-2 w-1/3 text-center">Total Inspected</th><th class="p-2 w-1/3 text-center">Detailed Logs</th></tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100">`;
+                            let feedersHtml = `<div id="feeders-${t.Call_ID}" class="hidden mt-2 border border-slate-200 rounded-lg shadow-inner overflow-hidden bg-white">
+                                <div class="px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                                    <h6 class="text-[9px] sm:text-[10px] uppercase font-black text-indigo-900 tracking-wider">Feeder Breakdown</h6>
+                                </div>
+                                <div class="divide-y divide-slate-100 flex flex-col">`;
                             
                             Object.keys(feederDict).forEach(fKey => {
                                 const fData = feederDict[fKey];
@@ -448,85 +424,94 @@
                                 
                                 let specificLogsHtml = "";
                                 if (fData.logs.length > 0) {
-                                    const remarkHeader = isCoordinator ? "Location & Remark" : "Location";
-                                    const timeHeader = isCoordinator ? '<th class="p-1.5">Timestamp</th>' : '';
-                                    const delHeader = isCoordinator ? '<th class="p-1.5 text-center">Del</th>' : '';
-                                    
-                                    specificLogsHtml = `<tr id="${safeFeederId}" class="hidden bg-slate-100/50"><td colspan="3" class="p-0">
-                                        <div class="px-6 py-2 shadow-inner border-y border-slate-200 bg-white">
-                                            <table class="w-full text-[9px] text-left border border-slate-200 rounded overflow-hidden">
-                                                <thead class="bg-slate-200 text-slate-600 uppercase">
-                                                    <tr><th class="p-1.5">${remarkHeader}</th><th class="p-1.5 text-center">Qty Logged</th><th class="p-1.5">Employee</th>${timeHeader}${delHeader}</tr>
-                                                </thead>
-                                                <tbody class="divide-y divide-slate-100">`;
+                                    specificLogsHtml = `<div id="${safeFeederId}" class="hidden bg-slate-50 border-t border-slate-100 p-2 inset-shadow">
+                                        <div class="flex flex-col gap-2">`;
                                     
                                     fData.logs.forEach(l => {
                                         let rawDate = String(l.Timestamp || '');
                                         let dStr = rawDate.includes(' ') ? rawDate.split(' ')[0] : rawDate;
                                         
-                                        const timeCol = isCoordinator ? `<td class="p-1.5 text-slate-400 font-mono">${rawDate}</td>` : '';
-                                        const delBtn = isCoordinator ? `<td class="p-1.5 text-center"><button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:text-rose-700 font-bold"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></td>` : '';
+                                        const timeSpan = isCoordinator ? `<span class="text-slate-400 font-mono text-[9px]">${rawDate}</span>` : '';
+                                        const delBtn = isCoordinator ? `<button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : '';
                                         const rawRemark = String(l.Remark || l.Remarks || '').trim();
-                                        const remarkHtml = (isCoordinator && rawRemark !== "") ? `<div class="text-[9px] text-amber-700 font-bold italic mt-1 bg-amber-50 p-1 rounded border border-amber-200 leading-tight">Remark: ${rawRemark}</div>` : '';
+                                        const remarkHtml = (isCoordinator && rawRemark !== "") ? `<div class="text-[9px] text-amber-800 font-medium mt-1 bg-amber-50/80 p-1.5 rounded border border-amber-200/50 leading-tight"><strong class="uppercase text-[8px] text-amber-600 block mb-0.5">Remark:</strong>${rawRemark}</div>` : '';
 
-                                        specificLogsHtml += `<tr>
-                                            <td class="p-1.5"><span class="font-bold text-slate-800">${l.Location_Name}</span>${remarkHtml}</td>
-                                            <td class="p-1.5 text-center font-mono text-emerald-700 font-bold">+${formatQty(l.Inspected_Qty)}</td>
-                                            <td class="p-1.5 text-slate-500">${l.Submitted_By_Name}</td>
-                                            ${timeCol}
-                                            ${delBtn}
-                                        </tr>`;
+                                        specificLogsHtml += `
+                                            <div class="bg-white p-2 border border-slate-200 rounded shadow-sm relative pr-8">
+                                                <div class="flex justify-between items-start mb-1">
+                                                    <span class="font-bold text-slate-800 text-[10px] leading-tight">${l.Location_Name}</span>
+                                                    <span class="font-mono text-emerald-600 font-bold text-[10px]">+${formatQty(l.Inspected_Qty)}</span>
+                                                </div>
+                                                <div class="flex justify-between items-center text-[9px] text-slate-500 mt-1">
+                                                    <span>${l.Submitted_By_Name}</span>
+                                                    ${timeSpan}
+                                                </div>
+                                                ${remarkHtml}
+                                                <div class="absolute top-1.5 right-1.5">${delBtn}</div>
+                                            </div>
+                                        `;
                                     });
-                                    specificLogsHtml += `</tbody></table></div></td></tr>`;
+                                    specificLogsHtml += `</div></div>`;
                                 }
 
                                 feedersHtml += `
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-2 font-black text-slate-700">${fKey}</td>
-                                        <td class="p-2 text-center font-mono text-emerald-600 font-bold">${formatQty(fData.total)}${tUnitStr}</td>
-                                        <td class="p-2 text-center">
-                                            ${fData.logs.length > 0 ? `<button onclick="window.toggleAccordion('${safeFeederId}')" class="text-indigo-600 text-[9px] font-black uppercase hover:underline shadow-sm px-2 py-1 bg-indigo-50 rounded">Logs (${fData.logs.length})</button>` : `<span class="text-slate-300 text-[9px] uppercase font-bold">No Logs</span>`}
-                                        </td>
-                                    </tr>
-                                    ${specificLogsHtml}
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center justify-between p-2.5 hover:bg-slate-50 transition cursor-pointer" ${fData.logs.length > 0 ? `onclick="window.toggleAccordion('${safeFeederId}')"` : ''}>
+                                            <div class="font-black text-slate-700 text-[10px] truncate pr-2 w-1/2">${fKey}</div>
+                                            <div class="flex items-center justify-end gap-1.5 w-1/2">
+                                                <span class="font-mono text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">${formatQty(fData.total)}${tUnitStr}</span>
+                                                ${fData.logs.length > 0 ? `<button class="text-indigo-600 text-[9px] font-black uppercase shadow-sm px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 rounded border border-indigo-100 whitespace-nowrap flex items-center">Logs <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i></button>` : `<span class="text-slate-300 text-[8px] uppercase font-bold px-1.5 py-0.5 whitespace-nowrap">No Logs</span>`}
+                                            </div>
+                                        </div>
+                                        ${specificLogsHtml}
+                                    </div>
                                 `;
                             });
+                            feedersHtml += `</div></div>`;
 
-                            feedersHtml += `</tbody></table></div></td></tr>`;
-
+                            // 🎯 MOBILE-FIRST TARGET CARD
                             html += `
-                                <tr class="hover:bg-slate-50 align-top">
-                                    <td class="p-3">
-                                        <div class="font-bold text-slate-900">${t.Item_Type}</div>
-                                        <div class="text-[10px] text-slate-500 mt-1">Phase: <strong>${t.Phase}</strong></div>
-                                        <div class="text-[9px] text-slate-400 font-mono mt-1">Call: ${t.Call_ID}</div>
-                                    </td>
-                                    <td class="p-3">
-                                        <div class="text-[10px] font-black text-slate-500 mb-1 border-b border-slate-100 pb-1">
-                                            Sanctioned: <span class="text-slate-800">${formatQty(t.Sanctioned_Qty)}${tUnitStr}</span>
+                                <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden relative">
+                                    <div class="flex flex-col md:flex-row md:divide-x divide-slate-100">
+                                        
+                                        <!-- Card Col 1: Details -->
+                                        <div class="p-3 md:w-1/3 flex flex-col justify-center relative">
+                                            <div class="font-black text-slate-900 text-[11px] uppercase tracking-wide pr-8">${t.Item_Type}</div>
+                                            <div class="text-[10px] text-slate-500 mt-1">Phase: <strong class="text-slate-700">${t.Phase}</strong></div>
+                                            <div class="text-[9px] text-slate-400 font-mono mt-0.5 truncate">Call: ${t.Call_ID}</div>
+                                            
+                                            ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="absolute top-2 right-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>` : ''}
                                         </div>
-                                        <div class="flex justify-between text-[10px] font-black mb-1">
-                                            <span class="text-slate-500">Target: <span class="text-indigo-900">${formatQty(t.Target_Inspect_Qty)}${tUnitStr}</span></span>
-                                            <span class="text-slate-500">Done: <span class="${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'}">${formatQty(t.totalInspected)}</span></span>
+                                        
+                                        <!-- Card Col 2: Progress -->
+                                        <div class="p-3 md:w-1/3 border-t md:border-t-0 border-slate-100 bg-slate-50/50 flex flex-col justify-center">
+                                            <div class="text-[9px] font-black text-slate-500 mb-1.5 pb-1 border-b border-slate-200/60 flex justify-between">
+                                                <span>Sanctioned:</span>
+                                                <span class="text-slate-800">${formatQty(t.Sanctioned_Qty)}${tUnitStr}</span>
+                                            </div>
+                                            <div class="flex justify-between text-[9px] font-black mb-1">
+                                                <span class="text-slate-500">Target: <span class="text-indigo-900">${formatQty(t.Target_Inspect_Qty)}${tUnitStr}</span></span>
+                                                <span class="text-slate-500">Done: <span class="${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'}">${formatQty(t.totalInspected)}</span></span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden shadow-inner mb-1">
+                                                <div class="${progressColor} h-1.5 rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                                            </div>
+                                            <div class="text-[8px] text-right ${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'} font-black">${progressPct.toFixed(1)}% Complete</div>
                                         </div>
-                                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner mb-1">
-                                            <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${progressPct}%"></div>
+                                        
+                                        <!-- Card Col 3: Actions -->
+                                        <div class="p-3 md:w-1/3 border-t md:border-t-0 border-slate-100 flex flex-col justify-center gap-2">
+                                            ${progressPct < 100 ? `<button onclick="window.openLogModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase tracking-wider rounded shadow-sm transition flex items-center justify-center gap-1.5"><i data-lucide="plus-circle" class="w-3 h-3"></i> Log Location</button>` : `<div class="text-center text-[9px] font-black text-emerald-600 uppercase bg-emerald-50 py-1.5 rounded border border-emerald-100 flex items-center justify-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Target Achieved</div>`}
+                                            
+                                            <button onclick="window.toggleAccordion('feeders-${t.Call_ID}')" class="w-full px-2 py-1.5 bg-white text-indigo-700 hover:bg-indigo-50 text-[9px] font-black uppercase tracking-wider rounded border border-indigo-200 shadow-sm transition flex items-center justify-center gap-1.5">View Feeders <i data-lucide="chevron-down" class="w-3 h-3"></i></button>
                                         </div>
-                                        <div class="text-[9px] text-right ${progressPct >= 100 ? 'text-emerald-600' : 'text-indigo-600'} font-bold">${progressPct.toFixed(1)}% Complete</div>
-                                    </td>
-                                    <td class="p-3 space-y-2">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-[9px] font-black uppercase rounded border border-slate-300">Edit</button>` : '<div></div>'}
-                                            ${progressPct < 100 ? `<button onclick="window.openLogModal('${t.Call_ID}')" class="w-full px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase rounded shadow-sm"><i data-lucide="plus" class="w-3 h-3 inline"></i> Log Area</button>` : ''}
-                                        </div>
-                                        <button onclick="window.toggleAccordion('feeders-${t.Call_ID}')" class="w-full px-2 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider rounded border border-indigo-200 shadow-sm transition">Feeders Breakdown <i data-lucide="chevron-down" class="w-3 h-3 inline ml-1"></i></button>
-                                    </td>
-                                </tr>
-                                ${feedersHtml}
+                                    </div>
+                                    ${feedersHtml}
+                                </div>
                             `;
                         });
 
-                        html += `</tbody></table></div></div>`;
+                        html += `</div></div>`;
                     });
                     html += `</div></div>`;
                 });
@@ -552,7 +537,6 @@
                 return; 
             }
 
-            // 🎯 NEW: Added the isCoord flag to the URL so the print page knows who is viewing it
             const printUrl = `printInspectionReport.html?project=${encodeURIComponent(project)}&district=${encodeURIComponent(distFilter)}&phase=${encodeURIComponent(phaseFilter)}&apiUrl=${encodeURIComponent(API_URL)}&isCoord=${isCoordinator}`;
             window.open(printUrl, '_blank');
         };
