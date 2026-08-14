@@ -70,8 +70,7 @@
                 <label class="block mb-1 text-[10px] uppercase text-slate-500 text-sky-600">Unit</label>
                 <select id="t-item-unit" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900">
                     <option value="Nos">Nos (Numbers)</option>
-                    <option value="Kms">CKms (Kilometers)</option>
-                    <option value="CKms">CKms (Circuit Kilometers)</option>
+                    <option value="Kms">Kms (Kilometers)</option>
                     <option value="Mtrs">Mtrs (Meters)</option>
                     <option value="Sets">Sets</option>
                     <option value="Lot">Lot</option>
@@ -407,17 +406,25 @@
                             
                             let specificLogsHtml = "";
                             if (fData.logs.length > 0) {
+                                // 🎯 NEW: Dynamic Headers based on Role
                                 const remarkHeader = isCoordinator ? "Location & Remark" : "Location";
+                                const timeHeader = isCoordinator ? '<th class="p-1.5">Timestamp</th>' : '';
+                                const delHeader = isCoordinator ? '<th class="p-1.5 text-center">Del</th>' : '';
+                                
                                 specificLogsHtml = `<tr id="${safeFeederId}" class="hidden bg-slate-100/50"><td colspan="3" class="p-0">
                                     <div class="px-6 py-2 shadow-inner border-y border-slate-200 bg-white">
                                         <table class="w-full text-[9px] text-left border border-slate-200 rounded overflow-hidden">
                                             <thead class="bg-slate-200 text-slate-600 uppercase">
-                                                <tr><th class="p-1.5">${remarkHeader}</th><th class="p-1.5 text-center">Qty Logged</th><th class="p-1.5">Employee</th><th class="p-1.5">Date</th>${isCoordinator ? '<th class="p-1.5 text-center">Del</th>' : ''}</tr>
+                                                <tr><th class="p-1.5">${remarkHeader}</th><th class="p-1.5 text-center">Qty Inspected</th><th class="p-1.5">Employee</th>${timeHeader}${delHeader}</tr>
                                             </thead>
                                             <tbody class="divide-y divide-slate-100">`;
                                 
                                 fData.logs.forEach(l => {
-                                    const dStr = new Date(l.Timestamp).toLocaleDateString('en-IN');
+                                    const rawDate = String(l.Timestamp || '');
+                                    
+                                    // 🎯 NEW: Complete Timestamp Column only visible to Admins/Coordinators
+                                    const timeCol = isCoordinator ? `<td class="p-1.5 text-slate-400 font-mono">${rawDate}</td>` : '';
+                                    
                                     const delBtn = isCoordinator ? `<td class="p-1.5 text-center"><button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:text-rose-700 font-bold"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></td>` : '';
                                     const rawRemark = String(l.Remark || l.Remarks || '').trim();
                                     const remarkHtml = (isCoordinator && rawRemark !== "") ? `<div class="text-[9px] text-amber-700 font-bold italic mt-1 bg-amber-50 p-1 rounded border border-amber-200 leading-tight">Remark: ${rawRemark}</div>` : '';
@@ -426,7 +433,7 @@
                                         <td class="p-1.5"><span class="font-bold text-slate-800">${l.Location_Name}</span>${remarkHtml}</td>
                                         <td class="p-1.5 text-center font-mono text-emerald-700 font-bold">+${formatQty(l.Inspected_Qty)}</td>
                                         <td class="p-1.5 text-slate-500">${l.Submitted_By_Name}</td>
-                                        <td class="p-1.5 text-slate-400 font-mono">${dStr}</td>
+                                        ${timeCol}
                                         ${delBtn}
                                     </tr>`;
                                 });
@@ -447,7 +454,6 @@
 
                         feedersHtml += `</tbody></table></div></td></tr>`;
 
-                        // 🎯 Master Target Row HTML (Now includes Sanctioned Qty again)
                         html += `
                             <tr class="hover:bg-slate-50 align-top">
                                 <td class="p-3">
