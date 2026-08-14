@@ -355,14 +355,23 @@
                     const tkcData = dpData.tkcs[tkcKey];
                     const safeTkcId = safeDpId + '_tkc_' + tkcKey.replace(/[^a-zA-Z0-9]/g, '_');
 
+                    // 🎯 NEW: Generate summary specifically for this TKC
+                    let tkcSummaryArr = [];
+                    Object.keys(tkcData.items).forEach(item => {
+                        const iData = tkcData.items[item];
+                        tkcSummaryArr.push(`<span class="text-indigo-500">${item}:</span> ${formatQty(iData.totalInspected)} / ${formatQty(iData.totalTarget)} ${iData.unit}`);
+                    });
+                    const tkcSummaryStr = tkcSummaryArr.join(' <span class="text-indigo-300 font-black px-1">|</span> ');
+
                     html += `
                         <!-- TIER 2: TKC Level -->
                         <div class="border border-indigo-200 rounded-lg overflow-hidden bg-white shadow-sm">
                             <div class="px-3 py-2 sm:px-4 sm:py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="briefcase" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600"></i>
-                                    <div>
+                                <div class="flex items-start sm:items-center gap-2 w-[90%]">
+                                    <i data-lucide="briefcase" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0 mt-0.5 sm:mt-0"></i>
+                                    <div class="w-full pr-2">
                                         <h5 class="text-[11px] sm:text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
+                                        <div class="text-[9px] sm:text-[10px] text-indigo-700 font-mono mt-1 leading-relaxed whitespace-normal break-words w-full pr-2">${tkcSummaryStr}</div>
                                     </div>
                                 </div>
                                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0"></i>
@@ -467,6 +476,7 @@
                             });
                             feedersHtml += `</div></div>`;
 
+                            // 🎯 MOBILE-FIRST TARGET CARD
                             html += `
                                 <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden relative">
                                     <div class="flex flex-col md:flex-row md:divide-x divide-slate-100">
