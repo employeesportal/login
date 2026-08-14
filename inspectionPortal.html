@@ -59,6 +59,7 @@
                 <select id="t-phase" class="w-full p-2 border rounded-lg bg-slate-50">
                     <option value="1st">1st Phase</option>
                     <option value="2nd">2nd Phase</option>
+                    <option value="3rd">3rd Phase</option>
                 </select>
             </div>
             
@@ -66,7 +67,16 @@
             <div class="col-span-2"><label class="block mb-1 text-[10px] uppercase text-slate-500">Feeder Name</label><input type="text" id="t-feeder" class="w-full p-2 border rounded-lg bg-slate-50"></div>
             
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500">Item Type</label><input type="text" id="t-item" list="existing-items" autocomplete="off" class="w-full p-2 border rounded-lg bg-slate-50"></div>
-            <div><label class="block mb-1 text-[10px] uppercase text-slate-500 text-sky-600">Unit (e.g., Kms, Nos)</label><input type="text" id="t-item-unit" list="existing-units" autocomplete="off" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900 placeholder:text-sky-300" placeholder="Nos"></div>
+             <div>
+                <label class="block mb-1 text-[10px] uppercase text-slate-500 text-sky-600">Unit</label>
+                <select id="t-item-unit" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900">
+                    <option value="Nos">Nos (Numbers)</option>
+                    <option value="Kms">Kms (Kilometers)</option>
+                    <option value="Mtrs">Mtrs (Meters)</option>
+                    <option value="Sets">Sets</option>
+                    <option value="Lot">Lot</option>
+                </select>
+            </div>
             
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500">Total Sanctioned Qty</label><input type="number" step="0.001" id="t-sanc-qty" class="w-full p-2 border rounded-lg bg-slate-50"></div>
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500 text-indigo-600">Target Qty to Inspect</label><input type="number" step="0.001" id="t-target-qty" class="w-full p-2 border border-indigo-200 rounded-lg bg-indigo-50 text-indigo-900"></div>
