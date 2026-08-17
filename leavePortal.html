@@ -1,27 +1,28 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+<div class="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
     
     <div id="admin-search-filter-card" style="display: none !important;"></div>
     <div id="admin-analysis-submodule-viewport" style="display: none !important;"></div>
     <div id="admin-monthly-report-viewport" style="display: none !important;"></div>
     
-    <div class="flex items-center gap-2 border-b border-slate-300 pb-4 mb-6">
+    <!-- 🎯 RESPONSIVE TAB BUTTONS -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 border-b border-slate-300 pb-4 mb-6">
         <button id="tab-apply-btn" onclick="window.switchLeaveTabSection('apply')" 
-                class="px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
             <i data-lucide="file-plus-2" class="w-4 h-4"></i> Apply for Leave
         </button>
         <button id="tab-history-btn" onclick="window.switchLeaveTabSection('history')" 
-                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer">
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer">
             <i data-lucide="history" class="w-4 h-4"></i> View Leave History
         </button>
     </div>
 
     <div id="section-leave-apply" class="fade-in-up">
-        <div class="max-w-xl mx-auto bg-slate-50 border border-slate-300 p-6 rounded-2xl shadow-inner">
-            <div class="border-b border-slate-300 pb-3 mb-5">
+        <div class="max-w-xl mx-auto bg-slate-50 border border-slate-300 p-4 sm:p-6 rounded-2xl shadow-inner">
+            <div class="border-b border-slate-300 pb-3 mb-4 sm:mb-5">
                 <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
                     <i data-lucide="file-text" class="text-rose-700 w-5 h-5"></i> Submit Leave Request Application
                 </h3>
-                <p class="text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Enter leave request boundaries below</p>
+                <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Enter leave request boundaries below</p>
             </div>
 
             <div id="leave-policy-warning-box" class="hidden mb-4 p-3 rounded-xl border font-bold text-[11px] leading-normal flex items-start gap-2 animate-fade-in">
@@ -32,7 +33,7 @@
             <div class="space-y-4 text-xs font-bold text-slate-800">
                 <div>
                     <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Leave Type Category</label>
-                    <select id="leave-category" onchange="window.evaluateLeavePolicyLogic()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500">
+                    <select id="leave-category" onchange="window.evaluateLeavePolicyLogic()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none">
                         <option value="Casual Leave">Casual Leave</option>
                         <option value="Medical Leave">Medical Leave</option>
                         <option value="Short Leave / Half-Day">Short Leave / Half-Day</option>
@@ -42,40 +43,40 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">From Date</label>
-                        <input type="date" id="leave-from" onchange="window.calculateLeaveDaysDelta()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white">
+                        <input type="date" id="leave-from" onchange="window.calculateLeaveDaysDelta()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">To Date</label>
-                        <input type="date" id="leave-to" onchange="window.calculateLeaveDaysDelta()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white">
+                        <input type="date" id="leave-to" onchange="window.calculateLeaveDaysDelta()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                 </div>
 
-                <div class="p-3 bg-white border border-slate-300 rounded-xl flex justify-between items-center shadow-inner">
+                <div class="p-3 sm:p-4 bg-white border border-slate-300 rounded-xl flex justify-between items-center shadow-inner">
                     <span class="text-[10px] uppercase text-slate-700 font-black">Computed Leave Days:</span>
-                    <strong id="leave-days-badge" class="text-sm font-black text-slate-950 font-mono">0 Days</strong>
+                    <strong id="leave-days-badge" class="text-sm sm:text-base font-black text-slate-950 font-mono">0 Days</strong>
                 </div>
 
                 <div>
                     <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Select Appointed Project</label>
-                    <select id="leave-curr-project" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500"></select>
+                    <select id="leave-curr-project" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none"></select>
                 </div>
 
                 <div>
                     <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Operating Location / District</label>
-                    <input type="text" id="leave-curr-location" placeholder="Enter active service location site" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white">
+                    <input type="text" id="leave-curr-location" placeholder="Enter active service location site" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Upload Document Attachment <span class="text-slate-500 font-normal lowercase">(optional)</span></label>
-                    <input type="file" id="leave-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-black file:bg-slate-950 file:text-white cursor-pointer border border-slate-300 p-1.5 rounded-xl">
+                    <input type="file" id="leave-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-black file:bg-slate-950 file:text-white cursor-pointer border border-slate-300 p-2 rounded-xl">
                 </div>
 
                 <div>
                     <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Reason Statement Description</label>
-                    <textarea id="leave-reason" rows="3" placeholder="Provide complete descriptions regarding your time-off request..." class="w-full px-3 py-2 border border-slate-300 text-slate-900 font-medium rounded-xl bg-white focus:ring-2 focus:ring-rose-500"></textarea>
+                    <textarea id="leave-reason" rows="3" placeholder="Provide complete descriptions regarding your time-off request..." class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 font-medium rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none"></textarea>
                 </div>
 
-                <button onclick="window.dispatchLeaveApplicationForm()" id="btn-submit-leave" class="w-full py-2.5 mt-2 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                <button onclick="window.dispatchLeaveApplicationForm()" id="btn-submit-leave" class="w-full py-3.5 sm:py-3 mt-4 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                     <i data-lucide="send" class="w-4 h-4"></i> Dispatch Application Request
                 </button>
             </div>
@@ -84,55 +85,47 @@
 
     <div id="section-leave-history" class="hidden space-y-4 fade-in-up">
         
-        <div id="history-manager-card-row" class="p-4 bg-slate-50 border border-slate-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 bg-slate-950 text-white rounded-xl flex items-center justify-center border border-slate-800 shadow-sm">
-                    <i data-lucide="user-check" class="w-4 h-4"></i>
+        <div id="history-manager-card-row" class="p-4 bg-slate-50 border border-slate-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-950 text-white rounded-xl flex items-center justify-center border border-slate-800 shadow-sm shrink-0">
+                    <i data-lucide="user-check" class="w-5 h-5"></i>
                 </div>
                 <div>
                     <span class="text-[9px] uppercase tracking-wider text-slate-500 block font-black">Your Direct Reporting Manager</span>
                     <strong id="lbl-history-mgr-name" class="text-slate-950 text-sm font-black">System Manager</strong>
                 </div>
             </div>
-            <div class="flex items-center gap-4 text-xs font-bold text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs font-bold text-slate-700 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm">
                 <div>Manager ID: <span id="lbl-history-mgr-id" class="font-mono text-slate-950 font-black">--</span></div>
-                <div class="border-l border-slate-300 h-4"></div>
+                <div class="hidden sm:block border-l border-slate-300 h-4"></div>
                 <div>Contact Phone: <span id="lbl-history-mgr-phone" class="font-mono text-slate-950 font-black">Loading...</span></div>
             </div>
         </div>
 
-        <div class="border-b border-slate-300 pb-3">
+        <div class="border-b border-slate-300 pb-3 mt-2">
             <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
                 <i data-lucide="history" class="text-slate-950 w-5 h-5"></i> Leave Clearances History Ledger
             </h3>
-            <p class="text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Review execution trace status maps</p>
+            <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Review execution trace status maps</p>
         </div>
 
-        <div class="overflow-x-auto border border-slate-300 rounded-2xl bg-slate-50 p-4 shadow-inner max-h-[580px]">
-            <table class="w-full text-left border-collapse table-auto min-w-[750px] bg-white rounded-xl overflow-hidden border border-slate-200">
-                <thead>
-                    <tr class="bg-slate-950 text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-10 border-b border-slate-800">
-                        <th class="px-4 py-3.5">Reference Token</th>
-                        <th class="px-4 py-3.5">Leave Scope Details</th>
-                        <th class="px-4 py-3.5 text-center">Duration</th>
-                        <th class="px-4 py-3.5">Reason Statement Context</th>
-                        <th class="px-4 py-3.5 text-center">Leave Approval Status</th>
-                    </tr>
-                </thead>
-                <tbody id="leave-history-table-body" class="text-xs divide-y divide-slate-300 text-slate-900 font-bold">
-                    <tr>
-                        <td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">
-                            Click 'View Leave History' tab button to load historical leave record indexes...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- 🎯 DUAL LAYOUT CONTAINER FOR LEAVE HISTORY -->
+        <div id="leave-history-container" class="w-full bg-slate-50 border border-slate-300 rounded-2xl p-2 sm:p-4 shadow-inner max-h-[600px] overflow-y-auto">
+            <div class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">
+                Click 'View Leave History' tab button to load historical leave record indexes...
+            </div>
         </div>
     </div>
 </div>
 
 <script>
     (() => {
+        // 🎯 Mobile Accordion Toggle Logic
+        window.toggleMyLeaveRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
+
         window.switchLeaveTabSection = function(section) {
             const applySec = document.getElementById("section-leave-apply");
             const historySec = document.getElementById("section-leave-history");
@@ -142,13 +135,13 @@
             if (section === "apply") {
                 if (applySec) applySec.classList.remove("hidden");
                 if (historySec) historySec.classList.add("hidden");
-                if (applyBtn) applyBtn.className = "px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer";
-                if (historyBtn) historyBtn.className = "px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer";
+                if (applyBtn) applyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
+                if (historyBtn) historyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer";
             } else {
                 if (applySec) applySec.classList.add("hidden");
                 if (historySec) historySec.classList.remove("hidden");
-                if (historyBtn) historyBtn.className = "px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer";
-                if (applyBtn) applyBtn.className = "px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer";
+                if (historyBtn) historyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
+                if (applyBtn) applyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer";
                 
                 setTimeout(() => { window.fetchActiveUserLeaveHistoryLedger(); }, 50);
             }
@@ -243,12 +236,11 @@
         };
 
         window.fetchActiveUserLeaveHistoryLedger = async function() {
-            const tbody = document.getElementById("leave-history-table-body");
-            if (!tbody) return;
+            const container = document.getElementById("leave-history-container");
+            if (!container) return;
 
-            tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">Assembling historical leave records index vectors...</td></tr>`;
+            container.innerHTML = `<div class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">Assembling historical leave records index vectors...</div>`;
             try {
-                // 🎯 RECONSTRUCTED PHONE RESOLVER: Queries the newly deployed backend resolver action securely
                 if (typeof currentUser !== "undefined" && currentUser.managerId) {
                     document.getElementById("lbl-history-mgr-id").innerText = currentUser.managerId;
                     
@@ -272,30 +264,39 @@
                 const result = await res.json();
                 
                 if(!result.status || !result.data) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-10 text-center text-slate-700 font-bold bg-slate-50">Error pulling ledger instances.</td></tr>`;
+                    container.innerHTML = `<div class="px-4 py-10 text-center text-rose-700 font-bold bg-white rounded-xl shadow-sm border border-rose-200">Error pulling ledger instances.</div>`;
                     return;
                 }
 
                 const filteredData = result.data.filter(item => String(item.employeeId).trim().toUpperCase() === String(currentUser.employeeId).trim().toUpperCase());
 
                 if(filteredData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-10 text-center text-slate-700 font-bold italic bg-slate-50">No leave application history maps stored.</td></tr>`;
+                    container.innerHTML = `<div class="px-4 py-10 text-center text-slate-500 font-bold italic bg-white rounded-xl shadow-sm border border-slate-200">No leave application history maps stored.</div>`;
                     return;
                 }
 
-                let rowsHtml = "";
-                filteredData.reverse().forEach(item => {
+                let desktopRowsHtml = "";
+                let mobileCardsHtml = "";
+
+                filteredData.reverse().forEach((item, idx) => {
+                    const rowId = `my_leave_mob_${idx}`;
                     let statusBadge = "";
                     let finalApprovedDaysNode = "";
+                    let shortStatusBadge = "";
 
                     if(item.status === "PENDING") {
                         statusBadge = `<span class="bg-amber-100 border border-amber-400 text-amber-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">PENDING</span>`;
+                        shortStatusBadge = `<span class="bg-amber-100 border border-amber-400 text-amber-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">PENDING</span>`;
                     } else if(item.status === "MGR_RECOMMENDED") {
                         statusBadge = `<span class="bg-blue-100 border border-blue-400 text-blue-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">MGR RECOMMENDED</span>`;
+                        shortStatusBadge = `<span class="bg-blue-100 border border-blue-400 text-blue-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">MGR REC</span>`;
                     } else if(item.status === "MGR_REJECTED") {
                         statusBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">MGR REJECTED</span>`;
+                        shortStatusBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">MGR REJ</span>`;
                     } else if(item.status === "APPROVED") {
                         statusBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">APPROVED</span>`;
+                        shortStatusBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">APPROVED</span>`;
+                        
                         let datesBlockString = (item.adminApprovedDate && item.adminApprovedDate !== "--") ? `<div class="text-[10px] text-rose-700 font-mono font-black mt-0.5">Dates: ${item.adminApprovedDate}</div>` : '';
                         if (item.finalApprovedDays && item.finalApprovedDays !== "--") {
                             finalApprovedDaysNode = `
@@ -307,15 +308,21 @@
                         }
                     } else if(item.status === "REJECTED") {
                         statusBadge = `<span class="bg-rose-100 border border-rose-400 text-rose-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">REJECTED</span>`;
+                        shortStatusBadge = `<span class="bg-rose-100 border border-rose-400 text-rose-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">REJECTED</span>`;
                     } else {
                         statusBadge = `<span class="bg-slate-100 border border-slate-400 text-slate-900 font-black px-2 py-0.5 rounded text-[10px] uppercase">${item.status}</span>`;
+                        shortStatusBadge = `<span class="bg-slate-100 border border-slate-400 text-slate-900 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">${item.status}</span>`;
                     }
 
                     let docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? 
-                        `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline block mt-1 text-[10px] font-mono flex items-center gap-0.5 font-black"><i data-lucide="eye" class="w-3 h-3"></i> View File Link</a>` : '';
+                        `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 hover:text-blue-800 underline block mt-2 text-[10px] font-mono flex items-center gap-0.5 font-black bg-blue-50 px-2 py-1 rounded w-max border border-blue-100"><i data-lucide="eye" class="w-3 h-3"></i> View File</a>` : '';
 
-                    rowsHtml += `
-                        <tr class="hover:bg-slate-100 transition-colors">
+                    const formattedFromDate = window.formatToIndianDateTime(item.fromDate).split(" ")[0];
+                    const formattedToDate = window.formatToIndianDateTime(item.toDate).split(" ")[0];
+
+                    // 🎯 DESKTOP ROW HTML
+                    desktopRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top hidden md:table-row">
                             <td class="px-4 py-3.5 font-mono text-[11px] text-slate-800">
                                 ${item.applicationId}
                                 <span class="block text-[9px] text-slate-600 font-sans font-bold mt-0.5">${window.formatToIndianDateTime(item.appliedOn)}</span>
@@ -326,21 +333,86 @@
                                 ${docLink}
                             </td>
                             <td class="px-4 py-3.5 text-center whitespace-nowrap leading-tight">
-                                <div class="text-slate-950 font-mono">${window.formatToIndianDateTime(item.fromDate).split(" ")[0]} to ${window.formatToIndianDateTime(item.toDate).split(" ")[0]}</div>
+                                <div class="text-slate-950 font-mono">${formattedFromDate} to ${formattedToDate}</div>
                                 <span class="text-[10px] text-slate-700">(${item.leaveDays} Requested Days)</span>
                             </td>
-                            <td class="px-4 py-3.5 max-w-xs truncate font-medium text-slate-900" title="${item.reason}">${item.reason}</td>
+                            <td class="px-4 py-3.5 max-w-xs truncate font-medium text-slate-900 italic bg-white rounded border border-slate-200 p-2 m-1 block" title="${item.reason}">"${item.reason}"</td>
                             <td class="px-4 py-3.5 text-center whitespace-nowrap align-middle">
                                 ${statusBadge}
                                 ${finalApprovedDaysNode}
-                                <span class="block text-[10px] text-slate-600 font-bold italic mt-1 max-w-[140px] truncate mx-auto" title="${item.adminRemark}">${item.adminRemark && item.adminRemark !== '--' ? '"' + item.adminRemark + '"' : ''}</span>
+                                <span class="block text-[10px] text-slate-600 font-bold italic mt-1.5 max-w-[160px] truncate mx-auto" title="${item.adminRemark}">${item.adminRemark && item.adminRemark !== '--' ? '"' + item.adminRemark + '"' : ''}</span>
                             </td>
                         </tr>
                     `;
+
+                    // 🎯 MOBILE ACCORDION CARD HTML
+                    mobileCardsHtml += `
+                        <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                            <div class="px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition" onclick="window.toggleMyLeaveRowAccordion('${rowId}')">
+                                <div class="w-[85%] pr-2">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-mono text-indigo-700 font-black text-[11px]">${item.applicationId}</span>
+                                        ${shortStatusBadge}
+                                    </div>
+                                    <div class="text-slate-900 font-bold text-xs">${item.leaveType}</div>
+                                    <div class="text-slate-500 font-mono text-[9px] mt-0.5">${formattedFromDate} to ${formattedToDate} (${item.leaveDays}D)</div>
+                                </div>
+                                <div class="w-[15%] flex justify-end">
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                                </div>
+                            </div>
+                            
+                            <div id="${rowId}" class="hidden p-4 text-xs border-t border-slate-100 space-y-3 bg-slate-50/50">
+                                <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-100">
+                                    <div><span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Project</span><span class="font-bold text-slate-800">${item.project}</span></div>
+                                    <div><span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Location</span><span class="font-bold text-slate-800">${item.location}</span></div>
+                                </div>
+                                
+                                <div class="pb-2 border-b border-slate-100">
+                                    <span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Reason Stated</span>
+                                    <div class="text-slate-700 italic leading-relaxed whitespace-pre-wrap bg-white p-2 rounded border border-slate-200">"${item.reason}"</div>
+                                    ${docLink}
+                                </div>
+                                
+                                <div class="pb-2 border-b border-slate-100">
+                                    <span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Approval Context</span>
+                                    <div class="mt-1">${statusBadge}</div>
+                                    ${finalApprovedDaysNode}
+                                    <div class="text-slate-700 font-bold italic mt-2">${item.adminRemark && item.adminRemark !== '--' ? '"' + item.adminRemark + '"' : '<span class="text-slate-400 font-normal">No admin remarks yet</span>'}</div>
+                                </div>
+                                
+                                <div class="text-[9px] text-slate-400 font-mono text-right">
+                                    Applied: ${window.formatToIndianDateTime(item.appliedOn)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
-                tbody.innerHTML = rowsHtml;
+
+                // 🎯 INJECT DUAL LAYOUT
+                container.innerHTML = `
+                    <div class="hidden md:block overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse table-auto min-w-[850px] bg-white rounded-xl overflow-hidden border border-slate-200">
+                            <thead>
+                                <tr class="bg-slate-950 text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-10 border-b border-slate-800">
+                                    <th class="px-4 py-3.5">Reference Token</th>
+                                    <th class="px-4 py-3.5">Leave Scope Details</th>
+                                    <th class="px-4 py-3.5 text-center">Duration</th>
+                                    <th class="px-4 py-3.5">Reason Statement Context</th>
+                                    <th class="px-4 py-3.5 text-center">Leave Approval Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="md:hidden flex flex-col w-full">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
                 if (window.lucide) lucide.createIcons();
-            } catch(e) { if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-rose-700 font-black">Error pulling ledger instances.</td></tr>`; }
+            } catch(e) { if(container) container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black bg-white rounded-xl shadow-sm border border-rose-200">Error pulling ledger instances.</div>`; }
         };
 
         window.dispatchLeaveApplicationForm = async function() {
