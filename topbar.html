@@ -1,58 +1,62 @@
-<header class="glass-header px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3 sm:gap-4 z-10 shadow-sm relative bg-white border-b border-slate-200 w-full text-center sm:text-left">
+<header class="glass-header px-3 sm:px-6 py-3 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-4 z-10 shadow-sm relative bg-white border-b border-slate-200 w-full text-left">
     
-    <!-- LEFT SIDE / MOBILE TOP: Profile Information Block -->
-    <div class="flex flex-col sm:flex-row items-center sm:items-center gap-3.5 w-full sm:w-auto">
-        <!-- Profile Picture -->
-        <div onclick="if(typeof window.loadTabModule === 'function'){ window.loadTabModule('profile.html', document.querySelector('[onclick*=\'profile.html\']')); }" 
-             class="relative group hidden sm:block w-16 h-16 rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden bg-slate-100 shrink-0 transition-transform hover:scale-105 cursor-pointer">
-            <img src="" class="topbar-avatar-img w-full h-full object-cover hidden">
-            <div class="topbar-avatar-fallback w-full h-full bg-slate-300 text-slate-600 flex items-center justify-center">
-                <i data-lucide="user" class="w-8 h-8"></i>
+    <!-- PROFILE IDENTITY BLOCK -->
+    <div class="flex items-center justify-between sm:justify-start gap-3 w-full md:w-auto">
+        <div class="flex items-center gap-3 min-w-0">
+            <!-- Profile Picture -->
+            <div onclick="if(typeof window.loadTabModule === 'function'){ window.loadTabModule('profile.html', document.querySelector('[onclick*=\'profile.html\']')); }" 
+                 class="relative group w-11 h-11 sm:w-16 sm:h-16 rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden bg-slate-100 shrink-0 transition-transform hover:scale-105 cursor-pointer">
+                <img src="" class="topbar-avatar-img w-full h-full object-cover hidden">
+                <div class="topbar-avatar-fallback w-full h-full bg-slate-300 text-slate-600 flex items-center justify-center">
+                    <i data-lucide="user" class="w-5 h-5 sm:w-8 sm:h-8"></i>
+                </div>
+                
+                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[8px] font-black uppercase text-center tracking-wider p-0.5">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 mb-0.5"></i>
+                    Edit
+                </div>
             </div>
-            
-            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white text-[8px] font-black uppercase text-center tracking-wider p-0.5">
-                <i data-lucide="edit-3" class="w-4 h-4 text-sky-400 mb-0.5"></i>
-                Edit
-            </div>
-        </div>
 
-        <div class="flex flex-col justify-center items-center sm:items-start min-w-0 w-full sm:w-auto">
-            <h4 class="topbar-emp-display-name text-base sm:text-base font-black text-slate-950 leading-tight truncate w-full">-</h4>
-            <div class="topbar-emp-id-tag font-mono text-xs font-bold text-slate-700 mt-0.5">ID: -</div>
-            <div class="mt-1 topbar-meta-badge-container">
-                <span class="topbar-emp-designation-tag"></span>
+            <div class="flex flex-col justify-center min-w-0">
+                <h4 class="topbar-emp-display-name text-sm sm:text-base font-black text-slate-950 leading-tight truncate">-</h4>
+                <div class="topbar-emp-id-tag font-mono text-[11px] sm:text-xs font-bold text-slate-700 mt-0.5">ID: -</div>
+                <div class="mt-1 topbar-meta-badge-container">
+                    <span class="topbar-emp-designation-tag"></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- RIGHT SIDE / MOBILE BOTTOM: Live Clock & Session Timer Badges -->
-    <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
-        <div class="flex items-center justify-center gap-2 bg-slate-900 text-white border border-slate-800 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-sm w-full sm:w-auto">
-            <div class="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0"></div>
-            <span class="topbar-live-clock text-[11px] sm:text-xs font-mono font-black tracking-wide text-sky-400">
+    <!-- LIVE CLOCK & SESSION TIMER BADGES (Stacked Layout) -->
+    <div class="flex flex-col items-stretch sm:items-end gap-1.5 w-full md:w-auto border-t border-slate-100 md:border-t-0 pt-2 md:pt-0">
+        <!-- Live Clock Badge -->
+        <div class="flex items-center justify-center sm:justify-start gap-1.5 bg-slate-900 text-white border border-slate-800 px-3 py-1.5 rounded-xl shadow-sm w-full">
+            <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-sky-400 animate-ping shrink-0"></div>
+            <span class="topbar-live-clock text-[10px] sm:text-xs font-mono font-black tracking-tight sm:tracking-wide text-sky-400 truncate">
                 Loading Time...
             </span>
         </div>
 
-        <div class="flex items-center justify-center gap-1 px-3 py-1.5 sm:py-2 bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl text-slate-200 font-mono text-xs font-black shadow-inner w-full sm:w-auto">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <!-- Session Timer Badge (Next Line) -->
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-200 font-mono text-xs font-black shadow-inner w-full">
+            <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
             <span class="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">Session:</span>
             <!-- The Global Session Manager from index.html targets this class -->
-            <span class="session-timer-display text-sky-400 font-black text-[11px] sm:text-xs">30:00</span>
+            <span class="session-timer-display text-sky-400 font-black text-[10px] sm:text-xs">30:00</span>
         </div>
     </div>
 </header>
 
 <script>
     (() => {
-        // 1. Hydrate identity parameters safely targeting ALL injected topbars
+        // 1. Hydrate identity parameters safely
         if (typeof currentUser !== 'undefined' && currentUser) {
             document.querySelectorAll(".topbar-emp-display-name").forEach(el => el.innerText = currentUser.employeeName || "-");
             document.querySelectorAll(".topbar-emp-id-tag").forEach(el => el.innerText = `ID: ${currentUser.employeeId || "-"}`);
             
             document.querySelectorAll(".topbar-emp-designation-tag").forEach(desigNode => {
                 if (currentUser.designation && currentUser.designation.trim() !== "") {
-                    desigNode.className = "topbar-emp-designation-tag inline-block bg-blue-600 border border-blue-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase shadow-sm tracking-wider";
+                    desigNode.className = "topbar-emp-designation-tag inline-block bg-blue-600 border border-blue-700 text-white px-2 py-0.5 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase shadow-sm tracking-wider truncate max-w-[150px] sm:max-w-none";
                     desigNode.innerText = currentUser.designation;
                 } else {
                     desigNode.className = "topbar-emp-designation-tag hidden";
@@ -93,7 +97,8 @@
             hours = hours ? hours : 12;
             const timeStr = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
             
-            const finalStr = `${dayOfWeek} , ${dayOfMonth} ${month} ${year} : ${timeStr}`;
+            // Compact formatting optimized for screens
+            const finalStr = `${dayOfWeek.slice(0, 3)}, ${dayOfMonth} ${month.slice(0, 3)} ${year} • ${timeStr}`;
             
             clockNodes.forEach(node => {
                 node.innerText = finalStr;
