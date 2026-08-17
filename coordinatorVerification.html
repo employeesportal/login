@@ -1,31 +1,30 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up"
-    id="verification-portal-container">
-    <div class="flex flex-wrap items-center gap-2 mb-4">
-        <button onclick="window.openReportModal()"
-            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Show Daily Report
+<div class="w-full glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up" id="verification-portal-container">
+    
+    <!-- Top Action Buttons (Mobile Optimized Grid) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 sm:mb-6">
+        <button onclick="window.openReportModal()" class="w-full px-4 py-3 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Show Daily Report
         </button>
-        <button onclick="window.loadTabModule('coordinatorPastHistory.html', this)"
-            class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> View Past Days Attendance
+        <button onclick="window.loadTabModule('coordinatorPastHistory.html', this)" class="w-full px-4 py-3 sm:py-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="calendar" class="w-4 h-4"></i> View Past Days Attendance
         </button>
     </div>
-<br>
-    <!-- Header Section -->
+
+    <!-- Header Section & Filters -->
     <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-4 mb-5 gap-4">
         <div>
-            <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
                 <i data-lucide="shield-check" class="text-emerald-600 w-5 h-5"></i> Coordinator Control Console
             </h3>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5" id="display-date-header">
+            <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1" id="display-date-header">
                 Loading today's roster...
             </p>
         </div>
         
-        <!-- 🎯 NEW: Interactive Status Filter -->
-        <div class="flex items-center gap-2 w-full md:w-auto">
+        <!-- Interactive Status Filter -->
+        <div class="w-full md:w-auto bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl border border-slate-200 md:border-none flex flex-col md:flex-row md:items-center gap-2">
             <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">Filter Status:</label>
-            <select id="roster-status-filter" onchange="window.renderRosterTable(this.value)" class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 font-black focus:ring-1 focus:ring-indigo-500 w-full md:w-auto shadow-sm">
+            <select id="roster-status-filter" onchange="window.renderRosterTable(this.value)" class="w-full md:w-auto px-4 md:px-3 py-2.5 md:py-2 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none transition">
                 <option value="ALL">Show All Employees</option>
                 <option value="EMP_MARKED">Emp Marked</option>
                 <option value="COORD_MARKED">Coord Marked</option>
@@ -37,7 +36,7 @@
     </div>
 
     <!-- Metrics Summary -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-2xl shadow-inner">
             <span class="text-[9px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Staff</span>
             <strong id="stat-total" class="text-xl font-black text-blue-700 font-mono">0</strong>
@@ -64,43 +63,20 @@
         </div>
     </div>
 
-    <!-- Roster Table -->
-    <div class="overflow-x-auto w-full border border-slate-200 rounded-2xl bg-white shadow-inner max-h-[600px] mb-4">
-        <table class="w-full text-left border-collapse table-auto min-w-[1650px]">
-            <thead>
-                <tr class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
-                    <th class="px-3 py-3.5 whitespace-nowrap">Employee Details</th>
-                    <th class="px-3 py-3.5 whitespace-wrap">Status</th>
-                    <th class="px-3 py-3.5 w-60">Project Sector</th>
-                    <th class="px-3 py-3.5 w-50">Operating District</th>
-                    <th class="px-3 py-3.5 w-50 text-center">Login Location</th>
-                    <th class="px-3 py-3.5 w-70 text-white">Today's Plan</th>
-                    <th class="px-3 py-3.5 w-40 whitespace-nowrap">Login Time</th>
-                    <th class="px-4 py-3.5 w-60">Last Progress</th>
-                    <th class="px-3 py-3.5 w-60 whitespace-nowrap">Audit Remark</th>
-                    <th class="px-3 py-3.5 w-60">Comments</th>
-                    <th class="px-3 py-3.5 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="coordinator-roster-table-body" class="text-xs divide-y divide-slate-100 text-slate-700 font-bold">
-                <tr>
-                    <td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">Fetching today's logs & leave data...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- 🎯 DUAL LAYOUT CONTAINER -->
+    <div id="coordinator-data-container" class="w-full bg-white border border-slate-200 rounded-2xl shadow-inner sm:overflow-hidden p-2 sm:p-0 mb-4">
+        <div class="p-12 text-center text-slate-500 font-bold animate-pulse">Fetching today's logs & leave data...</div>
     </div>
 </div>
 
 <!-- Modal Background: Daily Report -->
-<div id="report-modal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-8 relative">
-        <button onclick="document.getElementById('report-modal').classList.add('hidden')"
-            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 cursor-pointer">
-            <i data-lucide="x" class="w-5 h-5"></i>
+<div id="report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 relative">
+        <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 cursor-pointer transition">
+            <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
         </button>
         <div id="report-content">
-            <h2 class="text-xl font-black mb-6">Attendance Verification Ledger</h2>
+            <h2 class="text-xl font-black mb-6 pr-10">Attendance Verification Ledger</h2>
             <div id="modal-report-body">Loading...</div>
         </div>
     </div>
@@ -113,6 +89,11 @@
         
         const d = new Date();
         const todayDate = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth()+1).padStart(2, '0')}-${d.getFullYear()}`;
+
+        window.toggleRosterAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
         function normalizeBackendObject(obj) {
             if (!obj || typeof obj !== 'object') return {};
@@ -130,7 +111,6 @@
             if (!dInput) return "";
             let cleanStr = String(dInput).trim().split(' ')[0];
             if (cleanStr.includes('T')) cleanStr = cleanStr.split('T')[0];
-            
             let parts = [];
             if (cleanStr.includes('/')) parts = cleanStr.split('/');
             else if (cleanStr.includes('-')) parts = cleanStr.split('-');
@@ -154,7 +134,6 @@
             const cleanLv = normalizeBackendObject(lvRecord);
             let startStr = cleanLv.fromdate || "";
             let endStr = cleanLv.todate || "";
-            
             const status = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
             
             if (status === "APPROVED" || status === "SHORT") {
@@ -169,7 +148,6 @@
             const startT = parseToTimestamp(startStr);
             const endT = parseToTimestamp(endStr) || startT; 
             if (!startT) return false;
-            
             return (checkTime >= startT && checkTime <= endT);
         }
 
@@ -193,16 +171,17 @@
             document.getElementById("stat-not-marked").innerText = notM;
         };
 
-        // 🎯 NEW: Dynamic Renderer based on filter
+        // 🎯 DYNAMIC RENDERER: Builds Desktop & Mobile Views
         window.renderRosterTable = (filterStatus = "ALL") => {
-            const tableBody = document.getElementById("coordinator-roster-table-body");
+            const container = document.getElementById("coordinator-data-container");
             
             if (activeRosterDataCache.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-slate-400">No records found.</td></tr>`;
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No records found.</div>`;
                 return;
             }
 
-            let outputRows = "";
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
             let displayedCount = 0;
 
             activeRosterDataCache.forEach((r, idx) => {
@@ -212,23 +191,29 @@
                 else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") category = "EMP_MARKED";
                 else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") category = "COORD_MARKED";
 
-                // Filter logic
                 if (filterStatus !== "ALL" && filterStatus !== category) return;
                 displayedCount++;
 
                 let stateBadge = "";
+                let shortStatus = "";
                 if (r.isLeaveApproved) {
                     stateBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">ON APPROVED LEAVE</span>`;
+                    shortStatus = "ON LEAVE";
                 } else if (r.isLeaveApplied) {
                     stateBadge = `<span class="bg-orange-100 border border-orange-400 text-orange-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">APPLIED FOR LEAVE</span>`;
+                    shortStatus = "APPL LEAVE";
                 } else if (r.trackingState === "MARKED_UNVERIFIED") {
-                    stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED / VERIFICATION PENDING</span>`;
+                    stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED / PENDING</span>`;
+                    shortStatus = "PENDING";
                 } else if (r.trackingState === "NOT_MARKED") {
                     stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">NOT MARKED</span>`;
+                    shortStatus = "NOT MARKED";
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR") {
-                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED AND VERIFIED BY COORDINATOR</span>`;
+                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">VERIFIED BY COORD</span>`;
+                    shortStatus = "VERIFIED";
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
-                    stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED BY COORDINATOR ONLY</span>`;
+                    stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED BY COORD ONLY</span>`;
+                    shortStatus = "COORD ONLY";
                 }
 
                 let currentRemark = r.coordinatorRemark || "Pending";
@@ -237,125 +222,217 @@
                     else if (r.isLeaveApplied) currentRemark = "Leave Applied";
                 }
 
-                let projSelect = `<select id="proj_sel_${idx}" class="px-2 py-1 w-50 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.handleCoordRowProjectChange(${idx}, this.value)">`;
-                projSelect += `<option value="">-- Choose Project --</option>`;
-                r.appointedProjectsList.forEach(p => {
-                    projSelect += `<option value="${p}" ${p === r.currentProject ? "selected" : ""}>${p}</option>`;
-                });
-                projSelect += `</select>`;
-
                 const isDistrictOther = String(r.district || "").startsWith("OTHER");
                 const baseDistrictVal = isDistrictOther ? "OTHER" : r.district;
                 const customDistrictVal = isDistrictOther ? String(r.district).replace("OTHER-", "") : "";
 
-                let distSelect = `
-                    <div class="space-y-1.5 w-50">
-                        <select id="dist_sel_${idx}" class="w-50 px-2 py-1 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.toggleRowCustomDistrictField(${idx}, this.value)">
-                            <option value="">-- Choose District --</option>`;
-                r.availableDistrictsList.forEach(d => {
-                    distSelect += `<option value="${d}" ${d === baseDistrictVal ? "selected" : ""}>${d}</option>`;
-                });
-                distSelect += `
+                // Generate Controls Helper
+                const generateControls = (prefix) => {
+                    let projSelect = `<select id="${prefix}_proj_sel_${idx}" class="w-full px-2 py-2 sm:py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-indigo-500" onchange="window.handleCoordRowProjectChange(${idx}, this.value, '${prefix}')">`;
+                    projSelect += `<option value="">-- Choose Project --</option>`;
+                    r.appointedProjectsList.forEach(p => {
+                        projSelect += `<option value="${p}" ${p === r.currentProject ? "selected" : ""}>${p}</option>`;
+                    });
+                    projSelect += `</select>`;
+
+                    let distSelect = `
+                        <div class="space-y-1.5 w-full">
+                            <select id="${prefix}_dist_sel_${idx}" class="w-full px-2 py-2 sm:py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-indigo-500" onchange="window.toggleRowCustomDistrictField(${idx}, this.value, '${prefix}')">
+                                <option value="">-- Choose District --</option>`;
+                    r.availableDistrictsList.forEach(d => {
+                        distSelect += `<option value="${d}" ${d === baseDistrictVal ? "selected" : ""}>${d}</option>`;
+                    });
+                    distSelect += `
+                            </select>
+                            <input type="text" id="${prefix}_custom_dist_name_${idx}" value="${customDistrictVal}" placeholder="Specify sub-district name" 
+                                   class="w-full px-2 py-2 sm:py-1.5 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-2 focus:ring-orange-500 font-bold bg-white outline-none">
+                        </div>`;
+
+                    let remarkSelect = `
+                        <select id="${prefix}_remark_${idx}" class="w-full px-2 py-2.5 sm:py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Pending" ${currentRemark === "Pending" ? "selected" : ""}>Pending</option>
+                            <option value="Verified" ${currentRemark === "Verified" ? "selected" : ""}>Verified</option>
+                            <option value="Present" ${currentRemark === "Present" ? "selected" : ""}>Present</option>
+                            <option value="Absent" ${currentRemark === "Absent" ? "selected" : ""}>Absent</option>
+                            <option value="On Leave" ${currentRemark === "On Leave" ? "selected" : ""}>On Leave</option>
+                            <option value="Leave Applied" ${currentRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
+                            <option value="Half-Day" ${currentRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
+                            <option value="Holiday" ${currentRemark === "Holiday" ? "selected" : ""}>Holiday</option>
+                            <option value="On Duty" ${currentRemark === "On Duty" ? "selected" : ""}>On Duty</option>
+                            <option value="Field Visit" ${currentRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
+                            <option value="Location Wrongly Marked" ${currentRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
+                            <option value="Status Unknown-Audit Please" ${currentRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
                         </select>
-                        <input type="text" id="custom_dist_name_${idx}" value="${customDistrictVal}" placeholder="Specify sub-district name" 
-                               class="w-full px-2 py-1 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-1 focus:ring-orange-500 font-bold bg-white">
-                    </div>`;
+                    `;
+
+                    let commentArea = `<textarea id="${prefix}_comment_${idx}" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Provide descriptions...">${r.coordinatorComment || ''}</textarea>`;
+
+                    let saveBtn = `<button onclick="window.saveSingleRowDirectly(${idx}, '${prefix}')" class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 font-bold rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"><i data-lucide="save" class="w-4 h-4"></i> Save Row</button>`;
+
+                    return { projSelect, distSelect, remarkSelect, commentArea, saveBtn };
+                };
+
+                const deskCtrls = generateControls('desk');
+                const mobCtrls = generateControls('mob');
 
                 let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
                 let locStr = String(r.location || "").trim();
-
                 if (locStr && locStr !== "--" && locStr !== "undefined") {
-                    const btnClass = "w-32 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
-
+                    const btnClass = "w-28 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
                     if (locStr.includes("||")) {
-                        let segments = locStr.split("||");
-                        let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
-                        locationLink = `<a href="${parsedUrl}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        let segments = locStr.split("||"); let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
+                        locationLink = `<a href="${parsedUrl}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
-                        locationLink = `<a href="${locStr}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="${locStr}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
-                        locationLink = `<a href="https://maps.google.com/?q=${encodeURIComponent(locStr)}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="https://maps.google.com/?q=${encodeURIComponent(locStr)}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else {
                         locationLink = `<span class="text-slate-800 font-bold break-words">${locStr}</span>`;
                     }
                 }
-                
-                let historyHtml = '<span class="text-slate-300 italic">No history found</span>';
+
+                let historyHtml = '<span class="text-slate-400 italic">No history found</span>';
                 if (r.historyObj && r.historyObj.hasHistory) {
                     historyHtml = `
-                        <div class="space-y-1 bg-slate-50 border border-slate-200/60 p-3 rounded-xl shadow-inner text-[11px] leading-normal font-medium text-slate-600 min-w-[300px]">
+                        <div class="space-y-1 text-[11px] leading-normal font-medium text-slate-600">
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Date</span> 
-                                    <span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span>
-                                </div>
-                                <div>
-                                    <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Logout Time</span> 
-                                    <span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span>
-                                </div>
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Date</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span></div>
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Logout</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span></div>
                             </div>
                             <div class="border-t border-slate-200/60 pt-1 mt-1">
-                                <span class="font-black text-slate-400 text-[10px] uppercase tracking-wider block">Work Progress</span> 
-                                <p class="italic text-slate-700 font-normal leading-tight mt-0.5">${r.historyObj.progress}</p>
+                                <span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Progress</span>
+                                <span class="italic text-slate-700">${r.historyObj.progress}</span>
                             </div>
                         </div>
                     `;
                 }
 
-                outputRows += `
-                    <tr class="hover:bg-slate-50/50 transition-colors align-top">
+                const rowId = `roster_mob_row_${idx}`;
+
+                // 🎯 DESKTOP ROW HTML
+                desktopRowsHtml += `
+                    <tr class="hover:bg-slate-50/50 transition-colors align-top hidden lg:table-row">
                         <td class="px-3 py-3 whitespace-nowrap">
                             <strong class="text-slate-900 block font-semibold text-xs">${r.employeeName}</strong>
-                            <span class="font-mono text-[11px] text-slate-400 block">ID: ${r.employeeId}</span>
+                            <span class="font-mono text-[11px] text-slate-400 block mt-0.5">ID: ${r.employeeId}</span>
                         </td>
                         <td class="px-3 py-3 whitespace-nowrap">${stateBadge}</td>
-                        <td class="px-3 py-3">${projSelect}</td>
+                        <td class="px-3 py-3">${deskCtrls.projSelect}</td>
                         <td class="px-3 py-3">
-                            ${distSelect}
+                            ${deskCtrls.distSelect}
                             <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
                         </td>
-                        <td class="w-60 px-3 py-3 text-center align-middle">${locationLink}</td> 
-                        <td class="w-70 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap"> "${r.todaysPlan || 'None'}"</td>
-                        <td class="w-40 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
-                        <td class="px-4 py-3">${historyHtml}</td>
-                        <td class="px-3 py-3 whitespace-nowrap">
-                            <select id="remark_${idx}" class="px-2 py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs focus:ring-1" style="width:185px;">
-                                <option value="Pending" ${currentRemark === "Pending" ? "selected" : ""}>Pending</option>
-                                <option value="Verified" ${currentRemark === "Verified" ? "selected" : ""}>Verified</option>
-                                <option value="Present" ${currentRemark === "Present" ? "selected" : ""}>Present</option>
-                                <option value="Absent" ${currentRemark === "Absent" ? "selected" : ""}>Absent</option>
-                                <option value="On Leave" ${currentRemark === "On Leave" ? "selected" : ""}>On Leave</option>
-                                <option value="Leave Applied" ${currentRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
-                                <option value="Half-Day" ${currentRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
-                                <option value="Holiday" ${currentRemark === "Holiday" ? "selected" : ""}>Holiday</option>
-                                <option value="On Duty" ${currentRemark === "On Duty" ? "selected" : ""}>On Duty</option>
-                                <option value="Field Visit" ${currentRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
-                                <option value="Location Wrongly Marked" ${currentRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
-                                <option value="Status Unknown-Audit Please" ${currentRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
-                            </select>
-                        </td>
-                        <td class="px-3 py-3">
-                            <textarea id="comment_${idx}" rows="3" class="w-full min-w-[220px] px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Provide complete descriptions...">${r.coordinatorComment || ''}</textarea>
-                        </td>
-                        <td class="px-3 py-3 text-center whitespace-nowrap" data-html2pdf-ignore>
-                            <button onclick="window.saveSingleRowDirectly(${idx})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 font-bold rounded-xl transition cursor-pointer shadow-sm flex items-center gap-1.5">
-                                <i data-lucide="save" class="w-3.5 h-3.5"></i> Save Row
-                            </button>
-                        </td>
+                        <td class="w-48 px-3 py-3 text-center align-middle">${locationLink}</td> 
+                        <td class="w-60 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap text-[11px]">"${r.todaysPlan || 'None'}"</td>
+                        <td class="w-36 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
+                        <td class="px-4 py-3 bg-slate-50/50 rounded-lg border border-slate-100 shadow-inner m-1 block">${historyHtml}</td>
+                        <td class="px-3 py-3 whitespace-nowrap w-48">${deskCtrls.remarkSelect}</td>
+                        <td class="px-3 py-3 w-56">${deskCtrls.commentArea}</td>
+                        <td class="px-3 py-3 text-center whitespace-nowrap">${deskCtrls.saveBtn}</td>
                     </tr>
+                `;
+
+                // 🎯 MOBILE ACCORDION CARD HTML
+                mobileCardsHtml += `
+                    <div class="lg:hidden bg-white border border-slate-200 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-start cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleRosterAccordion('${rowId}')">
+                            <div class="pr-2 w-[85%]">
+                                <strong class="text-slate-950 block text-sm truncate font-black">${r.employeeName}</strong>
+                                <span class="text-slate-500 font-mono text-[10px] font-bold block mt-0.5">ID: ${r.employeeId}</span>
+                                <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                                    ${stateBadge.replace('block', 'inline-block').replace('text-[10px]', 'text-[9px]')}
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end justify-center w-[15%] pt-2">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <!-- Location & Assignments -->
+                            <div class="pb-3 border-b border-slate-100 space-y-3">
+                                <div>
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Project</label>
+                                    ${mobCtrls.projSelect}
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">District</label>
+                                    ${mobCtrls.distSelect}
+                                </div>
+                            </div>
+
+                            <!-- Execution & Tracking -->
+                            <div class="pb-3 border-b border-slate-100 space-y-3">
+                                <div>
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Today's Plan</span>
+                                    <div class="text-slate-700 italic text-[11px] leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">"${r.todaysPlan || 'None'}"</div>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Last Progress Log</span>
+                                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-inner">${historyHtml}</div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 text-[10px] font-mono mt-1 border-t border-slate-50 pt-3">
+                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Login</span> <span class="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">${r.loginTime || '--:--'}</span></div>
+                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Geo Tag</span> ${locationLink} <div class="text-[9px] text-slate-400 mt-1">Acc: ±${r.accuracy || '--'}m</div></div>
+                                </div>
+                            </div>
+
+                            <!-- Audit Controls -->
+                            <div class="pt-1 space-y-3">
+                                <span class="text-[10px] font-black uppercase text-indigo-700 tracking-wider flex items-center gap-1.5 mb-2"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Coordinator Audit Input</span>
+                                <div>
+                                    <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Audit Remark Status</label>
+                                    ${mobCtrls.remarkSelect}
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Audit Comments</label>
+                                    ${mobCtrls.commentArea}
+                                </div>
+                                <div class="pt-2">
+                                    ${mobCtrls.saveBtn}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
             });
 
             if (displayedCount === 0) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-slate-400 font-bold">No records match the selected filter.</td></tr>`;
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No records match the selected filter.</div>`;
             } else {
-                tableBody.innerHTML = outputRows;
+                container.innerHTML = `
+                    <div class="hidden lg:block overflow-x-auto w-full max-h-[600px]">
+                        <table class="w-full text-left border-collapse table-auto min-w-[1650px]">
+                            <thead>
+                                <tr class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
+                                    <th class="px-3 py-3.5 whitespace-nowrap">Employee Details</th>
+                                    <th class="px-3 py-3.5 whitespace-wrap">Status</th>
+                                    <th class="px-3 py-3.5 w-60">Project Sector</th>
+                                    <th class="px-3 py-3.5 w-50">Operating District</th>
+                                    <th class="px-3 py-3.5 w-48 text-center">Login Location</th>
+                                    <th class="px-3 py-3.5 w-60 text-white">Today's Plan</th>
+                                    <th class="px-3 py-3.5 w-36 whitespace-nowrap">Login Time</th>
+                                    <th class="px-4 py-3.5 w-60">Last Progress</th>
+                                    <th class="px-3 py-3.5 w-48 whitespace-nowrap">Audit Remark</th>
+                                    <th class="px-3 py-3.5 w-56">Comments</th>
+                                    <th class="px-3 py-3.5 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-100 text-slate-700 font-bold bg-white">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="lg:hidden flex flex-col w-full pt-1">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
             }
             if (window.lucide) window.lucide.createIcons();
         };
 
         window.fetchCoordinatorVerificationRoster = async () => {
-            const tableBody = document.getElementById("coordinator-roster-table-body");
+            const container = document.getElementById("coordinator-data-container");
             document.getElementById("display-date-header").innerText = `Audit Date: ${todayDate.replace(/-/g, '/')}`;
             const todayTimestamp = parseToTimestamp(todayDate);
 
@@ -378,7 +455,6 @@
                 
                 masterLeaveApplicationsCache = leaveResult.status ? leaveResult.data : [];
                 
-                // 🎯 Cross-reference Leaves into the Roster Array first
                 activeRosterDataCache.forEach(r => {
                     let isLeaveApplied = false;
                     let isLeaveApproved = false;
@@ -386,10 +462,8 @@
                     const activeLeave = masterLeaveApplicationsCache.find(lv => {
                         const cleanLv = normalizeBackendObject(lv);
                         if (String(cleanLv.employeeid || "").trim().toUpperCase() !== String(r.employeeId).trim().toUpperCase()) return false;
-                        
                         const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
                         if (stat === "REJECTED" || stat === "DECLINED" || stat === "CANCELLED") return false;
-                        
                         return evaluateDateInsideLeaveBlock(todayTimestamp, lv);
                     });
 
@@ -405,17 +479,17 @@
                 });
 
                 window.recalculateRosterStatistics();
-                
                 const currentFilter = document.getElementById("roster-status-filter").value;
                 window.renderRosterTable(currentFilter);
 
             } catch (err) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-rose-500 font-black bg-rose-50/40">Failed parsing data.</td></tr>`;
+                container.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-2xl border border-rose-200">Failed syncing data. Check connection.</div>`;
             }
         };
 
-        window.handleCoordRowProjectChange = function (index, newProjectValue) {
-            const distSel = document.getElementById(`dist_sel_${index}`);
+        // 🎯 UPDATED TO USE PREFIX FOR DYNAMIC TARGETING
+        window.handleCoordRowProjectChange = function (index, newProjectValue, prefix = 'desk') {
+            const distSel = document.getElementById(`${prefix}_dist_sel_${index}`);
             const cacheItem = activeRosterDataCache[index];
             cacheItem.currentProject = newProjectValue;
             if (!newProjectValue) { distSel.innerHTML = '<option value="">-- Choose District --</option>'; return; }
@@ -424,23 +498,23 @@
             let dOptions = '<option value="">-- Choose District --</option>';
             dList.forEach(d => { dOptions += `<option value="${d}">${d}</option>`; });
             distSel.innerHTML = dOptions;
-            window.toggleRowCustomDistrictField(index, distSel.value);
+            window.toggleRowCustomDistrictField(index, distSel.value, prefix);
         };
 
-        window.toggleRowCustomDistrictField = function (index, selectedDistrictValue) {
-            const txtInput = document.getElementById(`custom_dist_name_${index}`);
+        window.toggleRowCustomDistrictField = function (index, selectedDistrictValue, prefix = 'desk') {
+            const txtInput = document.getElementById(`${prefix}_custom_dist_name_${index}`);
             if (selectedDistrictValue === "OTHER") txtInput.classList.remove("hidden");
             else txtInput.classList.add("hidden");
         };
 
-        window.saveSingleRowDirectly = async function (idx) {
+        window.saveSingleRowDirectly = async function (idx, prefix = 'desk') {
             const r = activeRosterDataCache[idx];
 
-            const selectedProj = document.getElementById(`proj_sel_${idx}`).value;
-            let selectedDist = document.getElementById(`dist_sel_${idx}`).value;
-            const customDistName = document.getElementById(`custom_dist_name_${idx}`).value.trim();
-            const selectedRemark = document.getElementById(`remark_${idx}`).value;
-            const typedComment = document.getElementById(`comment_${idx}`).value.trim();
+            const selectedProj = document.getElementById(`${prefix}_proj_sel_${idx}`).value;
+            let selectedDist = document.getElementById(`${prefix}_dist_sel_${idx}`).value;
+            const customDistName = document.getElementById(`${prefix}_custom_dist_name_${idx}`).value.trim();
+            const selectedRemark = document.getElementById(`${prefix}_remark_${idx}`).value;
+            const typedComment = document.getElementById(`${prefix}_comment_${idx}`).value.trim();
 
             if (selectedDist === "OTHER") selectedDist = "OTHER-" + customDistName;
 
@@ -487,10 +561,10 @@
             });
 
             body.innerHTML = `
-                <div id="pdf-content-area" class="p-4">
+                <div id="pdf-content-area" class="p-4 bg-white">
                     <div class="mb-6 border-b pb-4">
                         <h2 class="text-xl font-black text-slate-800 mb-2">Daily Attendance Verification Report</h2>
-                        <div class="flex gap-8 text-xs font-bold text-slate-600">
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-8 text-xs font-bold text-slate-600">
                             <p>Report Date: <span class="text-slate-900">${todayStr}</span></p>
                             <p>Coordinator: <span class="text-slate-900">${coordName}</span></p>
                         </div>
@@ -505,56 +579,61 @@
                         <div class="bg-rose-50 p-2 rounded-xl border border-rose-100 text-center"><p class="text-[8px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-sm font-mono">${notM}</strong></div>
                     </div>
 
-                    <table class="w-full text-left border-collapse table-fixed">
-                        <thead>
-                            <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200">
-                                <th class="pb-3 px-3 w-32">Employee Details</th>
-                                <th class="pb-3 px-3 w-25">Status</th>
-                                <th class="pb-3 px-3 w-30">Project / District</th>
-                                <th class="pb-3 px-3 w-50">Plan / Login / Loc</th>
-                                <th class="pb-3 px-3 w-50">Last Day Progress</th>
-                                <th class="pb-3 px-3 w-50">Audit Remark</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs divide-y divide-slate-100">
-                            ${activeRosterDataCache.map(r => {
-                                const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
-                                const locLink = hasLocation
-                                    ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
-                                    : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
-                                
-                                let displayState = r.trackingState;
-                                if (r.isLeaveApproved) displayState = "ON APPROVED LEAVE";
-                                else if (r.isLeaveApplied) displayState = "APPLIED FOR LEAVE";
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
+                            <thead>
+                                <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200 bg-slate-50">
+                                    <th class="py-3 px-3 w-40">Employee Details</th>
+                                    <th class="py-3 px-3 w-28">Status</th>
+                                    <th class="py-3 px-3 w-32">Project/District</th>
+                                    <th class="py-3 px-3 w-48">Plan / Login / Loc</th>
+                                    <th class="py-3 px-3 w-48">Last Day Progress</th>
+                                    <th class="py-3 px-3 w-48">Audit Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-100">
+                                ${activeRosterDataCache.map(r => {
+                                    const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
+                                    const locLink = hasLocation
+                                        ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
+                                        : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
+                                    
+                                    let displayState = r.trackingState;
+                                    if (r.isLeaveApproved) displayState = "ON APPROVED LEAVE";
+                                    else if (r.isLeaveApplied) displayState = "APPLIED FOR LEAVE";
 
-                                return `
-                                    <tr class="align-top">
-                                        <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
-                                        <td class="py-4 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block font-bold">${displayState.replace(/_/g, ' ')}</span></td>
-                                        <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
-                                        <td class="py-4 text-slate-600 break-words">
-                                            <div>${r.todaysPlan || '-'}</div>
-                                            <div class="font-mono text-emerald-600 font-bold">${r.loginTime || '--:--'}</div>
-                                            ${locLink}
-                                        </td>
-                                        <td class="py-4 text-[10px] text-slate-600">
-                                            ${r.historyObj?.hasHistory ? `
-                                                <div class="bg-slate-50 p-2 rounded border border-slate-100">
-                                                    <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
-                                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b><br>${r.historyObj.progress}<br>
-                                                    <b class="text-slate-400 uppercase text-[8px]">Logout:</b> ${r.historyObj.logout}
-                                                </div>
-                                            ` : 'No history'}
-                                        </td>
-                                        <td class="py-4 font-bold text-slate-800 break-words">${r.coordinatorRemark || '-'}<br><span class="text-[10px] font-normal text-slate-500">${r.coordinatorComment || ''}</span></td>
-                                    </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
+                                    return `
+                                        <tr class="align-top hover:bg-slate-50">
+                                            <td class="py-4 px-3 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
+                                            <td class="py-4 px-3 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block font-bold">${displayState.replace(/_/g, ' ')}</span></td>
+                                            <td class="py-4 px-3 font-medium break-words leading-tight">${r.currentProject || '-'}<br><span class="text-[9px] text-slate-500 block mt-1">${r.district || '-'}</span></td>
+                                            <td class="py-4 px-3 text-slate-600 break-words leading-snug">
+                                                <div class="italic mb-1 text-[11px]">"${r.todaysPlan || '-'}"</div>
+                                                <div class="font-mono text-emerald-600 font-bold mb-1">In: ${r.loginTime || '--:--'}</div>
+                                                ${locLink}
+                                            </td>
+                                            <td class="py-4 px-3 text-[10px] text-slate-600">
+                                                ${r.historyObj?.hasHistory ? `
+                                                    <div class="bg-slate-50 p-2 rounded border border-slate-100 leading-tight">
+                                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
+                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Work Progress:</b>${r.historyObj.progress}<br>
+                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Logout:</b> ${r.historyObj.logout}
+                                                    </div>
+                                                ` : '<span class="italic text-slate-400">No history</span>'}
+                                            </td>
+                                            <td class="py-4 px-3 font-bold text-slate-800 break-words leading-snug">
+                                                <div class="text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark || '-'}</div>
+                                                <div class="text-[10px] font-normal text-slate-500 italic mt-1">"${r.coordinatorComment || ''}"</div>
+                                            </td>
+                                        </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div class="mt-6 border-t pt-4">
-                    <button onclick="window.downloadReportPDF()" class="w-full py-3 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition cursor-pointer">
+                    <button onclick="window.downloadReportPDF()" class="w-full py-3 sm:py-2.5 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition cursor-pointer">
                         Download PDF Report
                     </button>
                 </div>
