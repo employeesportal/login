@@ -1,40 +1,31 @@
-<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
-        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+<div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-4 sm:mb-6 gap-4">
+        <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
             <i data-lucide="user-check" class="text-emerald-600 w-5 h-5"></i> Manager Approval Console
         </h3>
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <select id="mgr-filter-job" onchange="window.filterMgrTable()"
-                class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+                class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48 focus:ring-2 focus:ring-emerald-500 outline-none">
                 <option value="">Filter by Job ID</option>
             </select>
         </div>
     </div>
 
-    <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
-        <table class="w-full text-left border-collapse text-xs min-w-[1200px]">
-            <thead>
-                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
-                    <th class="p-3.5">Job & Entry ID</th>
-                    <th class="p-3.5">Employee & Project</th>
-                    <th class="p-3.5">Timeline, Movement & Description</th>
-                    <th class="p-3.5">Coordinator Remarks</th>
-                    <th class="p-3.5">Manager Approval & Instructions (Locks on save)</th>
-                    <th class="p-3.5 text-center">Execute Control</th>
-                </tr>
-            </thead>
-            <tbody id="mgr-tbody" class="divide-y text-slate-800 font-bold">
-                <tr>
-                    <td colspan="6" class="p-8 text-center animate-pulse">Loading manager team records...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- 🎯 DUAL LAYOUT CONTAINER -->
+    <div id="mgr-data-container" class="w-full bg-white border border-slate-200 rounded-2xl shadow-inner sm:overflow-hidden p-2 sm:p-0">
+        <div class="p-8 text-center text-slate-500 font-bold animate-pulse">Loading manager team records...</div>
     </div>
 </div>
 
 <script>
     (() => {
         let mgrCache = [];
+
+        // Accordion Toggle for Mobile Cards
+        window.toggleMgrRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
         function formatIndianDateTime(rawStr) {
             if (!rawStr) return "N/A";
@@ -53,6 +44,9 @@
         }
 
         async function initMgrPortal() {
+            const container = document.getElementById("mgr-data-container");
+            if(container) container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold animate-pulse">Loading manager team records...</div>`;
+            
             try {
                 const res = await fetch(`${API_URL}?action=getFieldActivities&role=MANAGER&userId=${currentUser.employeeId}`);
                 const result = await res.json();
@@ -60,19 +54,18 @@
                     mgrCache = result.data;
                     populateMgrJobDropdown(mgrCache);
                     renderMgrTable(mgrCache);
+                } else {
+                    if(container) container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Failed to load records: ${result.message}</div>`;
                 }
             } catch (e) {
-                // 🎯 FIXED: Safeguard check prevents crash if user switched tabs
-                const tbody = document.getElementById("mgr-tbody");
-                if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load team activity records.</td></tr>`;
+                if (container) {
+                    container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Network failure. Could not load team activity records.</div>`;
                 }
             }
         }
 
         function populateMgrJobDropdown(data) {
             const select = document.getElementById("mgr-filter-job");
-            // 🎯 FIXED: Safeguard check
             if (!select) return; 
 
             const uniqueJobs = [...new Set(data.map(d => d.jobActivityId))];
@@ -92,19 +85,21 @@
         };
 
         function renderMgrTable(data) {
-            const tbody = document.getElementById("mgr-tbody");
-            // 🎯 FIXED: Safeguard check
-            if (!tbody) return; 
+            const container = document.getElementById("mgr-data-container");
+            if (!container) return; 
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No team field records found.</td></tr>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No team field records found.</div>`;
                 return;
             }
 
-            let html = "";
-            data.forEach(r => {
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+
+            data.forEach((r, idx) => {
                 const isLocked = r.managerStatus && r.managerStatus !== "PENDING";
-                let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800 border" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800 border" : "bg-amber-100 text-amber-800 border");
+                let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800 border-rose-300" : "bg-amber-100 text-amber-800 border-amber-300");
+                const rowId = `mgr_mob_row_${idx}`;
 
                 // Parse movement structure
                 let movementParts = (r.movementType || 'N/A').split('\n');
@@ -113,10 +108,11 @@
 
                 // Attachment link
                 let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
-                    `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 underline block mt-1.5 text-[10px] font-mono flex items-center gap-1 font-black"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
+                    `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline mt-1.5 text-[10px] font-mono inline-flex items-center gap-1 font-black bg-blue-50 px-2 py-1 rounded"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
 
-                html += `
-                    <tr class="hover:bg-slate-50 align-top">
+                // 🎯 DESKTOP ROW HTML
+                desktopRowsHtml += `
+                    <tr class="hover:bg-slate-50 align-top hidden md:table-row">
                         <td class="p-3.5">
                             <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
                             <span class="font-mono text-slate-500 text-[10px]">Entry: ${r.entryId}</span>
@@ -141,8 +137,8 @@
                             <div class="text-slate-700 italic text-[11px] bg-slate-50 p-2 rounded border mt-1">${r.coordinatorComment || 'No comments provided'}</div>
                         </td>
                         <td class="p-3.5 space-y-2">
-                            <div><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeClass}">${r.managerStatus}</span></div>
-                            <select id="mgr-status-${r.rowIndex}" class="w-full p-1.5 border rounded-lg text-xs bg-white font-black" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                            <div><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase border ${badgeClass}">${r.managerStatus}</span></div>
+                            <select id="desk-mgr-status-${r.rowIndex}" class="w-full p-1.5 border rounded-lg text-xs bg-white font-black focus:ring-2 focus:ring-emerald-500 outline-none" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>
                                 <option value="PENDING" ${r.managerStatus === 'PENDING' ? 'selected' : ''}>Pending Review</option>
                                 <option value="APPROVED_SITE" ${r.managerStatus === 'APPROVED_SITE' ? 'selected' : ''}>Approved - Proceed to Site</option>
                                 <option value="APPROVED_PROPOSED" ${r.managerStatus === 'APPROVED_PROPOSED' ? 'selected' : ''}>Approved as proposed plan</option>
@@ -152,30 +148,132 @@
                             ${r.managerTravelModeApproval !== 'N/A' ? `
                                 <div>
                                     <label class="text-[9px] font-black uppercase text-slate-500">Train/Flight Sign-off:</label>
-                                    <select id="mgr-travel-${r.rowIndex}" class="w-full p-1 border rounded text-xs bg-amber-50 font-bold" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                                    <select id="desk-mgr-travel-${r.rowIndex}" class="w-full p-1 border rounded text-xs bg-amber-50 font-bold focus:ring-2 focus:ring-emerald-500 outline-none" ${isLocked ? 'disabled text-slate-500' : ''}>
                                         <option value="PENDING_APPROVAL" ${r.managerTravelModeApproval === 'PENDING_APPROVAL' ? 'selected' : ''}>Pending Travel Approval</option>
                                         <option value="APPROVED" ${r.managerTravelModeApproval === 'APPROVED' ? 'selected' : ''}>Approved Mode</option>
                                         <option value="REJECTED" ${r.managerTravelModeApproval === 'REJECTED' ? 'selected' : ''}>Rejected Mode</option>
                                     </select>
                                 </div>
-                            ` : `<input type="hidden" id="mgr-travel-${r.rowIndex}" value="N/A">`}
-                            <input type="text" id="mgr-inst-${r.rowIndex}" value="${r.managerInstruction || ''}" placeholder="Manager instructions..." class="w-full p-1.5 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100' : ''}>
+                            ` : `<input type="hidden" id="desk-mgr-travel-${r.rowIndex}" value="N/A">`}
+                            <input type="text" id="desk-mgr-inst-${r.rowIndex}" value="${r.managerInstruction || ''}" placeholder="Manager instructions..." class="w-full p-1.5 border rounded-lg text-xs bg-white font-normal focus:ring-2 focus:ring-emerald-500 outline-none" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>
                             ${isLocked ? `<span class="text-[10px] text-emerald-700 font-bold block">🔒 Locked (By ${r.managerName || 'Manager'})</span>` : ''}
                         </td>
                         <td class="p-3.5 text-center align-middle">
-                            ${!isLocked ? `<button onclick="window.saveManagerDecision(${r.rowIndex})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Commit Decision</button>` : '<span class="text-xs text-slate-400">-</span>'}
+                            ${!isLocked ? `<button onclick="window.saveManagerDecision(${r.rowIndex}, 'desk')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Commit Decision</button>` : '<span class="text-xs text-slate-400">-</span>'}
                         </td>
                     </tr>
                 `;
+
+                // 🎯 MOBILE ACCORDION CARD HTML
+                mobileCardsHtml += `
+                    <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleMgrRowAccordion('${rowId}')">
+                            <div class="pr-2 w-[85%]">
+                                <strong class="text-slate-950 block text-xs sm:text-sm truncate font-black">${r.employeeName}</strong>
+                                <span class="text-slate-500 font-mono text-[10px] font-bold block mt-0.5 text-emerald-700">${r.jobActivityId} <span class="text-slate-400">| Entry: ${r.entryId}</span></span>
+                            </div>
+                            <div class="flex items-center justify-end w-[15%]">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Body (Hidden by default) -->
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Project</span>
+                                <span class="font-bold text-slate-800">${r.project}</span>
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Movement Details</span>
+                                <div class="font-bold text-slate-900">${mainMovement} (${r.modeOfTravel})</div>
+                                ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                                <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-50 p-2 rounded border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                                ${docLink}
+                                <div class="font-mono text-[10px] text-slate-500 mt-2 space-y-1">
+                                    <div class="flex justify-between border-b border-slate-50 pb-1"><span>Travel:</span> <span class="font-bold text-slate-700">${formatIndianDateTime(r.tentativeTravelDate)}</span></div>
+                                    <div class="flex justify-between border-b border-slate-50 pb-1"><span>Reach:</span> <span class="font-bold text-slate-700">${formatIndianDateTime(r.dateToReachDestination)}</span></div>
+                                    <div class="flex justify-between text-indigo-700 font-bold"><span>Logged:</span> <span>${formatIndianDateTime(r.employeeTimestamp)}</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Coordinator Remarks</span>
+                                <div class="text-[10px] text-slate-500 mb-1">Auditor: <strong>${r.coordinatorName || 'Assigned'}</strong></div>
+                                <div class="text-slate-700 italic text-[11px] bg-slate-50 p-2 rounded border border-slate-200">"${r.coordinatorComment || 'No comments provided'}"</div>
+                            </div>
+                            
+                            <div class="pt-1">
+                                <span class="text-slate-500 uppercase text-[10px] font-black tracking-wider block mb-2 flex items-center gap-1"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> Manager Approval</span>
+                                
+                                <div class="space-y-3">
+                                    <div>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase border ${badgeClass}">${r.managerStatus}</span>
+                                    </div>
+                                    <select id="mob-mgr-status-${r.rowIndex}" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-2 focus:ring-emerald-500 outline-none" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>
+                                        <option value="PENDING" ${r.managerStatus === 'PENDING' ? 'selected' : ''}>Pending Review</option>
+                                        <option value="APPROVED_SITE" ${r.managerStatus === 'APPROVED_SITE' ? 'selected' : ''}>Approved - Proceed to Site</option>
+                                        <option value="APPROVED_PROPOSED" ${r.managerStatus === 'APPROVED_PROPOSED' ? 'selected' : ''}>Approved as proposed plan</option>
+                                        <option value="REDIRECTED_OFFICE" ${r.managerStatus === 'REDIRECTED_OFFICE' ? 'selected' : ''}>Redirected to Base Office</option>
+                                        <option value="REJECTED" ${r.managerStatus === 'REJECTED' ? 'selected' : ''}>Rejected - Cancel Travel</option>
+                                    </select>
+                                    
+                                    ${r.managerTravelModeApproval !== 'N/A' ? `
+                                        <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200">
+                                            <label class="text-[9px] font-black uppercase text-amber-700 block mb-1.5">Train/Flight Sign-off:</label>
+                                            <select id="mob-mgr-travel-${r.rowIndex}" class="w-full p-2 border border-amber-300 rounded-lg text-xs bg-white font-bold focus:ring-2 focus:ring-emerald-500 outline-none" ${isLocked ? 'disabled text-slate-500' : ''}>
+                                                <option value="PENDING_APPROVAL" ${r.managerTravelModeApproval === 'PENDING_APPROVAL' ? 'selected' : ''}>Pending Travel Approval</option>
+                                                <option value="APPROVED" ${r.managerTravelModeApproval === 'APPROVED' ? 'selected' : ''}>Approved Mode</option>
+                                                <option value="REJECTED" ${r.managerTravelModeApproval === 'REJECTED' ? 'selected' : ''}>Rejected Mode</option>
+                                            </select>
+                                        </div>
+                                    ` : `<input type="hidden" id="mob-mgr-travel-${r.rowIndex}" value="N/A">`}
+                                    
+                                    <input type="text" id="mob-mgr-inst-${r.rowIndex}" value="${r.managerInstruction || ''}" placeholder="Manager instructions..." class="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white font-normal outline-none focus:ring-2 focus:ring-emerald-500" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>
+                                    
+                                    ${isLocked ? 
+                                        `<span class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded font-bold flex items-center gap-1 w-max mt-2"><i data-lucide="lock" class="w-3 h-3"></i> Locked (By ${r.managerName || 'Manager'})</span>` : 
+                                        `<button onclick="window.saveManagerDecision(${r.rowIndex}, 'mob')" class="mt-3 w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition flex items-center justify-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Commit Decision</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-            tbody.innerHTML = html;
+
+            // 🎯 INJECT DUAL LAYOUT
+            container.innerHTML = `
+                <div class="hidden md:block overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left border-collapse text-xs min-w-[1200px]">
+                        <thead>
+                            <tr class="bg-slate-950 text-white font-black uppercase text-[10px] tracking-wider sticky top-0 z-10">
+                                <th class="p-3.5">Job & Entry ID</th>
+                                <th class="p-3.5">Employee & Project</th>
+                                <th class="p-3.5">Timeline, Movement & Description</th>
+                                <th class="p-3.5">Coordinator Remarks</th>
+                                <th class="p-3.5 bg-slate-900 border-l border-r border-slate-800">Manager Approval & Instructions (Locks on save)</th>
+                                <th class="p-3.5 text-center">Execute Control</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y text-slate-800 font-bold bg-white">
+                            ${desktopRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="md:hidden flex flex-col w-full">
+                    ${mobileCardsHtml}
+                </div>
+            `;
             if (window.lucide) lucide.createIcons();
         }
 
-        window.saveManagerDecision = async function (rowIndex) {
-            const status = document.getElementById(`mgr-status-${rowIndex}`).value;
-            const travelApproval = document.getElementById(`mgr-travel-${rowIndex}`).value;
-            const instruction = document.getElementById(`mgr-inst-${rowIndex}`).value.trim();
+        // 🎯 UPDATED: Prefix system correctly locates Inputs whether clicked on Mobile or Desktop
+        window.saveManagerDecision = async function (rowIndex, prefix = 'desk') {
+            const status = document.getElementById(`${prefix}-mgr-status-${rowIndex}`).value;
+            const travelApproval = document.getElementById(`${prefix}-mgr-travel-${rowIndex}`).value;
+            const instruction = document.getElementById(`${prefix}-mgr-inst-${rowIndex}`).value.trim();
 
             if (status === "PENDING") { alert("Please select a valid manager decision state."); return; }
             if (!confirm("Are you sure you want to commit and lock this decision? It cannot be changed after saving.")) return;
@@ -201,14 +299,13 @@
         };
 
         setTimeout(() => {
-            const tableBody = document.getElementById("mgr-tbody");
-            if (tableBody) {
+            const container = document.getElementById("mgr-data-container");
+            if (container) {
                 initMgrPortal();
             } else {
                 console.warn("DOM not ready. Retrying init...");
-                // Keep the safeguard in the retry as well
                 setTimeout(() => {
-                   if(document.getElementById("mgr-tbody")) initMgrPortal(); 
+                   if(document.getElementById("mgr-data-container")) initMgrPortal(); 
                 }, 150);
             }
         }, 50);
