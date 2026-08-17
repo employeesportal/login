@@ -5,7 +5,6 @@
             <div class="w-5 h-5 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center group-hover:scale-100 transition-transform">
                 <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
             </div>
-            
             Attendance & Analysis Console
         </h3>
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">View & Analyse Daily and Employee Wise Attendance </p>
@@ -29,15 +28,17 @@
                 </select>
             </div>
 
-            <!-- NEW STATUS FILTER ADDED HERE -->
             <div>
                 <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Filter By Duty Status</label>
                 <select id="anly-status-filter" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black text-indigo-700">
                     <option value="ALL">Show All Statuses</option>
                     <option value="PRESENT">Present & Verified</option>
+                    <option value="APPROVED_LEAVE">Approved Leaves (System)</option>
+                    <option value="APPLIED_LEAVE">Applied Leaves (Pending)</option>
+                    <option value="COORD_LEAVE">Leave Marked by Coordinator</option>
                     <option value="ABSENT">Absent & Rejected</option>
-                    <option value="LEAVE">Approved Leaves</option>
                     <option value="SUNDAY">Sundays / Off Days</option>
+                    <option value="NOT_MARKED">Not Marked (Idle)</option>
                 </select>
             </div>
             
@@ -65,33 +66,15 @@
         </div>
     </div>
 
-    <!-- Summary Statistics Pane -->
-    <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-5 gap-4"></div>
+    <!-- Summary Statistics Pane (Expanded to 7 Columns for Sundays) -->
+    <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
 
     <!-- Data Matrix Viewport -->
-    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-4 sm:p-5">
-        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[550px]">
-            <table class="w-full text-left border-collapse table-auto min-w-[1550px]">
-                <thead>
-                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
-                        <th class="px-4 py-3.5 w-28">Date</th>
-                        <th class="px-4 py-3.5 w-56">Employee Details</th>
-                        <th class="px-4 py-3.5 w-32 text-center">Duty Status State</th>
-                        <th class="px-4 py-3.5 w-64">Assigned Project Parameters</th>
-                        <th class="px-4 py-3.5 w-40 text-center">Login Location</th>
-                        <th class="px-4 py-3.5 w-60">Day's Execution Plan</th>
-                        <th class="px-4 py-3.5 w-60">Day's Work Progress</th>
-                        <th class="px-4 py-3.5 w-64">Coordinator Audit Details</th>
-                    </tr>
-                </thead>
-                <tbody id="anly-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
-                    <tr>
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
-                            Synchronizing data and system configurations layout...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
+        <div id="anly-data-container" class="w-full">
+            <div class="text-center text-slate-600 font-bold py-12 animate-pulse">
+                Synchronizing data and system configurations layout...
+            </div>
         </div>
     </div>
 </div>
@@ -124,6 +107,11 @@
             if (empContainer) empContainer.classList.toggle("hidden", mode !== "EMPLOYEE");
             
             window.executeAttendanceAnalysisPipeline();
+        };
+
+        window.toggleAnalysisRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
         };
 
         function normalizeBackendObject(obj) {
@@ -189,18 +177,21 @@
             let startStr = cleanLv.fromdate || "";
             let endStr = cleanLv.todate || "";
             
-            if (cleanLv.managerdates && String(cleanLv.managerdates).includes(' to ')) {
-                let p = String(cleanLv.managerdates).split(' to ');
-                startStr = p[0].trim(); endStr = p[1].trim();
-            }
-            if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).includes(' to ')) {
-                let p = String(cleanLv.adminapproveddate).split(' to ');
-                startStr = p[0].trim(); endStr = p[1].trim();
+            const status = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+            
+            if (status === "APPROVED" || status === "SHORT") {
+                if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).includes('to')) {
+                    let p = String(cleanLv.adminapproveddate).split('to');
+                    startStr = p[0].trim(); endStr = p[1].trim();
+                } else if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).trim() !== "") {
+                    startStr = cleanLv.adminapproveddate; endStr = cleanLv.adminapproveddate;
+                }
             }
             
             const startT = parseToTimestamp(startStr);
-            const endT = parseToTimestamp(endStr);
-            if (!startT || !endT) return false;
+            const endT = parseToTimestamp(endStr) || startT; 
+            if (!startT) return false;
+            
             return (checkTime >= startT && checkTime <= endT);
         }
 
@@ -238,12 +229,12 @@
                 if (locStr.includes("||")) {
                     let segments = locStr.split("||");
                     let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
-                    locationLink = `<a href="${parsedUrl}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                    locationLink = `<a href="${parsedUrl}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> Map</a>`;
                 } else if (locStr !== "" && locStr !== "--") {
                     if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
-                        locationLink = `<a href="${locStr}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="${locStr}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> Map</a>`;
                     } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
-                        locationLink = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locStr)}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locStr)}" target="_blank" class="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center gap-0.5 transition shadow-sm"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> Map</a>`;
                     } else {
                         locationLink = `<span class="text-slate-800 font-bold">${locStr}</span>`;
                     }
@@ -262,29 +253,32 @@
 
         window.executeAttendanceAnalysisPipeline = function () {
             const modeEl = document.getElementById("anly-view-mode");
-            const statusFilter = document.getElementById("anly-status-filter") ? document.getElementById("anly-status-filter").value : "ALL";
+            const statusSelect = document.getElementById("anly-status-filter");
+            const statusFilter = statusSelect ? statusSelect.value : "ALL";
+            const filterDisplayName = statusSelect ? statusSelect.options[statusSelect.selectedIndex].text : "All Statuses";
+            
             if (!modeEl) return;
             const mode = modeEl.value;
-            const tbody = document.getElementById("anly-matrix-table-body");
+            const dataContainer = document.getElementById("anly-data-container");
             const summaryBox = document.getElementById("anly-summary-cards-container");
             
             if (masterRegistryEmployees.length === 0) return;
-            let outputRowsHtml = "";
+
+            let countPresent = 0, countApprLeave = 0, countApplLeave = 0, countCoordLeave = 0, countAbsent = 0, countSunday = 0, countIdle = 0;
+            let processedRows = [];
+            let daysToConsider = 0;
 
             if (mode === "DATE") {
                 const rawSelectedDate = datePicker ? datePicker.value : "";
                 if (!rawSelectedDate) { 
-                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pick a date parameter first.</td></tr>`; 
+                    dataContainer.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">Please pick a date parameter first.</div>`; 
                     return; 
                 }
                 
+                daysToConsider = 1;
                 const checkTime = parseToTimestamp(rawSelectedDate);
                 const dateObj = new Date(checkTime);
-                const monthInfo = getMonthMetricsInfo(dateObj.getFullYear(), dateObj.getMonth());
-                const monthDisplayLabel = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-                let presentCount = 0, leaveCount = 0, absentMarkedByCoordinator = 0, passiveAbsentCount = 0;
-                let processedRows = [];
+                const isSunday = dateObj.getDay() === 0;
 
                 masterRegistryEmployees.forEach(emp => {
                     const cleanEmp = normalizeBackendObject(emp);
@@ -292,24 +286,30 @@
                     
                     const attLog = masterAttendanceLogCache.find(log => {
                         const cleanLog = normalizeBackendObject(log);
-                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanEmpId && 
-                               parseToTimestamp(cleanLog.date) === checkTime;
+                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanEmpId && parseToTimestamp(cleanLog.date) === checkTime;
                     });
 
-                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => {
+                    let isLeaveApproved = false, isLeaveApplied = false;
+                    const activeLeave = masterLeaveApplicationsCache.find(lv => {
                         const cleanLv = normalizeBackendObject(lv);
                         if (String(cleanLv.employeeid || "").trim().toUpperCase() !== cleanEmpId) return false;
-                        if (cleanLv.status !== "APPROVED" && cleanLv.status !== "SHORT") return false;
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "REJECTED" || stat === "DECLINED" || stat === "CANCELLED") return false;
                         return evaluateDateInsideLeaveBlock(checkTime, lv);
                     });
 
-                    const cleanLog = normalizeBackendObject(attLog);
-                    const cleanLeave = normalizeBackendObject(hasApprovedLeave);
+                    if (activeLeave) {
+                        const cleanLv = normalizeBackendObject(activeLeave);
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "APPROVED" || stat === "SHORT") isLeaveApproved = true;
+                        else isLeaveApplied = true;
+                    }
 
-                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
-                    let todaysPlan = "--", loginTime = "--";
-                    let todaysWorkProgress = "--", logoutTime = "--";
-                    
+                    const cleanLog = normalizeBackendObject(attLog);
+                    const cleanLeave = normalizeBackendObject(activeLeave);
+
+                    let status = "NOT MARKED", badge = "bg-rose-50 text-rose-800 border border-rose-200";
+                    let todaysPlan = "--", loginTime = "--", todaysWorkProgress = "--", logoutTime = "--";
                     let coordinatorName = cleanLog.coordinatorname || cleanEmp.coordinatorname || "--";
                     let coordinatorRemark = "--", coordinatorComment = "--";
 
@@ -317,121 +317,51 @@
 
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
-                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
-                        badge = (status === "ABSENT" || status === "REJECTED" || status === "C-AB") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        let uRem = String(rem).toUpperCase();
                         
+                        if (uRem === "ON LEAVE" || uRem === "LEAVE APPLIED" || uRem === "HALF-DAY") {
+                            status = "COORD LEAVE MARK"; badge = "bg-fuchsia-100 text-fuchsia-950 border border-fuchsia-300";
+                        } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
+                            status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                        } else {
+                            status = "PRESENT"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                        }
+                        
+                        if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
+                        else if (isLeaveApplied && status !== "COORD LEAVE MARK") { status = "APPLIED LEAVE"; badge = "bg-orange-100 text-orange-950 border border-orange-400"; }
+
                         todaysPlan = cleanLog.todaysplan || "--";
                         loginTime = cleanLog.logintime || "--";
                         todaysWorkProgress = cleanLog.todaysworkprogress || "--";
                         logoutTime = cleanLog.logouttime || "--";
-
                         coordinatorRemark = rem || "Pending Audit";
                         coordinatorComment = cleanLog.coordinatorcomment || "--";
-                        
-                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") {
-                            absentMarkedByCoordinator++;
-                        } else {
-                            presentCount++;
-                        }
-                    } else if (hasApprovedLeave) {
-                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
-                        coordinatorComment = `Leave Token: ${cleanLeave.applicationid || "N/A"} [Remarks: "${cleanLeave.adminremark || 'Processed'}"]`;
-                        leaveCount++;
                     } else {
-                        passiveAbsentCount++;
+                        if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
+                        else if (isLeaveApplied) { status = "APPLIED LEAVE"; badge = "bg-orange-100 text-orange-950 border border-orange-400"; }
+                        else if (isSunday) { status = "SUNDAY"; badge = "bg-cyan-100 text-cyan-950 border border-cyan-300"; }
                     }
+
+                    if (status === "PRESENT") countPresent++;
+                    else if (status === "APPROVED LEAVE") countApprLeave++;
+                    else if (status === "APPLIED LEAVE") countApplLeave++;
+                    else if (status === "COORD LEAVE MARK") countCoordLeave++;
+                    else if (status === "ABSENT") countAbsent++;
+                    else if (status === "SUNDAY") countSunday++; 
+                    else countIdle++;
 
                     processedRows.push({
                         date: rawSelectedDate.split('-').reverse().join('/'),
                         name: cleanEmp.employeename || "--", id: cleanEmp.employeeid || "--",
-                        status, badge, ...pParams,
-                        todaysPlan, loginTime, todaysWorkProgress, logoutTime,
+                        status, badge, ...pParams, todaysPlan, loginTime, todaysWorkProgress, logoutTime,
                         coordinatorName, coordinatorRemark, coordinatorComment
                     });
                 });
 
-                if (summaryBox) {
-                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
-                    summaryBox.innerHTML = `
-                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-inner text-white">
-                            <span class="text-[9px] font-black text-slate-400 uppercase block tracking-wider mb-1">Total Employees</span>
-                            <strong class="text-lg font-mono font-black">${masterRegistryEmployees.length} </strong>
-                        </div>
-                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present / Verified</span>
-                            <strong class="text-lg font-mono font-black text-emerald-800">${presentCount} </strong>
-                        </div>
-                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">On Approved Leave</span>
-                            <strong class="text-lg font-mono font-black text-indigo-800">${leaveCount} </strong>
-                        </div>
-                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-amber-700 uppercase block tracking-wider mb-1"> Rejected / Absent </span>
-                            <strong class="text-lg font-mono font-black text-amber-900">${absentMarkedByCoordinator} </strong>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1"> System Absence (Idle)</span>
-                            <strong class="text-lg font-mono font-black text-rose-800">${passiveAbsentCount} </strong>
-                        </div>
-                    `;
-                }
-
-                // APPLY SELECTED FILTER 
-                let filteredRows = processedRows;
-                if (statusFilter !== "ALL") {
-                    filteredRows = processedRows.filter(r => {
-                        const s = String(r.status).toUpperCase();
-                        if (statusFilter === "PRESENT") return s === "PRESENT" || s === "VERIFIED" || s === "OK";
-                        if (statusFilter === "ABSENT") return s === "ABSENT" || s === "REJECTED" || s === "C-AB";
-                        if (statusFilter === "LEAVE") return s === "ON LEAVE";
-                        if (statusFilter === "SUNDAY") return s === "SUNDAY";
-                        return true;
-                    });
-                }
-
-                if (filteredRows.length === 0) {
-                    outputRowsHtml = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 font-bold">No records found matching the chosen duty status.</td></tr>`;
-                } else {
-                    filteredRows.forEach(r => {
-                        outputRowsHtml += `
-                            <tr class="hover:bg-slate-50 transition-colors align-top">
-                                <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
-                                <td class="px-4 py-3">
-                                    <strong class="text-slate-950 block text-xs">${r.name}</strong>
-                                    <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
-                                </td>
-                                <td class="px-4 py-3 space-y-1">
-                                    <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
-                                    ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
-                                    <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
-                                </td>
-                                <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
-                                <td class="px-4 py-3 space-y-1 max-w-xs">
-                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
-                                    <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
-                                </td>
-                                <td class="px-4 py-3 space-y-1 max-w-xs">
-                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
-                                    <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
-                                </td>
-                                <td class="px-4 py-3 space-y-1 text-[11px]">
-                                    <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
-                                    <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
-                                    <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                if (tbody) tbody.innerHTML = outputRowsHtml;
-
             } else if (mode === "EMPLOYEE") {
                 const selectedTargetEmpId = document.getElementById("anly-employee-select") ? document.getElementById("anly-employee-select").value : "";
                 if (!selectedTargetEmpId) { 
-                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please identify an active employee node using selection box inputs above.</td></tr>`; 
+                    dataContainer.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">Please identify an active employee node using selection box inputs above.</div>`; 
                     return; 
                 }
 
@@ -443,22 +373,24 @@
                 const cleanTargetEmp = normalizeBackendObject(targetEmp);
                 const targetMonthStr = monthPicker ? monthPicker.value : "";
                 if (!targetMonthStr) { 
-                    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 italic">Please pick a calculation month frame.</td></tr>`; 
+                    dataContainer.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">Please pick a calculation month frame.</div>`; 
                     return; 
                 }
                 
                 const tokens = targetMonthStr.split('-');
                 const currentYear = parseInt(tokens[0], 10);
                 const currentMonthIdx = parseInt(tokens[1], 10) - 1;
-                
                 const monthInfo = getMonthMetricsInfo(currentYear, currentMonthIdx);
-                const testDateObj = new Date(currentYear, currentMonthIdx, 1);
-                const monthDisplayLabel = testDateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-                let logDaysMap = [];
-                let summaryP = 0, summaryL = 0, summaryS = 0, summaryA = 0, employeeAbsentMarkedByCoordinator = 0;
+                daysToConsider = monthInfo.totalDays;
+                const now = new Date();
+                if (currentYear === now.getFullYear() && currentMonthIdx === now.getMonth()) {
+                    daysToConsider = now.getDate(); 
+                } else if (new Date(currentYear, currentMonthIdx, 1) > now) {
+                    daysToConsider = 0; 
+                }
 
-                for (let dayIndex = 1; dayIndex <= monthInfo.totalDays; dayIndex++) {
+                for (let dayIndex = 1; dayIndex <= daysToConsider; dayIndex++) {
                     const loopDate = new Date(currentYear, currentMonthIdx, dayIndex);
                     const loopTime = loopDate.getTime();
                     const isSunday = loopDate.getDay() === 0;
@@ -466,24 +398,30 @@
 
                     const attLog = masterAttendanceLogCache.find(log => {
                         const cleanLog = normalizeBackendObject(log);
-                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanSearchEmpId && 
-                               parseToTimestamp(cleanLog.date) === loopTime;
+                        return String(cleanLog.employeeid || "").trim().toUpperCase() === cleanSearchEmpId && parseToTimestamp(cleanLog.date) === loopTime;
                     });
 
-                    const hasApprovedLeave = masterLeaveApplicationsCache.find(lv => {
+                    let isLeaveApproved = false, isLeaveApplied = false;
+                    const activeLeave = masterLeaveApplicationsCache.find(lv => {
                         const cleanLv = normalizeBackendObject(lv);
                         if (String(cleanLv.employeeid || "").trim().toUpperCase() !== cleanSearchEmpId) return false;
-                        if (cleanLv.status !== "APPROVED" && cleanLv.status !== "SHORT") return false;
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "REJECTED" || stat === "DECLINED" || stat === "CANCELLED") return false;
                         return evaluateDateInsideLeaveBlock(loopTime, lv);
                     });
 
-                    const cleanLog = normalizeBackendObject(attLog);
-                    const cleanLeave = normalizeBackendObject(hasApprovedLeave);
+                    if (activeLeave) {
+                        const cleanLv = normalizeBackendObject(activeLeave);
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "APPROVED" || stat === "SHORT") isLeaveApproved = true;
+                        else isLeaveApplied = true;
+                    }
 
-                    let status = "ABSENT", badge = "bg-rose-100 text-rose-950 border border-rose-300";
-                    let todaysPlan = "--", loginTime = "--";
-                    let todaysWorkProgress = "--", logoutTime = "--";
-                    
+                    const cleanLog = normalizeBackendObject(attLog);
+                    const cleanLeave = normalizeBackendObject(activeLeave);
+
+                    let status = "NOT MARKED", badge = "bg-rose-50 text-rose-800 border border-rose-200";
+                    let todaysPlan = "--", loginTime = "--", todaysWorkProgress = "--", logoutTime = "--";
                     let coordinatorName = cleanLog.coordinatorname || cleanTargetEmp.coordinatorname || "--";
                     let coordinatorRemark = "--", coordinatorComment = "--";
 
@@ -491,125 +429,229 @@
 
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
-                        status = rem && String(rem).trim() !== "Pending" ? String(rem).toUpperCase() : "PRESENT";
-                        badge = (status === "ABSENT" || status === "REJECTED" || status === "C-AB") ? "bg-rose-100 text-rose-950 border border-rose-300" : "bg-emerald-100 text-emerald-950 border border-emerald-300";
+                        let uRem = String(rem).toUpperCase();
                         
+                        if (uRem === "ON LEAVE" || uRem === "LEAVE APPLIED" || uRem === "HALF-DAY") {
+                            status = "COORD LEAVE MARK"; badge = "bg-fuchsia-100 text-fuchsia-950 border border-fuchsia-300";
+                        } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
+                            status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                        } else {
+                            status = "PRESENT"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                        }
+                        
+                        if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
+                        else if (isLeaveApplied && status !== "COORD LEAVE MARK") { status = "APPLIED LEAVE"; badge = "bg-orange-100 text-orange-950 border border-orange-400"; }
+
                         todaysPlan = cleanLog.todaysplan || "--";
                         loginTime = cleanLog.logintime || "--";
                         todaysWorkProgress = cleanLog.todaysworkprogress || "--";
                         logoutTime = cleanLog.logouttime || "--";
-                        
                         coordinatorRemark = rem || "Pending Audit";
                         coordinatorComment = cleanLog.coordinatorcomment || "--";
-                        
-                        if (status === "ABSENT" || status === "REJECTED" || status === "C-AB") {
-                            employeeAbsentMarkedByCoordinator++;
-                        } else {
-                            summaryP++;
-                        }
-                    } else if (hasApprovedLeave) {
-                        status = "ON LEAVE"; badge = "bg-indigo-100 text-indigo-950 border border-indigo-300";
-                        summaryL++;
-                    } else if (isSunday) {
-                        status = "SUNDAY"; badge = "bg-amber-100 text-amber-950 border border-amber-300";
-                        todaysPlan = "Standard weekend cycle closure window.";
-                        summaryS++;
                     } else {
-                        summaryA++;
+                        if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
+                        else if (isLeaveApplied) { status = "APPLIED LEAVE"; badge = "bg-orange-100 text-orange-950 border border-orange-400"; }
+                        else if (isSunday) { status = "SUNDAY"; badge = "bg-cyan-100 text-cyan-950 border border-cyan-300"; }
                     }
 
-                    logDaysMap.push({
+                    if (status === "PRESENT") countPresent++;
+                    else if (status === "APPROVED LEAVE") countApprLeave++;
+                    else if (status === "APPLIED LEAVE") countApplLeave++;
+                    else if (status === "COORD LEAVE MARK") countCoordLeave++;
+                    else if (status === "ABSENT") countAbsent++;
+                    else if (status === "SUNDAY") countSunday++;
+                    else countIdle++;
+
+                    processedRows.push({
                         date: `${String(dayIndex).padStart(2, '0')}/${String(currentMonthIdx + 1).padStart(2, '0')}/${currentYear}`,
                         name: cleanTargetEmp.employeename || "--", id: cleanTargetEmp.employeeid || "--",
-                        status, badge, ...pParams,
-                        todaysPlan, loginTime, todaysWorkProgress, logoutTime,
+                        status, badge, ...pParams, todaysPlan, loginTime, todaysWorkProgress, logoutTime,
                         coordinatorName, coordinatorRemark, coordinatorComment
                     });
                 }
+            }
 
-                if (summaryBox) {
-                    summaryBox.className = "grid grid-cols-2 sm:grid-cols-5 gap-4";
-                    summaryBox.innerHTML = `
-                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-inner text-white">
-                            <span class="text-[9px] font-black text-slate-400 uppercase block tracking-wider mb-1">Present Cycles</span>
-                            <strong class="text-lg font-mono font-black text-emerald-400">${summaryP} Day(s)</strong>
+            // 🎯 Apply Filter logic
+            let filteredRows = processedRows;
+            if (statusFilter !== "ALL") {
+                filteredRows = processedRows.filter(r => {
+                    const s = String(r.status);
+                    if (statusFilter === "PRESENT") return s === "PRESENT";
+                    if (statusFilter === "APPROVED_LEAVE") return s === "APPROVED LEAVE";
+                    if (statusFilter === "APPLIED_LEAVE") return s === "APPLIED LEAVE";
+                    if (statusFilter === "COORD_LEAVE") return s === "COORD LEAVE MARK";
+                    if (statusFilter === "ABSENT") return s === "ABSENT";
+                    if (statusFilter === "NOT_MARKED") return s === "NOT MARKED";
+                    if (statusFilter === "SUNDAY") return s === "SUNDAY";
+                    return true;
+                });
+            }
+
+            // 🎯 Render Summary Boxes with Filtered Record Header & Sundays
+            if (summaryBox) {
+                summaryBox.innerHTML = `
+                    <div class="col-span-2 sm:col-span-4 lg:col-span-7 bg-slate-900 border border-slate-800 p-3 sm:px-5 sm:py-4 rounded-xl shadow-inner flex justify-between items-center transition-all duration-300">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="filter" class="w-5 h-5 text-indigo-400"></i>
+                            <div>
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-0.5">Currently Filtering By</span>
+                                <strong class="text-sm text-white">${filterDisplayName} <span class="text-indigo-400 text-xs ml-1 font-mono tracking-normal">(${mode === 'EMPLOYEE' ? daysToConsider + ' Days Analyzed' : '1 Day Analyzed'})</span></strong>
+                            </div>
                         </div>
-                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">Approved Leaves</span>
-                            <strong class="text-lg font-mono font-black text-indigo-800">${summaryL} Day(s)</strong>
+                        <div class="text-right">
+                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-0.5">Matching Records</span>
+                            <strong class="text-xl font-mono font-black text-emerald-400">${filteredRows.length}</strong>
                         </div>
-                        <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-amber-600 uppercase block tracking-wider mb-1">Auditor Absent Summary</span>
-                            <strong class="text-lg font-mono font-black text-amber-800">${employeeAbsentMarkedByCoordinator} Day(s)</strong>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1">System Absence (Idle)</span>
-                            <strong class="text-lg font-mono font-black text-rose-800">${summaryA} Day(s)</strong>
-                        </div>
-                        <div class="bg-slate-100 border border-slate-300 p-4 rounded-2xl shadow-inner">
-                            <span class="text-[9px] font-black text-slate-500 uppercase block tracking-wider mb-1">Sundays Excluded</span>
-                            <strong class="text-lg font-mono font-black text-slate-700">${summaryS} Day(s)</strong>
+                    </div>
+                    
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present</span>
+                        <strong class="text-lg font-mono font-black text-emerald-800">${countPresent}</strong>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">Appr Leave</span>
+                        <strong class="text-lg font-mono font-black text-indigo-800">${countApprLeave}</strong>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-orange-600 uppercase block tracking-wider mb-1">Appl Leave</span>
+                        <strong class="text-lg font-mono font-black text-orange-800">${countApplLeave}</strong>
+                    </div>
+                    <div class="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-fuchsia-600 uppercase block tracking-wider mb-1">Coord Leave</span>
+                        <strong class="text-lg font-mono font-black text-fuchsia-800">${countCoordLeave}</strong>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-amber-600 uppercase block tracking-wider mb-1">Absent</span>
+                        <strong class="text-lg font-mono font-black text-amber-800">${countAbsent}</strong>
+                    </div>
+                    <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-cyan-600 uppercase block tracking-wider mb-1">Sundays</span>
+                        <strong class="text-lg font-mono font-black text-cyan-800">${countSunday}</strong>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-inner">
+                        <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1">Unmarked</span>
+                        <strong class="text-lg font-mono font-black text-rose-800">${countIdle}</strong>
+                    </div>
+                `;
+            }
+
+            // 🎯 Construct DUAL Layout (Desktop Table + Mobile Cards)
+            if (filteredRows.length === 0) {
+                dataContainer.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">No records found matching the chosen criteria.</div>`;
+            } else {
+                let desktopRowsHtml = "";
+                let mobileCardsHtml = "";
+
+                filteredRows.forEach((r, idx) => {
+                    const rowId = `anly_row_${idx}`;
+                    
+                    // Desktop Row HTML
+                    desktopRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top hidden md:table-row">
+                            <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
+                            <td class="px-4 py-3">
+                                <strong class="text-slate-950 block text-xs">${r.name}</strong>
+                                <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
+                            </td>
+                            <td class="px-4 py-3 space-y-1">
+                                <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
+                                ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
+                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 max-w-xs">
+                                <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
+                                <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
+                            </td>
+                            <td class="px-4 py-3 space-y-1 text-[11px]">
+                                <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
+                                <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
+                                <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
+                            </td>
+                        </tr>
+                    `;
+
+                    // Mobile Accordion Card HTML
+                    mobileCardsHtml += `
+                        <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                            <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAnalysisRowAccordion('${rowId}')">
+                                <div class="pr-2 w-[70%]">
+                                    <strong class="text-slate-950 block text-xs truncate">${r.name}</strong>
+                                    <span class="text-slate-500 font-mono text-[10px] block mt-0.5">${r.date} | ID: ${r.id}</span>
+                                </div>
+                                <div class="flex flex-col items-end gap-1.5 w-[30%]">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider font-black ${r.badge} text-center block w-full truncate">${r.status}</span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                                </div>
+                            </div>
+                            <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                                <div class="space-y-1.5">
+                                    <div class="flex justify-between border-b pb-1.5 border-slate-50"><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider">Project</span> <span class="text-slate-900 font-bold truncate max-w-[150px] text-right">${r.currentProject}</span></div>
+                                    ${r.district ? `<div class="flex justify-between border-b pb-1.5 border-slate-50"><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider">District</span> <span class="text-slate-800 font-bold truncate max-w-[150px] text-right">${r.district}</span></div>` : ''}
+                                    <div class="flex justify-between border-b pb-1.5 border-slate-50"><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider">Loc Acc</span> <span class="text-slate-500 font-mono text-[10px]">± ${r.accuracy}</span></div>
+                                    <div class="flex justify-between border-b pb-1.5 border-slate-50 items-center"><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider">Map</span> <span>${r.locationLink}</span></div>
+                                </div>
+                                
+                                <div class="pt-2 border-t border-slate-100">
+                                    <div class="flex justify-between mb-1"><span class="text-slate-400 font-bold uppercase text-[9px] tracking-wider">Execution Plan</span><span class="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-100 font-bold">In: ${r.loginTime}</span></div>
+                                    <p class="text-slate-700 italic leading-relaxed text-[11px]">"${r.todaysPlan}"</p>
+                                </div>
+                                
+                                <div class="pt-2 border-t border-slate-100">
+                                    <div class="flex justify-between mb-1"><span class="text-slate-400 font-bold uppercase text-[9px] tracking-wider">Work Progress</span><span class="text-[9px] font-mono text-orange-700 bg-orange-50 px-1 rounded border border-orange-100 font-bold">Out: ${r.logoutTime}</span></div>
+                                    <p class="text-slate-700 italic leading-relaxed text-[11px]">"${r.todaysWorkProgress}"</p>
+                                </div>
+                                
+                                <div class="pt-2 border-t border-slate-100 bg-slate-50/50 p-3 rounded-xl border">
+                                    <span class="text-slate-400 block mb-1.5 font-black uppercase text-[9px] tracking-wider">Audit Details</span>
+                                    <div class="grid grid-cols-2 gap-2 mb-2">
+                                        <div class="text-[10px]"><span class="text-slate-400 block text-[8px] uppercase">By</span> <span class="font-bold text-slate-800">${r.coordinatorName}</span></div>
+                                        <div class="text-[10px]"><span class="text-slate-400 block text-[8px] uppercase">Remark</span> <span class="font-bold text-indigo-700 uppercase">${r.coordinatorRemark}</span></div>
+                                    </div>
+                                    <div class="text-[10px] text-slate-600 italic bg-white p-2 rounded border border-slate-200">"${r.coordinatorComment}"</div>
+                                </div>
+                            </div>
                         </div>
                     `;
-                }
+                });
 
-                // APPLY SELECTED FILTER
-                let filteredDays = logDaysMap;
-                if (statusFilter !== "ALL") {
-                    filteredDays = logDaysMap.filter(r => {
-                        const s = String(r.status).toUpperCase();
-                        if (statusFilter === "PRESENT") return s === "PRESENT" || s === "VERIFIED" || s === "OK";
-                        if (statusFilter === "ABSENT") return s === "ABSENT" || s === "REJECTED" || s === "C-AB";
-                        if (statusFilter === "LEAVE") return s === "ON LEAVE";
-                        if (statusFilter === "SUNDAY") return s === "SUNDAY";
-                        return true;
-                    });
-                }
-
-                if (filteredDays.length === 0) {
-                    outputRowsHtml = `<tr><td colspan="8" class="px-4 py-6 text-center text-slate-500 font-bold">No records found matching the chosen duty status.</td></tr>`;
-                } else {
-                    filteredDays.forEach(r => {
-                        outputRowsHtml += `
-                            <tr class="hover:bg-slate-50 transition-colors align-top">
-                                <td class="px-4 py-3 font-mono text-slate-700">${r.date}</td>
-                                <td class="px-4 py-3">
-                                    <strong class="text-slate-950 block text-xs">${r.name}</strong>
-                                    <span class="text-slate-500 font-mono text-[11px]">ID: ${r.id}</span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-black ${r.badge}">${r.status}</span>
-                                </td>
-                                <td class="px-4 py-3 space-y-1">
-                                    <div><span class="text-slate-400 font-medium">Proj:</span> <span class="text-slate-900">${r.currentProject}</span></div>
-                                    ${r.district ? `<div><span class="text-slate-400 font-medium">Dist:</span> <span class="text-slate-800">${r.district}</span></div>` : ''}
-                                    <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy}</div>
-                                </td>
-                                <td class="px-4 py-3 text-center align-middle">${r.locationLink}</td>
-                                <td class="px-4 py-3 space-y-1 max-w-xs">
-                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysPlan}"</div>
-                                    <div><span class="text-[10px] font-mono uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-black">In: ${r.loginTime}</span></div>
-                                </td>
-                                <td class="px-4 py-3 space-y-1 max-w-xs">
-                                    <div class="text-slate-600 font-medium break-words italic">"${r.todaysWorkProgress}"</div>
-                                    <div><span class="text-[10px] font-mono uppercase bg-orange-50 text-orange-800 border border-orange-200 px-1.5 py-0.5 rounded font-black">Out: ${r.logoutTime}</span></div>
-                                </td>
-                                <td class="px-4 py-3 space-y-1 text-[11px]">
-                                    <div><span class="text-slate-400 font-medium">Auditor:</span> <span class="text-slate-900 font-black">${r.coordinatorName}</span></div>
-                                    <div><span class="text-slate-400 font-medium">Remark:</span> <span class="font-bold text-indigo-700 uppercase text-[10px]">${r.coordinatorRemark}</span></div>
-                                    <div class="text-slate-500 italic max-w-xs truncate" title="${r.coordinatorComment}">Note: "${r.coordinatorComment}"</div>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                if (tbody) tbody.innerHTML = outputRowsHtml;
+                dataContainer.innerHTML = `
+                    <div class="hidden md:block overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[550px]">
+                        <table class="w-full text-left border-collapse table-auto min-w-[1550px]">
+                            <thead>
+                                <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
+                                    <th class="px-4 py-3.5 w-28">Date</th>
+                                    <th class="px-4 py-3.5 w-56">Employee Details</th>
+                                    <th class="px-4 py-3.5 w-32 text-center">Duty Status State</th>
+                                    <th class="px-4 py-3.5 w-64">Assigned Project Parameters</th>
+                                    <th class="px-4 py-3.5 w-40 text-center">Login Location</th>
+                                    <th class="px-4 py-3.5 w-60">Day's Execution Plan</th>
+                                    <th class="px-4 py-3.5 w-60">Day's Work Progress</th>
+                                    <th class="px-4 py-3.5 w-64">Coordinator Audit Details</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="md:hidden flex flex-col pt-2">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
             }
             if (window.lucide) window.lucide.createIcons();
         };
 
         window.loadMasterAnalysisDataPackages = async function () {
-            const tbody = document.getElementById("anly-matrix-table-body");
+            const dataContainer = document.getElementById("anly-data-container");
             try {
                 const [regRes, attRes, lvRes] = await Promise.all([
                     fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`),
@@ -634,7 +676,7 @@
                 window.filterAnalysisEmployeeDropdownOptions();
                 window.executeAttendanceAnalysisPipeline();
             } catch(e) {
-                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-700 font-black">Data Loading Failure.</td></tr>`;
+                if (dataContainer) dataContainer.innerHTML = `<div class="p-10 text-center text-rose-700 font-black border border-rose-200 rounded-xl bg-rose-50">Data Loading Failure. Please check connection.</div>`;
             }
         };
 
