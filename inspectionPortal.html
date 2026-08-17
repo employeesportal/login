@@ -167,6 +167,12 @@
             if (el) el.classList.toggle('hidden');
         };
 
+        // 🎯 Helper logic to decouple summary toggling from accordion row toggling
+        window.toggleSummary = function(e, id) {
+            if (e) e.stopPropagation();
+            window.toggleAccordion(id);
+        };
+
         window.renderFeederInputs = function(prefillData = []) {
             let count = parseInt(document.getElementById('t-feeder-count').value) || 1;
             if (prefillData.length > 0) count = prefillData.length;
@@ -340,6 +346,7 @@
                 Object.keys(dpData.tkcs).forEach(tkcKey => {
                     const tkcData = dpData.tkcs[tkcKey];
                     const safeTkcId = safeDpId + '_tkc_' + tkcKey.replace(/[^a-zA-Z0-9]/g, '_');
+                    const safeTkcSummaryId = safeTkcId + '_summary';
 
                     // 🎯 Generate summary specifically for this TKC
                     let tkcSummaryArr = [];
@@ -352,15 +359,22 @@
                     html += `
                         <!-- TIER 2: TKC Level -->
                         <div class="border border-indigo-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                            <div class="px-3 py-2 sm:px-4 sm:py-3 bg-indigo-50 flex justify-between items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
+                            <div class="px-3 py-2 sm:px-4 sm:py-3 bg-indigo-50 flex justify-between items-start sm:items-center cursor-pointer hover:bg-indigo-100 transition" onclick="window.toggleAccordion('${safeTkcId}')">
                                 <div class="flex items-start sm:items-center gap-2 w-[90%]">
                                     <i data-lucide="briefcase" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0 mt-0.5 sm:mt-0"></i>
                                     <div class="w-full pr-2">
-                                        <h5 class="text-[11px] sm:text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
-                                        <div class="text-[9px] sm:text-[10px] text-indigo-700 font-mono mt-1 leading-relaxed whitespace-normal break-words w-full pr-2">${tkcSummaryStr}</div>
+                                        <div class="flex items-center gap-2">
+                                            <h5 class="text-[11px] sm:text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
+                                            <!-- 🎯 NEW: Summary Toggle Button -->
+                                            <button onclick="window.toggleSummary(event, '${safeTkcSummaryId}')" class="px-2 py-0.5 bg-indigo-200/80 hover:bg-indigo-300 text-indigo-800 rounded text-[8px] font-black uppercase transition shadow-sm border border-indigo-300">Summary</button>
+                                        </div>
+                                        <!-- 🎯 NEW: Hidden Summary Container -->
+                                        <div id="${safeTkcSummaryId}" class="hidden text-[9px] sm:text-[10px] text-indigo-800 font-mono mt-2 pt-1.5 border-t border-indigo-200/60 leading-relaxed whitespace-normal break-words w-full pr-2">
+                                            ${tkcSummaryStr}
+                                        </div>
                                     </div>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0"></i>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400 shrink-0 mt-0.5 sm:mt-0"></i>
                             </div>
                             
                             <div id="${safeTkcId}" class="hidden p-2 sm:p-3 space-y-2 sm:space-y-3 bg-indigo-50/30">
