@@ -1,30 +1,30 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+<div class="w-full glass-panel p-3 sm:p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
 
     <!-- DASHBOARD PANEL HEADER CONTROL BAR -->
-    <div class="border-b border-slate-300 pb-4 mb-6 gap-4">
+    <div class="border-b border-slate-300 pb-4 mb-4 sm:mb-6 gap-4">
 
         <div>
             <h3 class="text-lg font-black tracking-tight text-slate-950 flex items-center gap-2">
                 <i data-lucide="shield" class="text-rose-700 w-5 h-5"></i> Employees Data Management Console
             </h3>
-            <p class="text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
+            <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
                 Master Provisioning Engine, Relational Overrides & Registry Sync Console
             </p>
         </div>
 
         <br>
         <div class="flex items-center gap-3 flex-wrap">
-            <div class="relative min-w-[240px]">
+            <div class="relative w-full sm:w-auto sm:min-w-[240px]">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-600">
                     <i data-lucide="search" class="w-4 h-4"></i>
                 </span>
                 <input type="text" id="l3-search-input" oninput="window.handleL3RegistrySearchFilter()"
                     placeholder="Search employees by name..."
-                    class="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 focus:bg-white text-slate-900 transition shadow-inner">
+                    class="w-full pl-9 pr-4 py-2 sm:py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-600 focus:bg-white text-slate-900 transition shadow-inner">
             </div>
 
             <select id="filter-qual" onchange="window.applyComplexFilters()"
-                class="px-3 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none">
+                class="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none">
                 <option value="">All Qualifications</option>
                 <option value="B.Tech (Electrical)">B.Tech (Electrical)</option>
                 <option value="B.Tech (Electrical & Electronics)">B.Tech (Electrical & Electronics)</option>
@@ -41,10 +41,10 @@
                 <option value="Graduation (Non-Tech)">Graduation (Non-Tech)</option>
             </select>
             <input type="number" id="filter-yop" oninput="window.applyComplexFilters()" placeholder="Passing Year"
-                class="w-400 px-3 py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl">
+                class="w-full sm:w-40 px-3 py-2 sm:py-1.5 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl">
 
             <button onclick="window.refreshAdminL3ConsoleData()"
-                class="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                class="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Workspace
             </button>
         </div>
@@ -52,63 +52,63 @@
 
     <!-- MASTER ROW EDITING UTILITY FORM OVERLAY -->
     <div id="l3-master-mutation-card"
-        class="hidden mb-6 p-5 bg-slate-100 border-2 border-slate-300 rounded-2xl relative fade-in-up">
+        class="hidden mb-6 p-4 sm:p-5 bg-slate-100 border-2 border-slate-300 rounded-2xl relative fade-in-up">
         <div class="flex items-center justify-between border-b border-slate-300 pb-3 mb-4">
             <h4 class="text-xs font-black uppercase tracking-wider text-rose-700 flex items-center gap-2">
                 <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Account Structure Master Record
             </h4>
             <button onclick="document.getElementById('l3-master-mutation-card').classList.add('hidden')"
-                class="text-slate-600 hover:text-slate-900"><i data-lucide="x" class="w-4 h-4"></i></button>
+                class="text-slate-600 hover:text-slate-900 bg-white p-1 rounded-md border border-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
         </div>
 
         <input type="hidden" id="edit-orig-empid">
         <input type="hidden" id="edit-orig-role">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs font-bold text-slate-800">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 text-xs font-bold text-slate-800">
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Employee ID</label>
                 <input type="text" id="edit-empid"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Employee Name</label>
                 <input type="text" id="edit-name"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Date of Joining</label>
                 <input type="date" id="edit-doj"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Designation</label>
                 <input type="text" id="edit-desig"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Username</label>
                 <input type="text" id="edit-username"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Password</label>
                 <input type="text" id="edit-password"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Assign Manager</label>
                 <select id="edit-mgr-select"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Assign Coordinator</label>
                 <select id="edit-coord-select"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
             </div>
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Qualification</label>
                 <select id="edit-qualification" 
-                        class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
+                        class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
                     <option value="">-- Select Qualification --</option>
                     <option value="B.Tech (Electrical)">B.Tech (Electrical)</option>
                     <option value="B.Tech (Electrical & Electronics)">B.Tech (Electrical & Electronics)</option>
@@ -128,12 +128,12 @@
             <div>
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Year of Passing</label>
                 <input type="text" id="edit-yearofpassing"
-                    class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                    class="w-full px-3 py-2.5 sm:py-2 border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
                     placeholder="e.g. 2022">
             </div>
 
             <!-- Current States Overview -->
-            <div class="md:col-span-3 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div class="md:col-span-3 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-1 sm:mt-2">
                 <div class="p-3 bg-white border border-slate-300 rounded-xl">
                     <span class="block text-[9px] uppercase text-slate-600 font-black tracking-wider mb-0.5">Currently Appointed Project Strings</span>
                     <div id="edit-current-projects-view" class="text-[11px] font-bold text-slate-900 leading-normal font-mono break-all"></div>
@@ -144,91 +144,60 @@
                 </div>
             </div>
 
-            <!-- MULTI-SELECT ROLE CHECKBOX GRID (Hidden for AdminL3) -->
+            <!-- 🎯 MULTI-SELECT ROLE CHECKBOX GRID (Mobile Vertical Checklist) -->
             <div id="role-assignment-container" class="md:col-span-3 lg:col-span-4 mt-2 hidden">
                 <label class="block text-[10px] uppercase text-slate-700 font-black mb-1.5">Assign System Roles (Multiple Allowed)</label>
-                <div class="w-full grid grid-cols-2 md:grid-cols-4 gap-2 bg-white border border-slate-300 p-3 rounded-xl shadow-inner">
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Non-Tech" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                <div class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 bg-slate-50 border border-slate-300 p-3 rounded-xl shadow-inner max-h-52 overflow-y-auto sm:max-h-full">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="Non-Tech" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Non-Tech</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Office Executive" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
-                        <span class="text-xs font-bold text-slate-800">Office Executive</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Accounts Officer" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
-                        <span class="text-xs font-bold text-slate-800">Account Officer</span>
-                    </label>
-                     <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="HR Executive" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
-                        <span class="text-xs font-bold text-slate-800">HR Executive</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Engineer" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="Engineer" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Engineer</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Coordinator" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="Coordinator" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Coordinator</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="Manager" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="Manager" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Manager</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="AdminL3" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="AdminL3" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Admin L3</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" name="l3-role-checkbox" value="AdminL2" class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-rose-50 cursor-pointer select-none transition shadow-sm w-full">
+                        <input type="checkbox" name="l3-role-checkbox" value="AdminL2" class="w-4 h-4 sm:w-4 sm:h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
                         <span class="text-xs font-bold text-slate-800">Admin L2</span>
                     </label>
                 </div>
             </div>
 
+            <!-- 🎯 MODIFY PROJECT SECTOR (Mobile Vertical Checklist) -->
             <div class="md:col-span-3 lg:col-span-4 mt-2">
-                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1.5">Modify Project Sector
-                    Selections Checklist</label>
+                <label class="block text-[10px] uppercase text-slate-700 font-black mb-1.5">Modify Project Sector Selections Checklist</label>
                 <div id="edit-proj-checkbox-grid"
-                    class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-white border border-slate-300 p-4 rounded-xl max-h-40 overflow-y-auto shadow-inner">
+                    class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-slate-50 border border-slate-300 p-3 sm:p-4 rounded-xl max-h-52 sm:max-h-40 overflow-y-auto shadow-inner">
                 </div>
             </div>
         </div>
 
-        <div class="flex justify-end gap-3 mt-5">
+        <div class="flex justify-end gap-3 mt-6">
             <button onclick="document.getElementById('l3-master-mutation-card').classList.add('hidden')"
-                class="px-4 py-2 bg-slate-200 text-slate-800 font-black rounded-xl text-xs hover:bg-slate-300">Cancel</button>
+                class="px-4 py-2.5 sm:py-2 bg-slate-200 text-slate-800 font-black rounded-xl text-xs hover:bg-slate-300 w-full sm:w-auto">Cancel</button>
             <button onclick="window.submitL3MasterOverridePackage()"
-                class="px-5 py-2 bg-rose-700 text-white font-black rounded-xl text-xs hover:bg-rose-800 shadow-md">Commit
-                Update</button>
+                class="px-5 py-2.5 sm:py-2 bg-rose-700 text-white font-black rounded-xl text-xs hover:bg-rose-800 shadow-md w-full sm:w-auto">Commit Update</button>
         </div>
     </div>
 
     <!-- MAIN INTERACTIVE IAM PROVISIONING GRID TABLE -->
-    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-5">
-        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[500px]">
-            <table class="w-full text-left border-collapse table-auto min-w-[1450px]">
-                <thead>
-                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
-                        <th class="px-3 py-3.5">Profile Image</th>
-                        <th class="px-3 py-3.5">Identity (Name & ID)</th>
-                        <th class="px-3 py-3.5 w-36">System Credentials</th>
-                        <th class="px-3 py-3.5 w-44">Designation</th>
-                        <th class="px-3 py-3.5 w-56">Appointed Projects</th>
-                        <th class="px-3 py-3.5">Supervisory Line Allocations</th>
-                        <th class="px-3 py-3.5 w-44">Education Attributes</th>
-                        <th class="px-3 py-3.5 text-center w-24">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="l3-iam-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900">
-                    <tr>
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
-                            Assembling ecosystem provisioning matrices map datasets...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
+        <div id="l3-data-container" class="w-full">
+            <div class="text-center text-slate-600 font-bold py-12 animate-pulse">
+                Assembling ecosystem provisioning matrices map datasets...
+            </div>
         </div>
     </div>
 </div>
@@ -246,9 +215,14 @@
         let employeeRegistryCache = [];
         let lookupLookupCacheMap = {};
 
+        window.toggleL3RowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
+
         window.refreshAdminL3ConsoleData = async function () {
-            const tbody = document.getElementById("l3-iam-matrix-table-body");
-            tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-12 text-center text-slate-700 font-bold">Synchronizing infrastructure parameters data...</td></tr>`;
+            const container = document.getElementById("l3-data-container");
+            container.innerHTML = `<div class="text-center text-slate-700 font-bold py-12">Synchronizing infrastructure parameters data...</div>`;
             document.getElementById("l3-master-mutation-card").classList.add("hidden");
             document.getElementById("l3-search-input").value = "";
 
@@ -258,67 +232,166 @@
 
                 const regRes = await fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`);
                 const regResult = await regRes.json();
-                if (!regResult.status) { tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-rose-700 font-black">Sync rejected by database.</td></tr>`; return; }
+                
+                if (!regResult.status) { 
+                    container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black border border-rose-200 rounded-xl bg-rose-50">Sync rejected by database.</div>`; 
+                    return; 
+                }
 
                 employeeRegistryCache = regResult.data;
                 window.renderL3RegistryGridRows(employeeRegistryCache);
-            } catch (e) { tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-rose-700 font-black">Governance stack sync crash.</td></tr>`; }
+            } catch (e) { 
+                container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black border border-rose-200 rounded-xl bg-rose-50">Governance stack sync crash.</div>`; 
+            }
         };
 
         window.renderL3RegistryGridRows = function (dataArray) {
-            const tbody = document.getElementById("l3-iam-matrix-table-body");
-            const currentYear = new Date().getFullYear();
+            const container = document.getElementById("l3-data-container");
+            
+            if (!dataArray || dataArray.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">No records found.</div>`;
+                return;
+            }
 
-            let outputRows = "";
-            dataArray.forEach((emp) => {
+            const currentYear = new Date().getFullYear();
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+
+            dataArray.forEach((emp, idx) => {
+                const rowId = `l3_emp_row_${idx}`;
                 let dojParts = String(emp.dateOfJoining || "").split("-");
                 let displayDoj = (dojParts.length === 3) ? `${dojParts[2]}/${dojParts[1]}/${dojParts[0]}` : (emp.dateOfJoining || "N/A");
 
                 const yop = parseInt(emp.yearOfPassing);
                 const experience = (yop && !isNaN(yop)) ? (currentYear - yop) + " yrs" : "N/A";
+                const profileImgUrl = emp.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNjY2MiLz48L3N2Zz4=';
 
-                outputRows += `
+                // 🎯 DESKTOP ROW
+                desktopRowsHtml += `
                 <tr class="hover:bg-slate-100/80 transition-colors">
-                <td class="px-3 py-3.5">
-                    <img src="${emp.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNjY2MiLz48L3N2Zz4='}" 
-                         onclick="window.showImageByEmpId('${emp.employeeId}')"
-                         class="w-12 h-12 min-w-[48px] rounded-full border-2 border-slate-200 cursor-pointer object-cover shadow-sm hover:scale-110 transition-transform" 
-                         alt="Profile">
-                </td>
-                 <td class="px-3 py-3.5">
-                    <strong class="text-slate-950 block font-black text-xs">${emp.employeeName}</strong>
-                    <span class="font-mono text-[11px] text-slate-700 block font-bold">${emp.employeeId}</span>
-                    <span class="text-[10px] text-slate-600 block mt-0.5 font-bold">DOJ: ${displayDoj}</span>
-                </td>
-                <td class="px-3 py-3.5 font-mono text-[10px] tracking-wide text-slate-600 leading-normal select-none font-bold">
-                    <div class="flex items-center gap-1"><span class="font-black text-slate-800 text-[11px]">U:</span> ••••••••</div>
-                    <div class="flex items-center gap-1 mt-0.5"><span class="font-black text-slate-800 text-[11px]">P:</span> ••••••••</div>
-                </td>
-                <td class="px-3 py-3.5">
-                    <span class="block text-slate-900 font-black text-xs">${emp.designation || 'Not Configured'}</span>
-                </td>
-                <td class="px-3 py-3.5 max-w-xs text-slate-800 font-bold leading-relaxed">
-                    ${emp.appointedProjects || '<span class="italic text-slate-400 font-medium">Unassigned Workspace</span>'}
-                </td>
-                <td class="px-3 py-3.5 text-[11px] font-bold leading-tight text-slate-800">
-                    <div>Mgr: <strong class="font-black text-slate-950">${emp.managerName || 'None'}</strong></div>
-                    <div class="mt-1">Coord: <strong class="font-black text-slate-900">${emp.coordinatorName || 'None'}</strong></div>
-                </td>
-                <td class="px-3 py-3.5 leading-normal">
-                    <div class="text-slate-900 font-black text-xs">${emp.qualification || 'N/A'}</div>
-                    <div class="text-[10px] font-bold text-slate-600">Pass: ${emp.yearOfPassing || '--'}</div>
-                    <div class="text-[10px] font-black text-rose-700">Exp: ${experience}</div>
-                </td>
-                <td class="px-3 py-3.5 text-center whitespace-nowrap">
-                    <button onclick="window.openL3AccountModifyWizard('${emp.employeeId}')" 
-                            class="px-3 py-2 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1 mx-auto cursor-pointer">
-                        <i data-lucide="edit" class="w-3.5 h-3.5"></i> Edit
-                    </button>
-                </td>
-            </tr>
-        `;
+                    <td class="px-3 py-3.5 text-center">
+                        <img src="${profileImgUrl}" 
+                             onclick="window.showImageByEmpId('${emp.employeeId}')"
+                             class="w-10 h-10 min-w-[40px] rounded-full border-2 border-slate-200 cursor-pointer object-cover shadow-sm mx-auto hover:scale-110 transition-transform" 
+                             alt="Profile">
+                    </td>
+                    <td class="px-3 py-3.5">
+                        <strong class="text-slate-950 block font-black text-xs">${emp.employeeName}</strong>
+                        <span class="font-mono text-[11px] text-slate-700 block font-bold mt-0.5">${emp.employeeId}</span>
+                        <span class="text-[10px] text-slate-600 block mt-0.5 font-bold">DOJ: ${displayDoj}</span>
+                    </td>
+                    <td class="px-3 py-3.5 font-mono text-[10px] tracking-wide text-slate-600 leading-normal select-none font-bold">
+                        <div class="flex items-center gap-1"><span class="font-black text-slate-800 text-[11px]">U:</span> ••••••••</div>
+                        <div class="flex items-center gap-1 mt-0.5"><span class="font-black text-slate-800 text-[11px]">P:</span> ••••••••</div>
+                    </td>
+                    <td class="px-3 py-3.5">
+                        <span class="block text-slate-900 font-black text-xs">${emp.designation || 'Not Configured'}</span>
+                    </td>
+                    <td class="px-3 py-3.5 max-w-xs text-slate-800 font-bold leading-relaxed">
+                        ${emp.appointedProjects || '<span class="italic text-slate-400 font-medium">Unassigned Workspace</span>'}
+                    </td>
+                    <td class="px-3 py-3.5 text-[11px] font-bold leading-tight text-slate-800">
+                        <div>Mgr: <strong class="font-black text-slate-950">${emp.managerName || 'None'}</strong></div>
+                        <div class="mt-1">Coord: <strong class="font-black text-slate-900">${emp.coordinatorName || 'None'}</strong></div>
+                    </td>
+                    <td class="px-3 py-3.5 leading-normal">
+                        <div class="text-slate-900 font-black text-xs">${emp.qualification || 'N/A'}</div>
+                        <div class="text-[10px] font-bold text-slate-600 mt-0.5">Pass: ${emp.yearOfPassing || '--'}</div>
+                        <div class="text-[10px] font-black text-rose-700 mt-0.5">Exp: ${experience}</div>
+                    </td>
+                    <td class="px-3 py-3.5 text-center whitespace-nowrap">
+                        <button onclick="window.openL3AccountModifyWizard('${emp.employeeId}')" 
+                                class="px-3 py-2 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1 mx-auto cursor-pointer">
+                            <i data-lucide="edit" class="w-3.5 h-3.5"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+                `;
+
+                // 🎯 MOBILE ACCORDION CARD
+                mobileCardsHtml += `
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-3">
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleL3RowAccordion('${rowId}')">
+                            <div class="flex items-center gap-3 w-[85%]">
+                                <img src="${profileImgUrl}" 
+                                     onclick="event.stopPropagation(); window.showImageByEmpId('${emp.employeeId}')"
+                                     class="w-11 h-11 min-w-[44px] rounded-full border border-slate-300 object-cover shadow-sm" alt="Profile">
+                                <div class="pr-2 truncate">
+                                    <strong class="text-slate-950 block text-xs sm:text-sm truncate font-black">${emp.employeeName}</strong>
+                                    <span class="text-slate-600 font-mono text-[10px] font-bold block mt-0.5">ID: ${emp.employeeId}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-end w-[15%]">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                                <div><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">DOJ</span><span class="font-bold text-slate-800">${displayDoj}</span></div>
+                                <div><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Designation</span><span class="font-bold text-slate-800">${emp.designation || 'N/A'}</span></div>
+                            </div>
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Credentials</span>
+                                <div class="flex items-center gap-4 font-mono text-[11px] font-bold text-slate-600">
+                                    <div><span class="text-slate-800 font-black">U:</span> ••••••••</div>
+                                    <div><span class="text-slate-800 font-black">P:</span> ••••••••</div>
+                                </div>
+                            </div>
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Supervisors</span>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="font-bold text-slate-800"><span class="text-[9px] text-slate-500 mr-1">Mgr:</span> ${emp.managerName || 'None'}</div>
+                                    <div class="font-bold text-slate-800"><span class="text-[9px] text-slate-500 mr-1">Coord:</span> ${emp.coordinatorName || 'None'}</div>
+                                </div>
+                            </div>
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Education</span>
+                                <div class="font-bold text-slate-900 mb-1">${emp.qualification || 'N/A'}</div>
+                                <div class="flex items-center gap-3">
+                                    <div class="text-[10px] text-slate-600 font-bold">Pass: ${emp.yearOfPassing || '--'}</div>
+                                    <div class="text-[10px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">Exp: ${experience}</div>
+                                </div>
+                            </div>
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Assigned Projects</span>
+                                <div class="font-bold text-slate-800 leading-relaxed">${emp.appointedProjects || '<span class="italic text-slate-400">Unassigned Workspace</span>'}</div>
+                            </div>
+                            <div class="pt-2">
+                                <button onclick="window.openL3AccountModifyWizard('${emp.employeeId}')" 
+                                        class="w-full px-3 py-3 bg-slate-950 hover:bg-slate-900 text-white font-black rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Account Record
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-            tbody.innerHTML = outputRows;
+
+            // 🎯 INJECT DUAL LAYOUT
+            container.innerHTML = `
+                <div class="hidden md:block overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[500px]">
+                    <table class="w-full text-left border-collapse table-auto min-w-[1450px]">
+                        <thead>
+                            <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
+                                <th class="px-3 py-3.5 w-16 text-center">Image</th>
+                                <th class="px-3 py-3.5 w-44">Identity (Name & ID)</th>
+                                <th class="px-3 py-3.5 w-36">System Credentials</th>
+                                <th class="px-3 py-3.5 w-44">Designation</th>
+                                <th class="px-3 py-3.5 w-56">Appointed Projects</th>
+                                <th class="px-3 py-3.5 w-48">Supervisory Allocations</th>
+                                <th class="px-3 py-3.5 w-44">Education Attributes</th>
+                                <th class="px-3 py-3.5 text-center w-24">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-200 text-slate-900">
+                            ${desktopRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="md:hidden flex flex-col pt-1">
+                    ${mobileCardsHtml}
+                </div>
+            `;
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
@@ -405,10 +478,11 @@
             let checkboxGridHtml = "";
             parentBaseProjectsList.forEach(p => {
                 const isChecked = assignedProjects.includes(p) ? "checked" : "";
+                // 🎯 Added explicit larger w-4 h-4 sizing with accent color for clean mobile display
                 checkboxGridHtml += `
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 cursor-pointer transition select-none">
-                        <input type="checkbox" name="l3-proj-checkbox" value="${p}" ${isChecked} class="w-4 h-4 rounded border-slate-400 text-rose-700 focus:ring-rose-600">
-                        <span class="truncate font-bold text-slate-800">${p}</span>
+                    <label class="flex items-center justify-start gap-3 p-3 sm:p-2 bg-white rounded-lg border border-slate-300 hover:border-rose-300 hover:bg-slate-50 cursor-pointer transition select-none shadow-sm sm:shadow-none w-full">
+                        <input type="checkbox" name="l3-proj-checkbox" value="${p}" ${isChecked} class="w-4 h-4 text-rose-600 bg-white border-slate-300 rounded focus:ring-rose-600 cursor-pointer accent-rose-600 shrink-0">
+                        <span class="truncate font-bold text-xs text-slate-800">${p}</span>
                     </label>
                 `;
             });
