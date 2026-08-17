@@ -1,34 +1,32 @@
-<div class="w-full max-w-xl mx-auto glass-panel p-6 rounded-2xl shadow-sm border border-slate-200 fade-in-up">
-    <div class="flex items-center justify-between border-b pb-4 mb-4">
-        <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
-            <i data-lucide="clock" class="text-blue-500 w-5 h-5"></i> Daily Attendance Registory Console
+<div class="w-full max-w-xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl sm:rounded-2xl shadow-sm border border-slate-200 fade-in-up bg-white">
+    <div class="flex items-center justify-between border-b pb-3 sm:pb-4 mb-4">
+        <h3 class="text-base sm:text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="clock" class="text-blue-500 w-5 h-5 shrink-0"></i> Daily Attendance Registry Console
         </h3>
         <button type="button" onclick="window.showWelcomeMessage()"
-            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+            class="text-slate-400 hover:text-slate-600 p-2 sm:p-1 rounded-xl sm:rounded-lg hover:bg-slate-100 transition cursor-pointer">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
     </div>
 
+    <!-- LOGIN VIEW -->
     <div id="box-login-view" class="space-y-4" style="display: none;">
-        <div
-            class="flex items-center gap-2 text-emerald-600 font-bold text-xs tracking-wider uppercase bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-lg w-max">
+        <div class="flex items-center gap-2 text-emerald-600 font-bold text-[11px] sm:text-xs tracking-wider uppercase bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-lg w-max">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Phase 1: Register Attendance Log-In
         </div>
 
-        <div class="grid grid-cols-1 gap-4">
+        <div class="grid grid-cols-1 gap-3.5 sm:gap-4">
             <div>
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's Working
-                    Project</label>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's Working Project</label>
                 <select id="mod-proj"
-                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                    class="w-full px-4 py-3.5 sm:py-2.5 border border-slate-300 rounded-xl bg-white text-xs sm:text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                     <option value="">-- Choose Project --</option>
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's
-                    Operating District</label>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's Operating District</label>
                 <select id="mod-dist"
-                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                    class="w-full px-4 py-3.5 sm:py-2.5 border border-slate-300 rounded-xl bg-white text-xs sm:text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
                     disabled>
                     <option value="">-- Choose Project First --</option>
                 </select>
@@ -36,92 +34,82 @@
 
             <!-- Dynamic Coordinator/Manager Assignment Notification Banner -->
             <div id="box-coordinator-notice"
-                class="hidden p-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-950 font-bold text-[11px] leading-normal flex items-start gap-2 fade-in-up">
+                class="hidden p-3.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-950 font-bold text-xs leading-normal flex items-start gap-2.5 fade-in-up">
                 <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-blue-600"></i>
                 <div id="lbl-coordinator-notice-text"></div>
             </div>
 
             <div id="box-custom-district" class="hidden fade-in-up">
-                <label class="block text-[10px] font-black tracking-wider text-orange-600 uppercase mb-1">Enter Custom
-                    District/ Location</label>
+                <label class="block text-[10px] font-black tracking-wider text-orange-600 uppercase mb-1">Enter Custom District/ Location</label>
                 <input type="text" id="mod-custom-dist-name" placeholder="Specify district location metadata detail"
-                    class="w-full px-4 py-2.5 border border-orange-300 rounded-xl bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none transition">
+                    class="w-full px-4 py-3.5 sm:py-2.5 border border-orange-300 rounded-xl bg-white text-xs sm:text-sm font-bold focus:ring-2 focus:ring-orange-500 focus:outline-none transition">
             </div>
 
             <div>
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Todays
-                    Operational Objectives Strategy / Work Plan </label>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Today's Operational Objectives Strategy / Work Plan</label>
                 <textarea id="mod-plan" rows="3"
-                    class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
                     placeholder="Detail active field assignments scheduled..."></textarea>
             </div>
         </div>
 
         <button type="button" id="mod-punch-in-btn"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-base uppercase tracking-wider cursor-pointer">
-            Verify Position & Mark Attendnace (Log-In)
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3.5 px-4 rounded-xl shadow-md transition text-xs sm:text-sm uppercase tracking-wider cursor-pointer">
+            Verify Position & Mark Attendance (Log-In)
         </button>
     </div>
 
+    <!-- LOGOUT VIEW -->
     <div id="box-logout-view" class="space-y-4" style="display: none;">
-        <div
-            class="flex items-center gap-2 text-orange-600 font-bold text-xs tracking-wider uppercase bg-orange-50 border border-orange-200/60 px-3 py-1.5 rounded-lg w-max">
+        <div class="flex items-center gap-2 text-orange-600 font-bold text-[11px] sm:text-xs tracking-wider uppercase bg-orange-50 border border-orange-200/60 px-3 py-1.5 rounded-lg w-max">
             <span class="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span> Phase 2: Register Attendance Log-Out
         </div>
 
-        <div
-            class="bg-slate-50/80 border border-slate-200/60 p-4 rounded-xl grid grid-cols-2 gap-3 text-xs shadow-inner">
-            <div class="col-span-1"><span class="text-slate-400 block font-medium mb-0.5">Active Project</span><strong
-                    id="lbl-active-proj" class="text-slate-700 text-sm">-</strong></div>
-            <div class="col-span-1"><span class="text-slate-400 block font-medium mb-0.5">Logged District/
-                    Location</span><strong id="lbl-active-dist" class="text-slate-700 text-sm">-</strong></div>
-            <div class="col-span-2 border-t border-slate-200/60 pt-2"><span
-                    class="text-slate-400 block font-medium mb-0.5">Shift Login Time</span><strong
-                    id="lbl-active-login-time" class="text-blue-600 font-mono text-sm">-</strong></div>
-            <div class="col-span-2 border-t border-slate-200/60 pt-2"><span
-                    class="text-slate-400 block font-medium mb-0.5">Committed Today's Work Plan</span>
-                <p id="lbl-active-plan" class="text-slate-600 italic leading-normal"></p>
+        <div class="bg-slate-50/80 border border-slate-200/60 p-3.5 sm:p-4 rounded-xl grid grid-cols-2 gap-3 text-xs shadow-inner">
+            <div class="col-span-1"><span class="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Active Project</span><strong
+                    id="lbl-active-proj" class="text-slate-800 text-xs sm:text-sm font-black">-</strong></div>
+            <div class="col-span-1"><span class="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Logged Location</span><strong
+                    id="lbl-active-dist" class="text-slate-800 text-xs sm:text-sm font-black">-</strong></div>
+            <div class="col-span-2 border-t border-slate-200/60 pt-2.5"><span
+                    class="text-slate-400 block font-bold text-[10px] uppercase mb-0.5">Shift Login Time</span><strong
+                    id="lbl-active-login-time" class="text-blue-600 font-mono text-xs sm:text-sm font-black">-</strong></div>
+            <div class="col-span-2 border-t border-slate-200/60 pt-2.5"><span
+                    class="text-slate-400 block font-bold text-[10px] uppercase mb-1">Committed Today's Work Plan</span>
+                <p id="lbl-active-plan" class="text-slate-700 font-medium italic leading-relaxed text-xs"></p>
             </div>
         </div>
 
         <div>
-            <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Completed
-                End-Of-Day Progress Summary</label>
+            <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Completed End-Of-Day Progress Summary</label>
             <textarea id="mod-progress" rows="4"
-                class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none transition"
+                class="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-xs sm:text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none transition"
                 placeholder="Provide complete descriptions regarding structural tasks processed today..."></textarea>
         </div>
 
         <button type="button" id="mod-punch-out-btn"
-            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition text-base uppercase tracking-wider cursor-pointer">
+            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 sm:py-3.5 px-4 rounded-xl shadow-md transition text-xs sm:text-sm uppercase tracking-wider cursor-pointer">
             Submit Work Progress & Log-Out
         </button>
     </div>
 
+    <!-- LOCKED VIEW -->
     <div id="box-locked-view" class="text-center py-6 space-y-4" style="display: none;">
-        <div
-            class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-200 shadow-sm">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-200 shadow-sm">
             <i data-lucide="shield-check" class="w-8 h-8"></i>
         </div>
         <div>
-            <h3 class="text-lg font-black tracking-tight text-slate-800">In-Out Attendance Already Marked For The Day
-            </h3>
-            <p class="text-sm text-slate-500 max-w-xs mx-auto mt-2">Your field tracking parameters, shift entries, and
-                objectives progression summary for today are fully locked and securely recorded inside the cloud
-                repository.</p>
+            <h3 class="text-base sm:text-lg font-black tracking-tight text-slate-800">In-Out Attendance Already Marked For The Day</h3>
+            <p class="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto mt-2 leading-relaxed">Your field tracking parameters, shift entries, and objectives progression summary for today are fully locked and securely recorded inside the cloud repository.</p>
         </div>
         <button type="button" onclick="window.showWelcomeMessage()"
-            class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+            class="mt-2 px-5 py-3 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-xl transition cursor-pointer">
             Return to Welcome Dashboard
         </button>
     </div>
 </div>
 
 <script>
-
-
     (() => {
-
         let activeRowIndexRef = null;
 
         const cache = localStorage.getItem("current_user_cache");
@@ -136,61 +124,53 @@
             return;
         }
 
-        // Define the cutoff time (24-hour format)
-        const LOGIN_CUTOFF_HOUR = 23;
+        const LOGIN_CUTOFF_HOUR = 11;
 
         const evaluateModuleWorkflowState = async function () {
-    try {
-        const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
-        const state = await res.json();
+            try {
+                const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
+                const state = await res.json();
 
-        // 1. Reset all views
-        document.getElementById("box-login-view").style.display = "none";
-        document.getElementById("box-logout-view").style.display = "none";
-        document.getElementById("box-locked-view").style.display = "none";
+                document.getElementById("box-login-view").style.display = "none";
+                document.getElementById("box-logout-view").style.display = "none";
+                document.getElementById("box-locked-view").style.display = "none";
 
-        // 2. Already logged in? Proceed to Phase 2 (Logout)
-        if (state.status === "LOGGED_IN") {
-            activeRowIndexRef = state.rowIndex;
-            document.getElementById("lbl-active-proj").innerText = state.project || "-";
-            document.getElementById("lbl-active-dist").innerText = state.district || "-";
-            document.getElementById("lbl-active-plan").innerText = state.plan || "";
-            document.getElementById("lbl-active-login-time").innerText = state.loginTime || "Recorded Modulo System Epoch";
-            document.getElementById("box-logout-view").style.display = "block";
-        }
-        // 3. Completed for the day?
-        else if (state.status === "COMPLETED") {
-            document.getElementById("box-locked-view").style.display = "block";
-        } 
-        // 4. Not logged in? Check time and display login view
-        else {
-            const now = new Date();
-            const currentHour = now.getHours();
-
-            if (currentHour >= LOGIN_CUTOFF_HOUR) {
-                document.getElementById("box-locked-view").innerHTML = `
-                    <div class="text-center py-6">
-                        <h3 class="text-lg font-black text-rose-600">Login Window Closed</h3>
-                        <p class="text-sm text-slate-500 mt-2">
-                            Attendance log-in is only permitted before ${LOGIN_CUTOFF_HOUR > 12 ? LOGIN_CUTOFF_HOUR - 12 : LOGIN_CUTOFF_HOUR}:00 ${LOGIN_CUTOFF_HOUR >= 12 ? 'PM' : 'AM'}. 
-                            Please contact your coordinator.
-                        </p>
-                    </div>`;
-                document.getElementById("box-locked-view").style.display = "block";
-            } else {
-                // EXPLICITLY SHOW LOGIN VIEW
-                document.getElementById("box-login-view").style.display = "block";
-                // Trigger project initialization
-                if (typeof modInitProjects === "function") {
-                    modInitProjects();
+                if (state.status === "LOGGED_IN") {
+                    activeRowIndexRef = state.rowIndex;
+                    document.getElementById("lbl-active-proj").innerText = state.project || "-";
+                    document.getElementById("lbl-active-dist").innerText = state.district || "-";
+                    document.getElementById("lbl-active-plan").innerText = state.plan || "";
+                    document.getElementById("lbl-active-login-time").innerText = state.loginTime || "Recorded Modulo System Epoch";
+                    document.getElementById("box-logout-view").style.display = "block";
                 }
-            }
-        }
-    } catch (e) { 
-        console.error("Tracking execution pipeline terminated.", e); 
-    }
-};
+                else if (state.status === "COMPLETED") {
+                    document.getElementById("box-locked-view").style.display = "block";
+                } 
+                else {
+                    const now = new Date();
+                    const currentHour = now.getHours();
 
+                    if (currentHour >= LOGIN_CUTOFF_HOUR) {
+                        document.getElementById("box-locked-view").innerHTML = `
+                            <div class="text-center py-6">
+                                <h3 class="text-base sm:text-lg font-black text-rose-600">Login Window Closed</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+                                    Attendance log-in is only permitted before ${LOGIN_CUTOFF_HOUR > 12 ? LOGIN_CUTOFF_HOUR - 12 : LOGIN_CUTOFF_HOUR}:00 ${LOGIN_CUTOFF_HOUR >= 12 ? 'PM' : 'AM'}. 
+                                    Please contact your coordinator.
+                                </p>
+                            </div>`;
+                        document.getElementById("box-locked-view").style.display = "block";
+                    } else {
+                        document.getElementById("box-login-view").style.display = "block";
+                        if (typeof modInitProjects === "function") {
+                            modInitProjects();
+                        }
+                    }
+                }
+            } catch (e) { 
+                console.error("Tracking execution pipeline terminated.", e); 
+            }
+        };
 
         const modInitProjects = async function () {
             const sel = document.getElementById("mod-proj");
@@ -231,7 +211,6 @@
                     });
                 }
 
-                // 🎯 FIXED URL PARAMETER: Correctly queries the newly deployed backend script endpoint
                 const coordRes = await fetch(`${API_URL}?action=getCoordinatorForProject&project=${encodeURIComponent(pName)}`);
                 const coordData = await coordRes.json();
 
@@ -326,7 +305,7 @@
                     inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
                 }
             }, () => {
-                alert("Could not get your location. Please turn on your device's GPS and allow location access in your browser settings.");
+                alert("Positioning metrics mapping initialization error. Check browser settings.");
                 inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
             });
         };
@@ -363,7 +342,6 @@
             }
         };
 
-
         document.getElementById("mod-proj").addEventListener("change", modLoadDistricts);
         document.getElementById("mod-dist").addEventListener("change", toggleCustomDistrictField);
         document.getElementById("mod-punch-in-btn").addEventListener("click", handlePunchInCycle);
@@ -379,7 +357,5 @@
         }, 60);
 
         if (window.lucide) lucide.createIcons();
-
-
     })();
 </script>
