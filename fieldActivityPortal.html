@@ -1,6 +1,6 @@
-<div class="w-full max-w-5xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <div class="flex items-center justify-between border-b pb-4 mb-6">
-        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+<div class="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex items-center justify-between border-b pb-4 mb-4 sm:mb-6">
+        <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
             <i data-lucide="map-pin" class="text-blue-600 w-5 h-5"></i> Field Activity & Movement Portal
         </h3>
         <button onclick="window.showWelcomeMessage()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition">
@@ -12,7 +12,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Select Activity Mode</label>
-                <select id="fa-mode" onchange="window.toggleActivityMode(this.value)" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                <select id="fa-mode" onchange="window.toggleActivityMode(this.value)" required class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
                     <option value="" disabled selected>-- Select Activity Mode --</option>
                     <option value="NEW">Create New Job Activity</option>
                     <option value="EXISTING">Add Entry to Existing Job Activity ID</option>
@@ -21,13 +21,13 @@
             <div id="fa-existing-box" class="hidden">
                 <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Select Job Activity ID</label>
                 <!-- onchange event triggers project autofill -->
-                <select id="fa-job-id-select" onchange="window.autoFillProject(this.value)" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono font-bold text-xs">
+                <select id="fa-job-id-select" onchange="window.autoFillProject(this.value)" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-mono font-bold text-xs">
                     <option value="" disabled selected>-- Select Job ID --</option>
                 </select>
             </div>
             <div>
                 <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Target Project</label>
-                <select id="fa-project" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
+                <select id="fa-project" required class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs">
                     <option value="" disabled selected>-- Choose Project --</option>
                 </select>
             </div>
@@ -36,12 +36,12 @@
             <div class="md:col-span-2 mt-2">
                 <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Entry Category</label>
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-slate-50">
-                        <input type="radio" name="entry_category" value="TRAVEL" checked onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-blue-600">
+                    <label class="flex items-center gap-3 sm:gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-4 sm:p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-slate-50">
+                        <input type="radio" name="entry_category" value="TRAVEL" checked onchange="window.toggleEntryCategory(this.value)" class="w-5 h-5 sm:w-4 sm:h-4 text-blue-600">
                         Travel / Movement Log & Approval Request
                     </label>
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-indigo-50">
-                        <input type="radio" name="entry_category" value="STAY" onchange="window.toggleEntryCategory(this.value)" class="w-4 h-4 text-indigo-600">
+                    <label class="flex items-center gap-3 sm:gap-2 text-xs font-bold text-slate-800 bg-white border border-slate-300 p-4 sm:p-3 rounded-xl cursor-pointer flex-1 transition hover:bg-indigo-50">
+                        <input type="radio" name="entry_category" value="STAY" onchange="window.toggleEntryCategory(this.value)" class="w-5 h-5 sm:w-4 sm:h-4 text-indigo-600">
                         Accommodation / Stay Log & Approval Request
                     </label>
                 </div>
@@ -50,18 +50,18 @@
             <!-- DYNAMIC DATES -->
             <div>
                 <label id="lbl-date-1" class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Tentative / Proposed Travel Date & Time</label>
-                <input type="datetime-local" id="fa-travel-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
+                <input type="datetime-local" id="fa-travel-date" required class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
             </div>
             <div>
                 <label id="lbl-date-2" class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Date & Time to Reach Destination</label>
-                <input type="datetime-local" id="fa-reach-date" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
+                <input type="datetime-local" id="fa-reach-date" required class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-mono text-xs">
             </div>
             
             <!-- TRAVEL: Movement Configuration -->
             <div id="travel-section" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4 mt-2">
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Movement Type</label>
-                    <select id="fa-movement" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
+                    <select id="fa-movement" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                         <option value="" disabled selected>-- Select Route --</option>
                         <option value="Site to Office">Site to Office</option>
                         <option value="Site to Home">Site to Home</option>
@@ -74,11 +74,11 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">From Location</label>
-                    <input type="text" id="fa-loc-from" placeholder="e.g., Delhi" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
+                    <input type="text" id="fa-loc-from" placeholder="e.g., Delhi" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">To Location</label>
-                    <input type="text" id="fa-loc-to" placeholder="e.g., Lucknow" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
+                    <input type="text" id="fa-loc-to" placeholder="e.g., Lucknow" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-travel">
                 </div>
             </div>
 
@@ -86,7 +86,7 @@
             <div id="travel-mode-wrapper" class="md:col-span-2 p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-slate-800 uppercase mb-1">Mode Of Travel</label>
-                    <select id="fa-travel-mode" onchange="window.handleTravelModeChange(this.value)" class="w-full md:w-1/2 px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none req-travel">
+                    <select id="fa-travel-mode" onchange="window.handleTravelModeChange(this.value)" class="w-full md:w-1/2 px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none req-travel">
                         <option value="" disabled selected>-- Select Transport Mode --</option>
                         <option value="Company Vehicle">Company Vehicle</option>
                         <option value="Personal Bike/Car">Personal Bike/Car</option>
@@ -108,11 +108,11 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Stay City / Location</label>
-                    <input type="text" id="sa-loc" placeholder="e.g., Mumbai" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                    <input type="text" id="sa-loc" placeholder="e.g., Mumbai" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Accommodation Type</label>
-                    <select id="sa-type" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                    <select id="sa-type" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
                         <option value="" disabled selected>-- Select --</option>
                         <option value="Hotel">Hotel</option>
                         <option value="Guesthouse">Guesthouse</option>
@@ -122,11 +122,11 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Est. Cost / Night (Rs)</label>
-                    <input type="number" id="sa-cost" placeholder="₹" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                    <input type="number" id="sa-cost" placeholder="₹" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
                 </div>
                 <div>
                     <label class="block text-[10px] font-black tracking-wider text-indigo-800 uppercase mb-1">Number of Nights</label>
-                    <input type="number" id="sa-nights" placeholder="Nights" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
+                    <input type="number" id="sa-nights" placeholder="Nights" class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-xs req-stay">
                 </div>
                 <div class="md:col-span-4">
                     <p class="text-[10px] text-indigo-700 font-bold mt-1">ℹ️ Hotel/Stay bookings are subject to approval limits as per company TA/DA policy.</p>
@@ -135,7 +135,7 @@
 
             <!-- FILE UPLOAD FIELD -->
             <div class="md:col-span-2">
-                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Upload Document / Ticket / Booking <span class="text-rose-500 font-bold normal-case text-[10px] ml-1">(Upload the travel ticket or booking invoice here, otherwise same will not be accepted later by accounts)</span></label>
+                <label class="block text-[10px] font-black tracking-wider text-slate-500 uppercase mb-1">Upload Document / Ticket / Booking <span class="text-rose-500 font-bold normal-case text-[10px] ml-1 block sm:inline mt-1 sm:mt-0">(Upload travel ticket or invoice here, otherwise it will not be accepted later)</span></label>
                 <input type="file" id="fa-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer border border-slate-300 p-1.5 rounded-xl transition">
             </div>
         </div>
@@ -147,7 +147,7 @@
                 <i data-lucide="check-circle" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
                 <span id="dynamic-approval-text"></span>
             </div>
-            <textarea id="fa-desc" rows="3" required placeholder="Detail specific field tasks, site execution status, or reasons for movement/approval..." class="w-full px-4 py-2.5 border border-slate-300 rounded-xl bg-white text-xs"></textarea>
+            <textarea id="fa-desc" rows="3" required placeholder="Detail specific field tasks, site execution status, or reasons for movement/approval..." class="w-full px-4 py-3 sm:py-2.5 border border-slate-300 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
         <div class="bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-xl text-[11px] font-semibold flex gap-2 items-start">
@@ -162,39 +162,28 @@
 
     <div class="mt-10 border-t pt-6">
         <h4 class="text-sm font-black text-slate-800 mb-4">My Submitted Field Activity Logs & Feedback Tracker</h4>
-        <div class="overflow-x-auto border rounded-xl">
-            <table class="w-full text-left border-collapse text-xs min-w-[900px]">
-                <thead>
-                    <tr class="bg-slate-900 text-white font-black uppercase text-[10px]">
-                        <th class="p-3 whitespace-nowrap">Job ID & Manager Status</th>
-                        <th class="p-3">Project, Dates & Log Time</th>
-                        <th class="p-3">Movement & Details</th>
-                        <th class="p-3">Coordinator Review</th>
-                        <th class="p-3 text-center">Manager Instructions & Approvals</th>
-                        <th class="p-3 text-center">Admin Verdict</th>
-                    </tr>
-                </thead>
-                <tbody id="fa-my-logs-body" class="divide-y text-slate-700 font-bold">
-                    <tr><td colspan="6" class="p-4 text-center">Loading logs...</td></tr>
-                </tbody>
-            </table>
+        
+        <!-- 🎯 DUAL LAYOUT CONTAINER FOR LOGS -->
+        <div id="fa-logs-container" class="w-full bg-white border border-slate-200 rounded-xl shadow-inner sm:overflow-hidden p-2 sm:p-0">
+            <div class="p-8 text-center text-slate-500 font-bold animate-pulse">Loading logs...</div>
         </div>
+
     </div>
 </div>
 
 <br>
 
 <!-- TA Claim Voucher Print Selection Panel -->
-<div class="bg-slate-900 text-white p-4 rounded-2xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-full mx-auto">
+<div class="bg-slate-900 text-white p-4 rounded-2xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-full mx-auto shadow-xl">
     <div>
         <h4 class="text-xs font-black uppercase tracking-wider text-blue-400">TA Claim Documentation Voucher</h4>
         <p class="text-xs text-slate-300 mt-0.5">Select a Job ID to generate an A4 printable travel expense and approval report in a new tab.</p>
     </div>
     <div class="flex items-center gap-2 w-full sm:w-auto">
-        <select id="ta-print-job-select" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-mono font-bold text-white w-full sm:w-44">
+        <select id="ta-print-job-select" class="px-3 py-3 sm:py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-mono font-bold text-white w-full sm:w-44 outline-none focus:ring-1 focus:ring-blue-500">
             <option value="">-- Choose Job ID --</option>
         </select>
-        <button type="button" onclick="window.printTaClaimVoucher()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shrink-0">
+        <button type="button" onclick="window.printTaClaimVoucher()" class="px-4 py-3 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shrink-0">
             Print TA Claim
         </button>
     </div>
@@ -203,6 +192,11 @@
 <script>
     (() => {
         let myActivitiesCache = [];
+
+        window.toggleMyLogsRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
         function formatLocalDateTime(rawStr) {
             if (!rawStr) return "N/A";
@@ -363,22 +357,22 @@
             
             if (val === "Company Vehicle") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Company Car Auth.</label><select id="dt-auth" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Have Approval">Have Approval</option><option value="Approval Needed">Approval Needed</option></select></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Expected KM Travel</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Company Car Auth.</label><select id="dt-auth" required class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Have Approval">Have Approval</option><option value="Approval Needed">Approval Needed</option></select></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Expected KM Travel</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                 `;
             } 
             else if (val === "Personal Bike/Car") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Vehicle Type</label><select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Car">Car</option><option value="Bike">Bike</option></select></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Vehicle Type</label><select id="dt-type" required class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"><option value="" disabled selected>-- Select --</option><option value="Car">Car</option><option value="Bike">Bike</option></select></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                 `;
             } 
             else if (val === "Public Transport") {
                 html = `
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Transport Type</label>
-                        <select id="dt-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
+                        <select id="dt-type" required class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="General Sitting">General Sitting</option>
                             <option value="AC Sitting">AC Sitting</option>
@@ -386,8 +380,8 @@
                             <option value="AC Sleeper">AC Sleeper</option>
                         </select>
                     </div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                     <div class="md:col-span-3">
                         <p class="text-[10px] text-rose-500 font-bold bg-rose-50 p-2 rounded-lg border border-rose-200 mt-1">⚠️ Warning: A proper ticket/bill is mandatory for processing Public Transport TA claims.</p>
                     </div>
@@ -395,8 +389,8 @@
             } 
             else if (val === "Rented Cab") {
                 html = `
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated KM</label><input type="number" id="dt-km" required placeholder="KM" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Expense (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>
                     <div class="md:col-span-3">
                         <p class="text-[10px] text-rose-500 font-bold bg-rose-50 p-2 rounded-lg border border-rose-200 mt-1">⚠️ Warning: A proper original bill/receipt is strictly mandatory for processing Rented Cab TA claims.</p>
                     </div>
@@ -406,7 +400,7 @@
                 html = `
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Train Type</label>
-                        <select id="dt-train-type" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
+                        <select id="dt-train-type" required class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="Passenger/Local">Passenger / Local</option>
                             <option value="Express">Express</option>
@@ -419,7 +413,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Travel Class</label>
-                        <select id="dt-class" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
+                        <select id="dt-class" required class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="General">General</option>
                             <option value="Sleeper">Sleeper</option>
@@ -432,7 +426,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Ticketing Mode</label>
-                        <select id="dt-ticket" required onchange="window.handleTrainModeSwitch(this.value)" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
+                        <select id="dt-ticket" required onchange="window.handleTrainModeSwitch(this.value)" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                             <option value="" disabled selected>-- Select --</option>
                             <option value="Pre-Ticket">Pre-Ticket</option>
                             <option value="On General Ticket">On General Ticket</option>
@@ -442,7 +436,7 @@
                 `;
             }
             else if (val === "Flight") {
-                html = `<div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Amount (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>`;
+                html = `<div><label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimated Amount (Rs)</label><input type="number" id="dt-rs" required placeholder="₹" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel"></div>`;
             }
 
             container.innerHTML = html;
@@ -464,37 +458,40 @@
                 wrap.innerHTML = `
                     <label class="block text-[10px] font-black uppercase text-rose-600 mb-1">Approval Needed (Gen. Ticket)</label>
                     <div class="flex gap-2">
-                        <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Enter KM">
-                        <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Amount">
+                        <input type="number" id="dt-km" required placeholder="Est. KM" class="w-1/2 px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Enter KM">
+                        <input type="number" id="dt-rs" required placeholder="Est. Rs" class="w-1/2 px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel" title="Amount">
                     </div>
                     <p class="text-[9px] text-rose-500 leading-tight mt-1 font-bold">WARNING: If travelling on general ticket, proper receipt of penalty/fees must be produced, otherwise paid per company & railway norms.</p>
                 `;
             } else {
                 wrap.innerHTML = `
                     <label class="block text-[10px] font-black uppercase text-slate-500 mb-1">Estimate / Ticket Amount</label>
-                    <input type="number" id="dt-rs" required placeholder="₹ Amount" class="w-full px-3 py-2 border rounded-lg bg-white text-xs font-bold req-travel">
+                    <input type="number" id="dt-rs" required placeholder="₹ Amount" class="w-full px-3 py-3 sm:py-2 border rounded-lg bg-white text-xs font-bold req-travel">
                 `;
             }
         };
 
+        // 🎯 UPDATED: Load My Activities using Dual Layout Architecture
         async function loadMyActivities() {
             try {
                 const res = await fetch(`${API_URL}?action=getFieldActivities&role=EMPLOYEE&userId=${currentUser.employeeId}`);
                 const result = await res.json();
-                const tbody = document.getElementById("fa-my-logs-body");
+                const container = document.getElementById("fa-logs-container");
                 if (result.status) {
                     myActivitiesCache = result.data;
 
                     if (myActivitiesCache.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No field activity records found.</td></tr>`;
+                        container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-xl">No field activity records found.</div>`;
                         return;
                     }
                     
                     populateJobDropdowns();
 
-                    let html = "";
-                    myActivitiesCache.forEach(r => {
-                        let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800");
+                    let desktopRowsHtml = "";
+                    let mobileCardsHtml = "";
+
+                    myActivitiesCache.forEach((r, idx) => {
+                        let badgeClass = r.managerStatus === "APPROVED_SITE" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : (r.managerStatus === "REJECTED" ? "bg-rose-100 text-rose-800 border-rose-300" : "bg-amber-100 text-amber-800 border-amber-300");
                         let travelApprovalBadge = r.managerTravelModeApproval === "APPROVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (r.managerTravelModeApproval === "REJECTED" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200");
 
                         let movementParts = (r.movementType || 'N/A').split('\n');
@@ -502,17 +499,19 @@
                         let locations = movementParts.length > 1 ? movementParts[1] : '';
                         
                         let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
-                            `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 underline block mt-1.5 text-[10px] font-mono flex items-center gap-1 font-black"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
+                            `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline mt-1.5 text-[10px] font-mono inline-flex items-center gap-1 font-black bg-blue-50 px-2 py-1 rounded w-max"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
 
-                        // Render the compiled Travel Mode nicely
                         let travelDetailsBlock = r.modeOfTravel.split(" | ").map(x => `<div class="bg-indigo-50 text-indigo-900 px-1.5 py-0.5 rounded text-[10px] font-mono border border-indigo-100 inline-block mr-1 mb-1">${x}</div>`).join('');
+                        
+                        const rowId = `my_logs_mob_row_${idx}`;
 
-                        html += `
-                            <tr class="hover:bg-slate-50 align-top">
+                        // 🎯 DESKTOP ROW
+                        desktopRowsHtml += `
+                            <tr class="hover:bg-slate-50 align-top hidden md:table-row">
                                 <td class="p-3">
                                     <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
                                     <div class="text-[10px] text-slate-500 font-mono mt-0.5">Act. ID: ${r.entryId}</div>
-                                    <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase ${badgeClass}">${r.managerStatus}</span>
+                                    <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase border ${badgeClass}">${r.managerStatus}</span>
                                 </td>
                                 <td class="p-3">
                                     <div class="text-slate-900 font-bold">${r.project}</div>
@@ -536,14 +535,93 @@
                                     ${r.managerInstruction ? `<div class="text-[11px] text-indigo-900 font-semibold bg-indigo-50 p-2 rounded border border-indigo-100">Instruction: ${r.managerInstruction}</div>` : '<div class="text-[10px] text-slate-400">No instructions yet</div>'}
                                 </td>
                                 <td class="p-3 text-center align-middle">
-                                    <div class="text-[11px] font-mono text-slate-700 bg-slate-50 p-1.5 rounded border">
+                                    <div class="text-[11px] font-mono text-slate-700 bg-slate-50 p-1.5 rounded border border-slate-200 font-bold shadow-sm">
                                         ${(r.adminVerdict || 'PENDING').split(' (By ')[0]}
                                     </div>
                                 </td>
                             </tr>
                         `;
+
+                        // 🎯 MOBILE ACCORDION CARD
+                        mobileCardsHtml += `
+                            <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                                <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleMyLogsRowAccordion('${rowId}')">
+                                    <div class="pr-2 w-[80%]">
+                                        <strong class="text-slate-950 block text-xs sm:text-sm font-black text-indigo-700">${r.jobActivityId}</strong>
+                                        <span class="text-slate-500 font-bold text-[10px] block mt-0.5">${r.project} | Act ID: ${r.entryId}</span>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-1.5 w-[20%]">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-center block w-full truncate border ${badgeClass}">${r.managerStatus}</span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                                    </div>
+                                </div>
+                                
+                                <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                                    <div class="pb-3 border-b border-slate-100">
+                                        <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Timeline & Tracking</span>
+                                        <div class="font-mono text-[10px] text-slate-600 space-y-1">
+                                            <div class="flex justify-between pb-1 border-b border-slate-50"><span>Start:</span> <span class="font-bold text-slate-800">${formatLocalDateTime(r.tentativeTravelDate)}</span></div>
+                                            <div class="flex justify-between pb-1 border-b border-slate-50"><span>End/Reach:</span> <span class="font-bold text-indigo-700">${formatLocalDateTime(r.dateToReachDestination)}</span></div>
+                                            <div class="flex justify-between"><span>Logged:</span> <span>${formatLocalDateTime(r.employeeTimestamp)}</span></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="pb-3 border-b border-slate-100">
+                                        <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Movement Details</span>
+                                        <div class="font-bold text-slate-900">${mainMovement}</div>
+                                        ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                                        <div class="mt-1.5 flex flex-wrap gap-1">${travelDetailsBlock}</div>
+                                        <div class="text-slate-700 text-[11px] mt-2 bg-slate-50 p-2 rounded border border-slate-200 whitespace-pre-wrap">"${r.activityDescription || 'No description provided'}"</div>
+                                        ${docLink}
+                                    </div>
+                                    
+                                    <div class="pb-3 border-b border-slate-100">
+                                        <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Coordinator Remarks</span>
+                                        <div class="text-[10px] text-slate-500 mb-1">Auditor: <strong>${r.coordinatorName || 'Assigned'}</strong></div>
+                                        <div class="text-slate-700 italic text-[11px] bg-slate-50 p-2 rounded border border-slate-200">"${r.coordinatorComment || 'No comments yet'}"</div>
+                                    </div>
+                                    
+                                    <div class="pb-3 border-b border-slate-100">
+                                        <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Manager Instructions & Approval</span>
+                                        ${r.managerTravelModeApproval && r.managerTravelModeApproval !== 'N/A' ? `<div class="mb-2"><span class="inline-block text-[9px] font-mono px-1.5 py-0.5 rounded border ${travelApprovalBadge}">Travel Auth: ${r.managerTravelModeApproval}</span></div>` : ''}
+                                        ${r.managerInstruction ? `<div class="text-[11px] text-indigo-900 font-semibold bg-indigo-50 p-2 rounded border border-indigo-100">"${r.managerInstruction}"</div>` : '<div class="text-[10px] text-slate-400 italic">No instructions yet</div>'}
+                                    </div>
+                                    
+                                    <div class="pt-1">
+                                        <span class="text-rose-600 uppercase text-[9px] font-black tracking-wider block mb-1.5">Admin Verdict</span>
+                                        <div class="text-[11px] font-mono text-slate-800 bg-rose-50/50 p-2.5 rounded border border-rose-100 font-bold shadow-sm">
+                                            ${(r.adminVerdict || 'PENDING').split(' (By ')[0]}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     });
-                    tbody.innerHTML = html;
+
+                    // 🎯 INJECT DUAL LAYOUT
+                    container.innerHTML = `
+                        <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-xl max-h-[600px]">
+                            <table class="w-full text-left border-collapse text-xs min-w-[900px]">
+                                <thead>
+                                    <tr class="bg-slate-900 text-white font-black uppercase text-[10px] sticky top-0 z-10">
+                                        <th class="p-3 whitespace-nowrap">Job ID & Manager Status</th>
+                                        <th class="p-3">Project, Dates & Log Time</th>
+                                        <th class="p-3">Movement & Details</th>
+                                        <th class="p-3">Coordinator Review</th>
+                                        <th class="p-3 text-center">Manager Instructions & Approvals</th>
+                                        <th class="p-3 text-center">Admin Verdict</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y text-slate-700 font-bold bg-white">
+                                    ${desktopRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="md:hidden flex flex-col w-full pt-1">
+                            ${mobileCardsHtml}
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
                 }
             } catch(e) {}
         }
