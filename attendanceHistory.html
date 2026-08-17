@@ -1,141 +1,499 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up">
-
-    <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-5">
-        <div>
-            <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
-                <i data-lucide="history" class="text-indigo-600 w-5 h-5"></i> Personal Attendance History
-            </h3>
-            <p id="history-month-subtitle" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                Loading Active Log Boundaries...
-            </p>
-        </div>
-        <button onclick="window.showWelcomeMessage()"
-            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
-            <i data-lucide="x" class="w-5 h-5"></i>
+<div class="w-full max-w-5xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    
+    <div id="admin-search-filter-card" style="display: none !important;"></div>
+    <div id="admin-analysis-submodule-viewport" style="display: none !important;"></div>
+    <div id="admin-monthly-report-viewport" style="display: none !important;"></div>
+    
+    <!-- 🎯 RESPONSIVE TAB BUTTONS -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 border-b border-slate-300 pb-4 mb-6">
+        <button id="tab-apply-btn" onclick="window.switchLeaveTabSection('apply')" 
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="file-plus-2" class="w-4 h-4"></i> Apply for Leave
+        </button>
+        <button id="tab-history-btn" onclick="window.switchLeaveTabSection('history')" 
+                class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i data-lucide="history" class="w-4 h-4"></i> View Leave History
         </button>
     </div>
 
-    <div class="overflow-x-auto w-full border border-slate-200 rounded-2xl bg-white shadow-inner max-h-[480px]">
-        <table class="w-full text-left border-collapse min-w-[850px]">
-            <thead>
-                <tr
-                    class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-10">
-                    <th class="px-4 py-3.5 w-28">Date</th>
-                    <th class="px-4 py-3.5">Current Project</th>
-                    <th class="px-4 py-3.5 w-36">District</th>
-                    <th class="px-4 py-3.5 max-w-xs">Morning Strategy Plan</th>
-                    <th class="px-4 py-3.5 text-center w-28">Login Time</th>
-                    <th class="px-4 py-3.5 max-w-xs">EOD Work Progress Log</th>
-                    <th class="px-4 py-3.5 text-center w-28">Logout Time</th>
-                    <th class="px-4 py-3.5 w-44 text-center">Coordinator Remark</th>
-                </tr>
-            </thead>
-            <tbody id="attendance-history-table-body"
-                class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
-                <tr>
-                    <td colspan="8" class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">
-                        <div class="flex items-center justify-center gap-2">
-                            <div
-                                class="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin">
-                            </div>
-                            Synchronizing cloud database history logs...
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div id="section-leave-apply" class="fade-in-up">
+        <div class="max-w-xl mx-auto bg-slate-50 border border-slate-300 p-4 sm:p-6 rounded-2xl shadow-inner">
+            <div class="border-b border-slate-300 pb-3 mb-4 sm:mb-5">
+                <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
+                    <i data-lucide="file-text" class="text-rose-700 w-5 h-5"></i> Submit Leave Request Application
+                </h3>
+                <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Enter leave request boundaries below</p>
+            </div>
+
+            <div id="leave-policy-warning-box" class="hidden mb-4 p-3 rounded-xl border font-bold text-[11px] leading-normal flex items-start gap-2 animate-fade-in">
+                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                <div id="leave-policy-warning-txt" class="text-slate-950"></div>
+            </div>
+
+            <div class="space-y-4 text-xs font-bold text-slate-800">
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Leave Type Category</label>
+                    <select id="leave-category" onchange="window.evaluateLeavePolicyLogic()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none">
+                        <option value="Casual Leave">Casual Leave</option>
+                        <option value="Medical Leave">Medical Leave</option>
+                        <option value="Short Leave / Half-Day">Short Leave / Half-Day</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">From Date</label>
+                        <input type="date" id="leave-from" onchange="window.calculateLeaveDaysDelta()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">To Date</label>
+                        <input type="date" id="leave-to" onchange="window.calculateLeaveDaysDelta()" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <div class="p-3 sm:p-4 bg-white border border-slate-300 rounded-xl flex justify-between items-center shadow-inner">
+                    <span class="text-[10px] uppercase text-slate-700 font-black">Computed Leave Days:</span>
+                    <strong id="leave-days-badge" class="text-sm sm:text-base font-black text-slate-950 font-mono">0 Days</strong>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Select Appointed Project</label>
+                    <select id="leave-curr-project" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none"></select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Operating Location / District</label>
+                    <input type="text" id="leave-curr-location" placeholder="Enter active service location site" class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 rounded-xl bg-white outline-none focus:ring-2 focus:ring-rose-500">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Upload Document Attachment <span class="text-slate-500 font-normal lowercase">(optional)</span></label>
+                    <input type="file" id="leave-file-input" class="w-full text-slate-900 font-bold bg-white file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-black file:bg-slate-950 file:text-white cursor-pointer border border-slate-300 p-2 rounded-xl">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-700 font-black mb-1">Reason Statement Description</label>
+                    <textarea id="leave-reason" rows="3" placeholder="Provide complete descriptions regarding your time-off request..." class="w-full px-4 py-3 sm:py-2 border border-slate-300 text-slate-900 font-medium rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none"></textarea>
+                </div>
+
+                <button onclick="window.dispatchLeaveApplicationForm()" id="btn-submit-leave" class="w-full py-3.5 sm:py-3 mt-4 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="send" class="w-4 h-4"></i> Dispatch Application Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-leave-history" class="hidden space-y-4 fade-in-up">
+        
+        <div id="history-manager-card-row" class="p-4 bg-slate-50 border border-slate-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-950 text-white rounded-xl flex items-center justify-center border border-slate-800 shadow-sm shrink-0">
+                    <i data-lucide="user-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] uppercase tracking-wider text-slate-500 block font-black">Your Direct Reporting Manager</span>
+                    <strong id="lbl-history-mgr-name" class="text-slate-950 text-sm font-black">System Manager</strong>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs font-bold text-slate-700 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm">
+                <div>Manager ID: <span id="lbl-history-mgr-id" class="font-mono text-slate-950 font-black">--</span></div>
+                <div class="hidden sm:block border-l border-slate-300 h-4"></div>
+                <div>Contact Phone: <span id="lbl-history-mgr-phone" class="font-mono text-slate-950 font-black">Loading...</span></div>
+            </div>
+        </div>
+
+        <div class="border-b border-slate-300 pb-3 mt-2">
+            <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
+                <i data-lucide="history" class="text-slate-950 w-5 h-5"></i> Leave Clearances History Ledger
+            </h3>
+            <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase mt-0.5 tracking-wide">Review execution trace status maps</p>
+        </div>
+
+        <!-- 🎯 DUAL LAYOUT CONTAINER FOR LEAVE HISTORY -->
+        <div id="leave-history-container" class="w-full bg-slate-50 border border-slate-300 rounded-2xl p-2 sm:p-4 shadow-inner max-h-[600px] overflow-y-auto">
+            <div class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">
+                Click 'View Leave History' tab button to load historical leave record indexes...
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     (() => {
-        window.fetchAndRenderAttendanceHistory = async function () {
-            const tableBody = document.getElementById("attendance-history-table-body");
-            const subtitle = document.getElementById("history-month-subtitle");
-            if (!tableBody) return;
+        // 🎯 Mobile Accordion Toggle Logic
+        window.toggleMyLeaveRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
-            const currentPeriod = new Date();
-            const monthLabel = currentPeriod.toLocaleString('default', { month: 'long', year: 'numeric' });
-            subtitle.innerText = `Displaying Logs For: ${monthLabel} (Current Month Only)`;
+        window.switchLeaveTabSection = function(section) {
+            const applySec = document.getElementById("section-leave-apply");
+            const historySec = document.getElementById("section-leave-history");
+            const applyBtn = document.getElementById("tab-apply-btn");
+            const historyBtn = document.getElementById("tab-history-btn");
 
-            try {
-                const res = await fetch(`${API_URL}?action=getMonthlyAttendanceHistory&employeeId=${currentUser.employeeId}`);
-                const result = await res.json();
-
-                if (!result.status || !result.data || result.data.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="8" class="px-4 py-10 text-center text-slate-500 font-bold italic bg-slate-50">
-                                No active attendance registry data rows tracked for this current month statement period.
-                            </td>
-                        </tr>`;
-                    return;
-                }
-
-                let outputRows = "";
-                result.data.forEach(row => {
-                    
-                    // SAFE DATE PARSER: Avoids the "Invalid Date" JS error from strict backend formats
-                    let formattedDate = String(row.date || "-");
-                    try {
-                        let s = formattedDate.trim().split(' ')[0];
-                        if (s.includes('T')) s = s.split('T')[0];
-                        let parts = s.includes('/') ? s.split('/') : s.split('-');
-                        if (parts.length === 3) {
-                            if (parts[0].length === 4) {
-                                formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert YYYY-MM-DD to DD-MM-YYYY
-                            } else {
-                                formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`; // Ensure clean DD-MM-YYYY
-                            }
-                        }
-                    } catch(e) { }
-
-                    // Match coordinator statuses and comments dynamically
-                    let statusBadgeClass = "bg-slate-100 border-slate-200 text-slate-700";
-                    const remarkText = String(row.coordinatorRemark || 'Pending').trim().toUpperCase();
-
-                    if (remarkText === "VERIFIED" || remarkText === "APPROVED") {
-                        statusBadgeClass = "bg-emerald-50 border-emerald-200 text-emerald-700";
-                    } else if (remarkText === "REJECTED" || remarkText === "ABSENT") {
-                        statusBadgeClass = "bg-rose-50 border-rose-200 text-rose-700";
-                    } else if (remarkText === "PENDING") {
-                        statusBadgeClass = "bg-amber-50 border-amber-200 text-amber-700";
-                    }
-
-                    outputRows += `
-        <tr class="hover:bg-slate-50 transition-colors duration-150 align-top">
-            <td class="px-4 py-3 text-slate-950 whitespace-nowrap font-mono">${formattedDate}</td>
-            <td class="px-4 py-3 font-semibold text-slate-700 break-words">${row.currentProject || '-'}</td>
-            <td class="px-4 py-3 whitespace-nowrap"><span class="bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold text-[11px]">${row.district || '-'}</span></td>
-            <td class="px-4 py-3 max-w-xs break-words font-medium text-slate-600 italic">"${row.todaysPlan || '-'}"</td>
-            <td class="px-4 py-3 font-mono font-black text-emerald-600 whitespace-nowrap text-center">${row.loginTime || '-'}</td>
-            <td class="px-4 py-3 max-w-xs break-words italic text-slate-600 font-medium">"${row.todaysWorkProgress || '-'}"</td>
-            <td class="px-4 py-3 font-mono font-black text-orange-600 whitespace-nowrap text-center">${row.logoutTime || '-'}</td>
-            <td class="px-4 py-3 align-middle">
-                <div class="flex flex-col items-center gap-1 max-w-[160px] mx-auto">
-                    <span class="border px-2 py-0.5 rounded-md text-[10px] w-max uppercase tracking-wider font-black ${statusBadgeClass}">
-                        ${row.coordinatorRemark || 'Pending'}
-                    </span>
-                    ${row.coordinatorComment ? `<span class="text-[10px] text-slate-500 font-semibold italic text-center break-words leading-tight w-full">"${row.coordinatorComment}"</span>` : ''}
-                </div>
-            </td>
-        </tr>
-    `;
-                });
-                tableBody.innerHTML = outputRows;
-
-            } catch (err) {
-                console.error("History engine failure.", err);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="px-4 py-10 text-center text-rose-700 font-black bg-rose-50">
-                            Fail to Load Data.
-                        </td>
-                    </tr>`;
+            if (section === "apply") {
+                if (applySec) applySec.classList.remove("hidden");
+                if (historySec) historySec.classList.add("hidden");
+                if (applyBtn) applyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
+                if (historyBtn) historyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer";
+            } else {
+                if (applySec) applySec.classList.add("hidden");
+                if (historySec) historySec.classList.remove("hidden");
+                if (historyBtn) historyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
+                if (applyBtn) applyBtn.className = "w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer";
+                
+                setTimeout(() => { window.fetchActiveUserLeaveHistoryLedger(); }, 50);
             }
         };
 
-        window.fetchAndRenderAttendanceHistory();
-        if (window.lucide) lucide.createIcons();
+        window.formatToIndianDateTime = function(dateInput) {
+            if (!dateInput) return "--";
+            try {
+                if (typeof dateInput === 'string' && dateInput.includes('/') && !dateInput.includes(' ')) return dateInput;
+                let d = new Date(dateInput);
+                if (isNaN(d.getTime())) return dateInput;
+                
+                const pad = (n) => String(n).padStart(2, '0');
+                const day = pad(d.getDate()); const month = pad(d.getMonth() + 1); const year = d.getFullYear();
+                
+                if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0 && String(dateInput).length <= 10) {
+                    return `${day}/${month}/${year}`;
+                }
+                return `${day}/${month}/${year} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            } catch(e) { return dateInput; }
+        };
+
+        const projectSelectEl = document.getElementById("leave-curr-project");
+        if (projectSelectEl && typeof currentUser !== "undefined") {
+            const baseProjectsArray = (currentUser.appointedProjects || "").split(",").map(p => p.trim()).filter(Boolean);
+            let projectOptionsHtml = "";
+            if (baseProjectsArray.length === 0) {
+                projectOptionsHtml = '<option value="Workspace Head">Workspace Head</option>';
+            } else {
+                baseProjectsArray.forEach(proj => {
+                    projectOptionsHtml += `<option value="${proj}">${proj}</option>`;
+                });
+            }
+            projectSelectEl.innerHTML = projectOptionsHtml;
+        }
+
+        window.calculateLeaveDaysDelta = function() {
+            const fVal = document.getElementById("leave-from") ? document.getElementById("leave-from").value : "";
+            const tVal = document.getElementById("leave-to") ? document.getElementById("leave-to").value : "";
+            const badge = document.getElementById("leave-days-badge");
+            
+            if(!fVal || !tVal) { if (badge) badge.innerText = "0 Days"; window.evaluateLeavePolicyLogic(); return 0; }
+            
+            const d1 = new Date(fVal); const d2 = new Date(tVal);
+            const diffTime = d2 - d1;
+            
+            if(diffTime < 0) { if (badge) badge.innerText = "Invalid Block"; window.evaluateLeavePolicyLogic(); return 0; }
+            
+            const calculatedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if (badge) badge.innerText = `${calculatedDays} Day(s)`;
+            
+            window.evaluateLeavePolicyLogic();
+            return calculatedDays;
+        };
+
+        window.evaluateLeavePolicyLogic = function() {
+            const catEl = document.getElementById("leave-category");
+            const fromEl = document.getElementById("leave-from");
+            const badgeEl = document.getElementById("leave-days-badge");
+            
+            if (!catEl || !fromEl || !badgeEl) return;
+            
+            const cat = catEl.value;
+            const fromStr = fromEl.value;
+            const totalDays = parseInt(badgeEl.innerText) || 0;
+            
+            const warnBox = document.getElementById("leave-policy-warning-box");
+            const warnTxt = document.getElementById("leave-policy-warning-txt");
+            let warningsArray = [];
+            
+            if(fromStr) {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const targetedFromDate = new Date(fromStr); targetedFromDate.setHours(0,0,0,0);
+                if (targetedFromDate < today) {
+                    warningsArray.push("Notice: The selected start date is a past date. The chance of approval is least as it is a past data.");
+                }
+            }
+            if(cat === "Casual Leave") {
+                warningsArray.push("Policy Rule: For Casual Leave, a 2-day advance notice is needed minimum.");
+            }
+            if(cat === "Medical Leave" && totalDays > 1) {
+                warningsArray.push("Policy Rule: A proper medical certificate is needed for approval. Absence of which chances are less.");
+            }
+
+            if(warnBox && warnTxt) {
+                if(warningsArray.length > 0) {
+                    warnTxt.innerHTML = warningsArray.map(w => `<div class='mb-1 last:mb-0'>• ${w}</div>`).join("");
+                    warnBox.className = "mb-4 p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-950 font-bold text-[11px] leading-normal flex items-start gap-2 animate-fade-in";
+                    if (window.lucide) lucide.createIcons();
+                } else { warnBox.className = "hidden"; }
+            }
+        };
+
+        window.fetchActiveUserLeaveHistoryLedger = async function() {
+            const container = document.getElementById("leave-history-container");
+            if (!container) return;
+
+            container.innerHTML = `<div class="px-4 py-12 text-center text-slate-700 font-bold animate-pulse">Assembling historical leave records index vectors...</div>`;
+            try {
+                if (typeof currentUser !== "undefined" && currentUser.managerId) {
+                    document.getElementById("lbl-history-mgr-id").innerText = currentUser.managerId;
+                    
+                    try {
+                        const mRes = await fetch(`${API_URL}?action=getManagerContactPhone&managerId=${encodeURIComponent(currentUser.managerId)}`);
+                        const mData = await mRes.json();
+                        if (mData.status) {
+                            document.getElementById("lbl-history-mgr-name").innerText = mData.name || currentUser.managerName;
+                            document.getElementById("lbl-history-mgr-phone").innerText = mData.phone || "--";
+                        } else {
+                            document.getElementById("lbl-history-mgr-name").innerText = currentUser.managerName || "System Manager";
+                            document.getElementById("lbl-history-mgr-phone").innerText = "Not Set";
+                        }
+                    } catch(err) {
+                        document.getElementById("lbl-history-mgr-name").innerText = currentUser.managerName || "System Manager";
+                        document.getElementById("lbl-history-mgr-phone").innerText = "Network Delay";
+                    }
+                }
+
+                const res = await fetch(`${API_URL}?action=getAdminLeaveDataBundles`);
+                const result = await res.json();
+                
+                if(!result.status || !result.data) {
+                    container.innerHTML = `<div class="px-4 py-10 text-center text-rose-700 font-bold bg-white rounded-xl shadow-sm border border-rose-200">Error pulling ledger instances.</div>`;
+                    return;
+                }
+
+                const filteredData = result.data.filter(item => String(item.employeeId).trim().toUpperCase() === String(currentUser.employeeId).trim().toUpperCase());
+
+                if(filteredData.length === 0) {
+                    container.innerHTML = `<div class="px-4 py-10 text-center text-slate-500 font-bold italic bg-white rounded-xl shadow-sm border border-slate-200">No leave application history maps stored.</div>`;
+                    return;
+                }
+
+                let desktopRowsHtml = "";
+                let mobileCardsHtml = "";
+
+                filteredData.reverse().forEach((item, idx) => {
+                    const rowId = `my_leave_mob_${idx}`;
+                    let statusBadge = "";
+                    let finalApprovedDaysNode = "";
+                    let shortStatusBadge = "";
+
+                    if(item.status === "PENDING") {
+                        statusBadge = `<span class="bg-amber-100 border border-amber-400 text-amber-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">PENDING</span>`;
+                        shortStatusBadge = `<span class="bg-amber-100 border border-amber-400 text-amber-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">PENDING</span>`;
+                    } else if(item.status === "MGR_RECOMMENDED") {
+                        statusBadge = `<span class="bg-blue-100 border border-blue-400 text-blue-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">MGR RECOMMENDED</span>`;
+                        shortStatusBadge = `<span class="bg-blue-100 border border-blue-400 text-blue-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">MGR REC</span>`;
+                    } else if(item.status === "MGR_REJECTED") {
+                        statusBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">MGR REJECTED</span>`;
+                        shortStatusBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">MGR REJ</span>`;
+                    } else if(item.status === "APPROVED") {
+                        statusBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">APPROVED</span>`;
+                        shortStatusBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">APPROVED</span>`;
+                        
+                        let datesBlockString = (item.adminApprovedDate && item.adminApprovedDate !== "--") ? `<div class="text-[10px] text-rose-700 font-mono font-black mt-0.5">Dates: ${item.adminApprovedDate}</div>` : '';
+                        if (item.finalApprovedDays && item.finalApprovedDays !== "--") {
+                            finalApprovedDaysNode = `
+                                <div class="mt-1 leading-tight">
+                                    <div class="text-[10px] text-slate-900 font-black italic">${item.finalApprovedDays} day(s) approved</div>
+                                    ${datesBlockString}
+                                </div>
+                            `;
+                        }
+                    } else if(item.status === "REJECTED") {
+                        statusBadge = `<span class="bg-rose-100 border border-rose-400 text-rose-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">REJECTED</span>`;
+                        shortStatusBadge = `<span class="bg-rose-100 border border-rose-400 text-rose-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">REJECTED</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-slate-100 border border-slate-400 text-slate-900 font-black px-2 py-0.5 rounded text-[10px] uppercase">${item.status}</span>`;
+                        shortStatusBadge = `<span class="bg-slate-100 border border-slate-400 text-slate-900 font-black px-1.5 py-0.5 rounded text-[9px] uppercase">${item.status}</span>`;
+                    }
+
+                    let docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? 
+                        `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 hover:text-blue-800 underline block mt-2 text-[10px] font-mono flex items-center gap-0.5 font-black bg-blue-50 px-2 py-1 rounded w-max border border-blue-100"><i data-lucide="eye" class="w-3 h-3"></i> View File</a>` : '';
+
+                    const formattedFromDate = window.formatToIndianDateTime(item.fromDate).split(" ")[0];
+                    const formattedToDate = window.formatToIndianDateTime(item.toDate).split(" ")[0];
+
+                    // 🎯 DESKTOP ROW HTML
+                    desktopRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors align-top hidden md:table-row">
+                            <td class="px-4 py-3.5 font-mono text-[11px] text-slate-800">
+                                ${item.applicationId}
+                                <span class="block text-[9px] text-slate-600 font-sans font-bold mt-0.5">${window.formatToIndianDateTime(item.appliedOn)}</span>
+                            </td>
+                            <td class="px-4 py-3.5 leading-normal">
+                                <div class="text-slate-950">${item.leaveType}</div>
+                                <div class="text-slate-700 text-[10px] font-bold">${item.project} (${item.location})</div>
+                                ${docLink}
+                            </td>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap leading-tight">
+                                <div class="text-slate-950 font-mono">${formattedFromDate} to ${formattedToDate}</div>
+                                <span class="text-[10px] text-slate-700">(${item.leaveDays} Requested Days)</span>
+                            </td>
+                            <td class="px-4 py-3.5 max-w-xs truncate font-medium text-slate-900 italic bg-white rounded border border-slate-200 p-2 m-1 block" title="${item.reason}">"${item.reason}"</td>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap align-middle">
+                                ${statusBadge}
+                                ${finalApprovedDaysNode}
+                                <span class="block text-[10px] text-slate-600 font-bold italic mt-1.5 max-w-[160px] truncate mx-auto" title="${item.adminRemark}">${item.adminRemark && item.adminRemark !== '--' ? '"' + item.adminRemark + '"' : ''}</span>
+                            </td>
+                        </tr>
+                    `;
+
+                    // 🎯 MOBILE ACCORDION CARD HTML
+                    mobileCardsHtml += `
+                        <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                            <div class="px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition" onclick="window.toggleMyLeaveRowAccordion('${rowId}')">
+                                <div class="w-[85%] pr-2">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-mono text-indigo-700 font-black text-[11px]">${item.applicationId}</span>
+                                        ${shortStatusBadge}
+                                    </div>
+                                    <div class="text-slate-900 font-bold text-xs">${item.leaveType}</div>
+                                    <div class="text-slate-500 font-mono text-[9px] mt-0.5">${formattedFromDate} to ${formattedToDate} (${item.leaveDays}D)</div>
+                                </div>
+                                <div class="w-[15%] flex justify-end">
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                                </div>
+                            </div>
+                            
+                            <div id="${rowId}" class="hidden p-4 text-xs border-t border-slate-100 space-y-3 bg-slate-50/50">
+                                <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-100">
+                                    <div><span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Project</span><span class="font-bold text-slate-800">${item.project}</span></div>
+                                    <div><span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Location</span><span class="font-bold text-slate-800">${item.location}</span></div>
+                                </div>
+                                
+                                <div class="pb-2 border-b border-slate-100">
+                                    <span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Reason Stated</span>
+                                    <div class="text-slate-700 italic leading-relaxed whitespace-pre-wrap bg-white p-2 rounded border border-slate-200">"${item.reason}"</div>
+                                    ${docLink}
+                                </div>
+                                
+                                <div class="pb-2 border-b border-slate-100">
+                                    <span class="block text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1">Approval Context</span>
+                                    <div class="mt-1">${statusBadge}</div>
+                                    ${finalApprovedDaysNode}
+                                    <div class="text-slate-700 font-bold italic mt-2">${item.adminRemark && item.adminRemark !== '--' ? '"' + item.adminRemark + '"' : '<span class="text-slate-400 font-normal">No admin remarks yet</span>'}</div>
+                                </div>
+                                
+                                <div class="text-[9px] text-slate-400 font-mono text-right">
+                                    Applied: ${window.formatToIndianDateTime(item.appliedOn)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 🎯 INJECT DUAL LAYOUT
+                container.innerHTML = `
+                    <div class="hidden md:block overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse table-auto min-w-[850px] bg-white rounded-xl overflow-hidden border border-slate-200">
+                            <thead>
+                                <tr class="bg-slate-950 text-white text-[10px] font-black uppercase tracking-wider sticky top-0 z-10 border-b border-slate-800">
+                                    <th class="px-4 py-3.5">Reference Token</th>
+                                    <th class="px-4 py-3.5">Leave Scope Details</th>
+                                    <th class="px-4 py-3.5 text-center">Duration</th>
+                                    <th class="px-4 py-3.5">Reason Statement Context</th>
+                                    <th class="px-4 py-3.5 text-center">Leave Approval Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-200 text-slate-900 font-bold">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="md:hidden flex flex-col w-full">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+            } catch(e) { if(container) container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black bg-white rounded-xl shadow-sm border border-rose-200">Error pulling ledger instances.</div>`; }
+        };
+
+        window.dispatchLeaveApplicationForm = async function() {
+            const leaveType = document.getElementById("leave-category").value;
+            const fromDate = document.getElementById("leave-from").value;
+            const toDate = document.getElementById("leave-to").value;
+            const location = document.getElementById("leave-curr-location").value.trim();
+            const reason = document.getElementById("leave-reason").value.trim();
+            const fileInput = document.getElementById("leave-file-input");
+            
+            const totalDays = window.calculateLeaveDaysDelta();
+
+            if(!fromDate || !toDate) { alert("Execution Blocked: Please supply standard start and end target dates."); return; }
+            if(totalDays <= 0) { alert("Execution Blocked: Duration metric calculation error."); return; }
+            if(!location) { alert("Execution Blocked: Operating Location cannot be empty."); return; }
+            if(!reason) { alert("Execution Blocked: Please specify your reason context statements."); return; }
+
+            if(!currentUser.managerId || currentUser.managerId === "" || currentUser.managerId === "N/A") {
+                alert("Identity Mismatch: Your account profile does not have a direct reporting Manager ID assigned.");
+                return;
+            }
+
+            if(!confirm("Are you sure you want to submit this leave application?")) return;
+
+            const submitBtn = document.getElementById("btn-submit-leave");
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Streaming Payload Data...";
+            }
+
+            const finalPayload = {
+                action: "submitLeaveApplication",
+                employeeId: currentUser.employeeId,
+                employeeName: currentUser.employeeName,
+                leaveType: leaveType,
+                fromDate: fromDate,
+                toDate: toDate,
+                leaveDays: totalDays,
+                currentProject: document.getElementById("leave-curr-project").value,
+                operatingLocation: location,
+                reason: reason,
+                managerId: currentUser.managerId,
+                attachmentBase64: "", attachmentFileName: "", attachmentContentType: ""
+            };
+
+            if(fileInput && fileInput.files.length > 0) {
+                const targetedFile = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    finalPayload.attachmentBase64 = e.target.result.split(',')[1];
+                    finalPayload.attachmentFileName = targetedFile.name;
+                    finalPayload.attachmentContentType = targetedFile.type;
+                    window.executeLeaveSubmitAjaxRequest(finalPayload, submitBtn);
+                };
+                reader.readAsDataURL(targetedFile);
+            } else { window.executeLeaveSubmitAjaxRequest(finalPayload, submitBtn); }
+        };
+
+        window.executeLeaveSubmitAjaxRequest = async function(payload, btnEl) {
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                if((await res.json()).status) {
+                    alert("Leave request dispatched successfully!");
+                    document.getElementById("leave-from").value = "";
+                    document.getElementById("leave-to").value = "";
+                    document.getElementById("leave-curr-location").value = "";
+                    document.getElementById("leave-reason").value = "";
+                    if (document.getElementById("leave-file-input")) document.getElementById("leave-file-input").value = "";
+                    window.calculateLeaveDaysDelta();
+                    window.switchLeaveTabSection('history');
+                }
+            } catch(e) { alert("Network transmission breakdown."); }
+            finally {
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> Dispatch Application Request`;
+                }
+                if (window.lucide) lucide.createIcons();
+            }
+        };
+
+        window.switchLeaveTabSection('apply');
     })();
 </script>
