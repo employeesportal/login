@@ -2,8 +2,8 @@
 
     <div class="border-b border-slate-200 pb-4 mb-6">
         <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-            <div class="w-5 h-5 bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-100 transition-transform">
-                <i data-lucide="shield" class="w-6 h-6"></i>
+            <div class="w-5 h-5 bg-rose-100 text-rose-700 flex items-center justify-center rounded-lg transition-transform">
+                <i data-lucide="shield" class="w-4 h-4"></i>
             </div>
             Admin Leave Approval Console
         </h3>
@@ -12,42 +12,42 @@
 
     <!-- Navigation Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-300 pb-4 mb-6 gap-4">
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <button id="adm-tab-pending-btn" onclick="window.switchAdminLeaveTab('pending')"
-                class="px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
-                <i data-lucide="clock" class="w-4 h-4"></i> Pending Leave Approval Queue
+                class="flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="clock" class="w-4 h-4"></i> Pending Approvals
             </button>
             <button id="adm-tab-history-btn" onclick="window.switchAdminLeaveTab('history')"
-                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer">
-                <i data-lucide="archive" class="w-4 h-4"></i> Leave Application History
+                class="flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i data-lucide="archive" class="w-4 h-4"></i> Leave History
             </button>
         </div>
         <button onclick="window.syncAdminLeaveMasterData()"
-            class="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
+            class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-slate-950 hover:bg-slate-900 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Master Data
         </button>
     </div>
 
     <!-- Filter Engine -->
     <div id="admin-search-filter-card"
-        class="hidden mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl animate-fade-in">
+        class="hidden mb-6 p-4 bg-slate-50 border border-slate-300 rounded-2xl animate-fade-in shadow-inner">
         <span class="block text-[10px] uppercase text-slate-700 font-black tracking-wider mb-2">Multi-Combination Filter Engine</span>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold text-slate-800">
             <div>
                 <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Search Employee Name / ID</label>
                 <input type="text" id="filter-search-term" oninput="window.executeAdminFilterQueryPipeline()"
                     placeholder="Enter name or ID match strings..."
-                    class="w-full px-3 py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white">
+                    class="w-full px-3 py-2 sm:py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white outline-none focus:ring-1 focus:ring-rose-500">
             </div>
             <div>
-                <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Filter by Applied/Active Leave Date</label>
+                <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Filter by Applied/Active Date</label>
                 <input type="date" id="filter-from-date" onchange="window.executeAdminFilterQueryPipeline()"
-                    class="w-full px-3 py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white">
+                    class="w-full px-3 py-2 sm:py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white outline-none focus:ring-1 focus:ring-rose-500">
             </div>
             <div>
                 <label class="block text-[10px] text-slate-600 mb-1 font-black uppercase">Filter Status State</label>
                 <select id="filter-status-state" onchange="window.executeAdminFilterQueryPipeline()"
-                    class="w-full px-3 py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white font-black">
+                    class="w-full px-3 py-2 sm:py-1.5 border border-slate-300 text-slate-900 rounded-lg bg-white font-black outline-none focus:ring-1 focus:ring-rose-500">
                     <option value="ALL">Show All Historical Statuses</option>
                     <option value="APPROVED">APPROVED Only</option>
                     <option value="REJECTED">REJECTED Only</option>
@@ -57,26 +57,9 @@
         </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
-        <div class="w-full max-h-[550px] overflow-y-auto">
-            <table class="w-full text-left border-collapse table-auto block lg:table min-w-0 lg:min-w-[1250px]">
-                <thead>
-                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider hidden lg:table-row sticky top-0 z-10">
-                        <th class="px-3 py-3.5 w-44">Applicant Identity</th>
-                        <th class="px-3 py-3.5 w-64">Leave Scope Parameters</th>
-                        <th class="px-3 py-3.5 w-48">Manager Recommendation</th>
-                        <th class="px-3 py-3.5">Administrative Action Override</th>
-                        <th class="px-3 py-3.5 text-center w-28">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-leave-table-body" class="text-xs divide-y divide-slate-200 text-slate-900 font-bold block lg:table-row-group">
-                    <tr class="block lg:table-row">
-                        <td colspan="5" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse block lg:table-cell">Awaiting initialization arrays setup...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <!-- 🎯 DUAL LAYOUT CONTAINER -->
+    <div id="admin-data-container" class="w-full bg-white border border-slate-200 rounded-2xl shadow-inner sm:overflow-hidden p-2 sm:p-0">
+        <div class="p-12 text-center text-slate-500 font-bold animate-pulse">Awaiting initialization arrays setup...</div>
     </div>
 </div>
 
@@ -84,6 +67,11 @@
     (() => {
         let masterLeaveApplicationsCache = [];
         let activeSubPortalTabMode = "pending";
+
+        window.toggleAdminLeaveAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
         window.formatToISODateInput = function (dateInput) {
             if (!dateInput) return "";
@@ -127,14 +115,14 @@
             const filterCard = document.getElementById("admin-search-filter-card");
 
             [pendingBtn, historyBtn].forEach(b => {
-                b.className = "px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5 cursor-pointer";
+                b.className = "flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-[11px] sm:text-xs rounded-xl border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer";
             });
 
             if (targetMode === "pending") {
-                pendingBtn.className = "px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer";
+                pendingBtn.className = "flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
                 filterCard.classList.add("hidden");
             } else {
-                historyBtn.className = "px-4 py-2 bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer";
+                historyBtn.className = "flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-rose-700 text-white font-black text-[11px] sm:text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer";
                 filterCard.classList.remove("hidden");
             }
 
@@ -143,10 +131,9 @@
         };
         
         window.syncAdminLeaveMasterData = async function () {
-            const tbody = document.getElementById("admin-leave-table-body");
-            tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-700 font-bold block lg:table-cell">Synchronizing Admin leave ledger tracks...</td></tr>`;
+            const container = document.getElementById("admin-data-container");
+            if(container) container.innerHTML = `<div class="p-12 text-center text-slate-700 font-bold animate-pulse">Synchronizing Admin leave ledger tracks...</div>`;
             try {
-                // 🎯 FIXED: Simultaneously fetch Master Registry to cross-reference Manager Names
                 const [leaveRes, empRes] = await Promise.all([
                     fetch(`${API_URL}?action=getAdminLeaveDataBundles`),
                     fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`)
@@ -159,7 +146,6 @@
                     let leaves = leaveData.data;
                     let employees = empData.status ? empData.data : [];
 
-                    // Map missing Manager Names from the Master Registry
                     leaves.forEach(lv => {
                         if (lv.managerId && (!lv.managerName || lv.managerName === "N/A")) {
                             let mgr = employees.find(e => String(e.employeeId).trim().toUpperCase() === String(lv.managerId).trim().toUpperCase());
@@ -171,14 +157,14 @@
                     window.executeAdminFilterQueryPipeline(); 
                 }
             } catch (e) { 
-                tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-6 text-center text-rose-700 font-black block lg:table-cell">Server error. Check connection.</td></tr>`; 
+                if(container) container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black bg-rose-50 border border-rose-200 rounded-xl">Server error. Check connection.</div>`; 
             }
         };
 
-        window.calculateAdminApprovedShortLeaveDaysDelta = function (idx) {
-            const fVal = document.getElementById(`adm_rec_from_${idx}`).value;
-            const tVal = document.getElementById(`adm_rec_to_${idx}`).value;
-            const lbl = document.getElementById(`adm_rec_days_lbl_${idx}`);
+        window.calculateAdminApprovedShortLeaveDaysDelta = function (idx, prefix) {
+            const fVal = document.getElementById(`${prefix}_adm_rec_from_${idx}`).value;
+            const tVal = document.getElementById(`${prefix}_adm_rec_to_${idx}`).value;
+            const lbl = document.getElementById(`${prefix}_adm_rec_days_lbl_${idx}`);
             if (!fVal || !tVal) { lbl.innerText = "0 Days"; return 0; }
 
             const calculatedDays = Math.ceil((new Date(tVal) - new Date(fVal)) / (1000 * 60 * 60 * 24)) + 1;
@@ -187,7 +173,8 @@
         };
 
         window.executeAdminFilterQueryPipeline = function () {
-            const tbody = document.getElementById("admin-leave-table-body");
+            const container = document.getElementById("admin-data-container");
+            if(!container) return;
 
             let dataset = [];
             if (activeSubPortalTabMode === "pending") {
@@ -234,63 +221,81 @@
                 }
             }
 
-            if (dataset.length === 0) { tbody.innerHTML = `<tr class="block lg:table-row"><td colspan="5" class="px-4 py-12 text-center text-slate-600 italic block lg:table-cell">No leaves found.</td></tr>`; return; }
+            if (dataset.length === 0) { 
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold bg-slate-50 rounded-2xl">No leave applications found matching criteria.</div>`; 
+                return; 
+            }
 
-            let outputHtml = "";
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+
             dataset.forEach((item, idx) => {
-                const docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline inline-block mt-2 text-[11px] font-black"><i data-lucide="eye" class="w-3 h-3 inline"></i> View Attachment</a>` : '<span class="text-slate-500 font-black inline-block mt-2 text-[10px] uppercase tracking-wider">No Attachment</span>';
-                let actionInteractiveForm = "", actionDispatchButton = "";
+                const rowId = `admin_lv_mob_${idx}`;
+                const docLink = item.attachmentUrl && item.attachmentUrl.trim() !== "" ? `<a href="${item.attachmentUrl}" target="_blank" class="text-blue-700 underline inline-block mt-2 text-[11px] font-black hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"><i data-lucide="paperclip" class="w-3 h-3 inline"></i> View Attachment</a>` : '<span class="text-slate-500 font-black inline-block mt-2 text-[10px] uppercase tracking-wider">No Attachment</span>';
+                
+                let deskActionInteractiveForm = "", deskActionDispatchButton = "";
+                let mobActionInteractiveForm = "", mobActionDispatchButton = "";
+                
+                let statusColorBadge = "bg-slate-100 text-slate-900 border-slate-300";
+                if (item.status === "APPROVED") statusColorBadge = "bg-emerald-100 text-emerald-950 border-emerald-400";
+                else if (item.status === "REJECTED" || item.status === "MGR_REJECTED") statusColorBadge = "bg-rose-100 text-rose-950 border-rose-400";
+                else if (item.status === "PENDING") statusColorBadge = "bg-amber-100 text-amber-900 border-amber-300";
+                else if (item.status === "MGR_RECOMMENDED") statusColorBadge = "bg-indigo-100 text-indigo-900 border-indigo-300";
+
+                const parsedIsoFrom = window.formatToISODateInput(item.fromDate);
+                const parsedIsoTo = window.formatToISODateInput(item.toDate);
+
+                const generateActionForm = (prefix) => `
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Admin Action Final Decision</label>
+                            <select id="${prefix}_adm_decision_${idx}" onchange="document.getElementById('${prefix}_adm_short_days_container_${idx}').classList.toggle('hidden', this.value !== 'SHORT'); window.calculateAdminApprovedShortLeaveDaysDelta(${idx}, '${prefix}');" class="w-full px-3 py-2 sm:py-1 border border-slate-300 bg-white rounded-lg font-black text-xs text-slate-900 focus:ring-2 focus:ring-rose-500 outline-none shadow-sm">
+                                <option value="APPROVE">Approve as Recommended</option>
+                                <option value="SHORT">Approve Short Leave</option>
+                                <option value="REJECT">Reject Leave Application</option>
+                            </select>
+                        </div>
+                        <div id="${prefix}_adm_short_days_container_${idx}" class="hidden p-3 sm:p-2 bg-slate-50 border border-slate-300 rounded-xl space-y-2 shadow-inner">
+                            <div><label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Final Approved From</label><input type="date" id="${prefix}_adm_rec_from_${idx}" value="${parsedIsoFrom}" onchange="window.calculateAdminApprovedShortLeaveDaysDelta(${idx}, '${prefix}')" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded text-xs text-slate-900 outline-none focus:ring-2 focus:ring-rose-500"></div>
+                            <div><label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Final Approved To</label><input type="date" id="${prefix}_adm_rec_to_${idx}" value="${parsedIsoTo}" onchange="window.calculateAdminApprovedShortLeaveDaysDelta(${idx}, '${prefix}')" class="w-full px-2 py-1.5 border border-slate-300 bg-white rounded text-xs text-slate-900 outline-none focus:ring-2 focus:ring-rose-500"></div>
+                            <div class="text-[10px] text-slate-800 font-black pt-1 flex justify-between border-t border-slate-200 mt-1"><span>Final Approved:</span> <span id="${prefix}_adm_rec_days_lbl_${idx}" class="font-mono text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">${item.leaveDays} Days</span></div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Admin Remarks</label>
+                            <textarea id="${prefix}_adm_remark_${idx}" rows="3" placeholder="Provide administrative closure statements..." class="w-full px-3 py-2 sm:py-1 border border-slate-300 bg-white font-medium rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-rose-500 outline-none shadow-sm"></textarea>
+                        </div>
+                    </div>
+                `;
+
+                const generateHistoryBlock = () => `
+                    <div class="grid grid-cols-2 gap-2 leading-normal text-slate-800 text-[11px] font-medium bg-slate-50 p-2 sm:p-3 rounded-xl border border-slate-200">
+                        <div>Admin Decision: <strong class="text-slate-950 font-black text-xs uppercase">${item.adminDecision || 'APPROVE'}</strong></div>
+                        <div>Final Days: <strong class="text-rose-700 font-mono font-black">${item.finalApprovedDays || '0'} Day(s)</strong></div>
+                        <div class="col-span-2">Approved Block: <strong class="text-rose-700 font-mono bg-rose-50 px-1 py-0.5 border border-rose-100 rounded">${item.adminApprovedDate || '--'}</strong></div>
+                        <div class="col-span-2 pt-1 border-t border-slate-200 mt-1">Processed By Admin: <span class="bg-indigo-50 border border-indigo-300 text-indigo-900 font-black px-1.5 py-0.5 rounded">${item.adminName || 'System Admin'}</span></div>
+                        <div class="col-span-2 pt-1">Admin Remark: <span class="text-slate-950 font-bold italic">"${item.adminRemark || ''}"</span></div>
+                        <div class="col-span-2 text-slate-500 font-mono text-[9px] mt-1 text-right">${window.formatToIndianDateTimeStr(item.adminTimestamp)}</div>
+                    </div>
+                `;
 
                 if (activeSubPortalTabMode === "pending") {
-                    const parsedIsoFrom = window.formatToISODateInput(item.fromDate);
-                    const parsedIsoTo = window.formatToISODateInput(item.toDate);
-
-                    actionInteractiveForm = `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="space-y-2">
-                                <div>
-                                    <label class="block text-[9px] uppercase text-slate-600 font-black mb-0.5">Admin Action Final Decision</label>
-                                    <select id="adm_decision_${idx}" onchange="document.getElementById('adm_short_days_container_${idx}').classList.toggle('hidden', this.value !== 'SHORT'); window.calculateAdminApprovedShortLeaveDaysDelta(${idx});" class="w-full px-2 py-1 border border-slate-300 bg-white rounded-lg font-black text-xs text-slate-900">
-                                        <option value="APPROVE">Approve as Recommended</option>
-                                        <option value="SHORT">Approve Short Leave</option>
-                                        <option value="REJECT">Reject Leave Application</option>
-                                    </select>
-                                </div>
-                                <div id="adm_short_days_container_${idx}" class="hidden p-2 bg-white border border-slate-300 rounded-xl space-y-1.5 shadow-inner">
-                                    <div><label class="block text-[9px] uppercase text-slate-600 font-black">Final Approved From</label><input type="date" id="adm_rec_from_${idx}" value="${parsedIsoFrom}" onchange="window.calculateAdminApprovedShortLeaveDaysDelta(${idx})" class="w-full px-2 py-0.5 border border-slate-300 bg-white rounded text-xs text-slate-900"></div>
-                                    <div><label class="block text-[9px] uppercase text-slate-600 font-black">Final Approved To</label><input type="date" id="adm_rec_to_${idx}" value="${parsedIsoTo}" onchange="window.calculateAdminApprovedShortLeaveDaysDelta(${idx})" class="w-full px-2 py-0.5 border border-slate-300 bg-white rounded text-xs text-slate-900"></div>
-                                    <div class="text-[10px] text-slate-800 font-black pt-0.5 flex justify-between"><span>Final Approved:</span> <span id="adm_rec_days_lbl_${idx}" class="font-mono text-rose-700">${item.leaveDays} Days</span></div>
-                                </div>
-                            </div>
-                            <div><label class="block text-[9px] uppercase text-slate-600 font-black mb-0.5">Admin Remarks</label><textarea id="adm_remark_${idx}" rows="3" placeholder="Provide administrative closure statements..." class="w-full px-2 py-1 border border-slate-300 bg-white font-medium rounded-lg text-xs text-slate-900 focus:ring-1 focus:ring-rose-600"></textarea></div>
-                        </div>
-                    `;
-                    actionDispatchButton = `<button onclick="window.commitAdminFinalDecisionSingleRow(${item.rowIndex}, ${idx}, '${item.applicationId}', '${item.employeeId}', '${item.employeeName}')" class="w-full lg:w-auto px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"><i data-lucide="shield-check" class="w-4 h-4"></i> Commit Final Status</button>`;
+                    deskActionInteractiveForm = generateActionForm('desk');
+                    mobActionInteractiveForm = generateActionForm('mob');
+                    
+                    deskActionDispatchButton = `<button onclick="window.commitAdminFinalDecisionSingleRow(${item.rowIndex}, ${idx}, '${item.applicationId}', '${item.employeeId}', '${item.employeeName}', 'desk')" class="w-full lg:w-auto px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"><i data-lucide="shield-check" class="w-4 h-4"></i> Commit Final Status</button>`;
+                    mobActionDispatchButton = `<button onclick="window.commitAdminFinalDecisionSingleRow(${item.rowIndex}, ${idx}, '${item.applicationId}', '${item.employeeId}', '${item.employeeName}', 'mob')" class="w-full mt-2 px-4 py-3 bg-rose-700 hover:bg-rose-800 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"><i data-lucide="shield-check" class="w-4 h-4"></i> Commit Final Status</button>`;
                 } else {
-                    actionInteractiveForm = `
-                        <div class="grid grid-cols-2 gap-2 leading-normal text-slate-800 text-[11px] font-medium">
-                            <div>Admin Decision: <strong class="text-slate-950 font-black text-xs uppercase">${item.adminDecision || 'APPROVE'}</strong></div>
-                            <div>Final Days: <strong class="text-rose-700 font-mono font-black">${item.finalApprovedDays || '0'} Day(s)</strong></div>
-                            <div class="col-span-2">Approved Block: <strong class="text-rose-700 font-mono">${item.adminApprovedDate || '--'}</strong></div>
-                            
-                            <!-- 🎯 FIXED: Display Admin Name prominently -->
-                            <div class="col-span-2 pt-1">Processed By Admin: <span class="bg-indigo-50 border border-indigo-300 text-indigo-900 font-black px-1.5 py-0.5 rounded">${item.adminName || 'System Admin'}</span></div>
-                            
-                            <div class="col-span-2 border-t border-slate-200 pt-1">Admin Remark: <span class="text-slate-950 font-bold">"${item.adminRemark || ''}"</span></div>
-                            <div class="col-span-2 text-slate-500 font-mono text-[9px]">Processed On: ${window.formatToIndianDateTimeStr(item.adminTimestamp)}</div>
-                        </div>
-                    `;
-
-                    let statusColorBadge = "bg-slate-100 text-slate-900 border-slate-300";
-                    if (item.status === "APPROVED") statusColorBadge = "bg-emerald-100 text-emerald-950 border-emerald-400";
-                    else if (item.status === "REJECTED") statusColorBadge = "bg-rose-100 text-rose-950 border-rose-400";
-
-                    actionDispatchButton = `<div class="mt-1"><span class="border px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase ${statusColorBadge}">${item.status}</span></div>`;
+                    deskActionInteractiveForm = generateHistoryBlock();
+                    mobActionInteractiveForm = generateHistoryBlock();
+                    
+                    deskActionDispatchButton = `<span class="border px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase ${statusColorBadge}">${item.status}</span>`;
+                    mobActionDispatchButton = `<div class="mt-2 text-right"><span class="border px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase ${statusColorBadge}">${item.status}</span></div>`;
                 }
 
-                outputHtml += `
-                    <tr class="block lg:table-row hover:bg-slate-50/60 transition-colors p-4 mb-4 bg-slate-50 border border-slate-300 lg:border-none rounded-2xl shadow-sm lg:shadow-none">
-                        <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
+                // 🎯 DESKTOP ROW
+                desktopRowsHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors align-top hidden lg:table-row border-b border-slate-200">
+                        <td class="px-3 py-3.5">
                             <strong class="text-slate-950 block font-black text-xs">${item.employeeName}</strong>
                             <span class="font-mono text-[11px] text-slate-600 block">ID: ${item.employeeId}</span>
                             <span class="text-[10px] text-slate-600 block mt-0.5 font-bold font-mono">Token: ${item.applicationId}</span>
@@ -299,22 +304,18 @@
                                 <span class="font-bold text-slate-500">Loc:</span> ${item.location || 'N/A'}
                             </div>
                         </td>
-                        <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
+                        <td class="px-3 py-3.5 max-w-sm">
                             <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[10px] font-black">${item.leaveType}</span>
                             <div class="text-slate-950 font-mono mt-1">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</div>
                             <span class="text-[11px] text-slate-700 block mb-1.5">Day(s): <strong>${item.leaveDays} Day(s)</strong> | Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)}</span>
                             
-                            <!-- 🎯 FIXED: Fully Scrollable & Wrap-friendly Reason Box -->
                             <div class="text-slate-700 italic text-[11px] bg-white p-2.5 rounded-lg border border-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed shadow-inner" title="Reason">
                                 <span class="font-black text-slate-400 not-italic uppercase tracking-wider text-[9px] block mb-1">Reason Stated</span>
                                 "${item.reason || 'No reason provided'}"
                             </div>
-                            
                             ${docLink}
                         </td>
-                        <td class="block lg:table-cell px-0 lg:px-3 py-2 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-2 lg:pb-0">
-                            
-                            <!-- 🎯 FIXED: Display Manager Name prominently -->
+                        <td class="px-3 py-3.5">
                             <div class="text-slate-950 text-[11px] mb-2 bg-emerald-50 border border-emerald-200 p-1.5 rounded">
                                 <span class="font-bold text-emerald-800 text-[9px] uppercase block mb-0.5">Assigned Manager:</span>
                                 <span class="font-black">${item.managerName || 'Pending / N/A'}</span> 
@@ -329,18 +330,101 @@
                                 <div class="text-indigo-600 font-mono mt-1 text-[9px] border-t border-slate-200 pt-1">Rec. On: ${window.formatToIndianDateTimeStr(item.managerTimestamp)}</div>
                             </div>
                         </td>
-                        <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 align-top border-b border-slate-200 lg:border-none pb-3 lg:pb-0">${actionInteractiveForm}</td>
-                        <td class="block lg:table-cell px-0 lg:px-3 py-3 lg:py-3.5 text-center lg:align-middle whitespace-nowrap">${actionDispatchButton}</td>
+                        <td class="px-3 py-3.5">${deskActionInteractiveForm}</td>
+                        <td class="px-3 py-3.5 text-center align-middle whitespace-nowrap">${deskActionDispatchButton}</td>
                     </tr>
                 `;
+
+                // 🎯 MOBILE ACCORDION CARD WITH SHORT INFO IN HEADER
+                mobileCardsHtml += `
+                    <div class="lg:hidden bg-white border border-slate-200 rounded-2xl shadow-sm mb-4 overflow-hidden">
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-start cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAdminLeaveAccordion('${rowId}')">
+                            <div class="pr-2 w-[90%]">
+                                <div class="flex justify-between items-start mb-1">
+                                    <strong class="text-slate-950 block text-sm truncate font-black">${item.employeeName}</strong>
+                                    <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                                        <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 rounded px-1.5 py-0.5 text-[8px] font-black uppercase">${item.leaveType}</span>
+                                        <span class="text-rose-600 font-black text-[10px]">${item.leaveDays}D</span>
+                                    </div>
+                                </div>
+                                <span class="text-slate-500 font-mono text-[9px] font-bold block">ID: ${item.employeeId}</span>
+                                
+                                <!-- 🎯 SHORT INFO HEADER -->
+                                <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-bold">
+                                    <span class="text-slate-700 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm">${window.cleanISOToDashFormat(item.fromDate)} to ${window.cleanISOToDashFormat(item.toDate)}</span>
+                                    <span class="text-slate-600 flex items-center gap-1"><span class="text-slate-400">Mgr:</span> <span class="truncate max-w-[85px]">${item.managerName || 'Pending'}</span> <span class="${item.managerRec === 'REJECTED' ? 'text-rose-600' : 'text-emerald-600'} uppercase font-black">(${item.managerRec || 'PENDING'})</span></span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end justify-center w-[10%] h-full pt-1">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                                <div><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Project</span><span class="font-bold text-slate-800">${item.project || 'N/A'}</span></div>
+                                <div><span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Location</span><span class="font-bold text-slate-800">${item.location || 'N/A'}</span></div>
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Stated Reason</span>
+                                <div class="text-[9px] text-slate-400 font-mono mb-1.5">Filed: ${window.formatToIndianDateTimeStr(item.appliedOn)} | Token: ${item.applicationId}</div>
+                                <div class="text-slate-700 italic text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200 whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed shadow-inner">"${item.reason || 'No reason provided'}"</div>
+                                ${docLink}
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-emerald-700 uppercase text-[10px] font-black tracking-wider block mb-2 flex items-center gap-1"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Manager Recommendation Details</span>
+                                <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 space-y-1.5">
+                                    <div class="flex justify-between border-b border-emerald-100 pb-1">
+                                        <span class="text-[9px] uppercase font-bold text-emerald-800">Rec Days</span>
+                                        <span class="font-bold text-slate-800">${item.managerDays} | ${item.managerDates}</span>
+                                    </div>
+                                    <div class="pt-1">
+                                        <span class="text-[9px] uppercase font-bold text-emerald-800 block mb-0.5">Remark</span>
+                                        <span class="text-[10px] italic text-slate-700">"${item.managerRemark}"</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-1">
+                                <span class="text-rose-600 uppercase text-[10px] font-black tracking-wider block mb-2 flex items-center gap-1"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Administrative Override</span>
+                                ${mobActionInteractiveForm}
+                                ${mobActionDispatchButton}
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-            tbody.innerHTML = outputHtml; 
+
+            // 🎯 INJECT DUAL LAYOUT
+            container.innerHTML = `
+                <div class="hidden lg:block overflow-x-auto w-full max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse table-auto min-w-[1250px]">
+                        <thead>
+                            <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10">
+                                <th class="px-3 py-3.5 w-44">Applicant Identity</th>
+                                <th class="px-3 py-3.5 w-64">Leave Scope Parameters</th>
+                                <th class="px-3 py-3.5 w-56">Manager Recommendation</th>
+                                <th class="px-3 py-3.5">Administrative Action Override</th>
+                                <th class="px-3 py-3.5 text-center w-32">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs text-slate-900 font-bold bg-white">
+                            ${desktopRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="lg:hidden flex flex-col pt-1">
+                    ${mobileCardsHtml}
+                </div>
+            `;
             if (window.lucide) window.lucide.createIcons();
         };
 
-        window.commitAdminFinalDecisionSingleRow = async function (rowSheetIndex, idx, appId, empId, empName) {
-            const decisionType = document.getElementById(`adm_decision_${idx}`).value;
-            const remarkText = document.getElementById(`adm_remark_${idx}`).value.trim();
+        window.commitAdminFinalDecisionSingleRow = async function (rowSheetIndex, idx, appId, empId, empName, prefix) {
+            const decisionType = document.getElementById(`${prefix}_adm_decision_${idx}`).value;
+            const remarkText = document.getElementById(`${prefix}_adm_remark_${idx}`).value.trim();
             if (!remarkText) { alert("Validation Mismatch: Admin comments are required."); return; }
 
             let targetStatus = "APPROVED";
@@ -357,9 +441,9 @@
                 adminApprovedDateString = "Rejected / Cancelled";
                 descriptiveLabelText = `COMPLETE REJECTION / DISMISSAL (0 Days)`;
             } else if (decisionType === "SHORT") {
-                approvedDays = window.calculateAdminApprovedShortLeaveDaysDelta(idx);
-                const fromDateInput = document.getElementById(`adm_rec_from_${idx}`).value;
-                const toDateInput = document.getElementById(`adm_rec_to_${idx}`).value;
+                approvedDays = window.calculateAdminApprovedShortLeaveDaysDelta(idx, prefix);
+                const fromDateInput = document.getElementById(`${prefix}_adm_rec_from_${idx}`).value;
+                const toDateInput = document.getElementById(`${prefix}_adm_rec_to_${idx}`).value;
                 if (approvedDays <= 0 || isNaN(approvedDays)) { alert("Validation Mismatch: Short Leave approved dates mapping error."); return; }
 
                 adminApprovedDateString = `${window.cleanISOToDashFormat(fromDateInput)} to ${window.cleanISOToDashFormat(toDateInput)}`;
@@ -368,16 +452,30 @@
             
             if (!confirm(`MASTER ADMINISTRATIVE OVERRIDE CLEARANCE\n\nApplicant: ${empName}\nDecision: ${descriptiveLabelText}\nRemarks: "${remarkText}"\n\nCommit this closure state?`)) return;
 
-            const payload = { action: "processAdminLeaveApprovalDecision", rowIndex: rowSheetIndex, applicationId: appId, employeeId: empId, status: targetStatus, adminDecision: decisionType, finalApprovedDays: approvedDays, adminRemark: remarkText, adminName: currentUser.employeeName, adminApprovedDateString: adminApprovedDateString };
+            const payload = { 
+                action: "processAdminLeaveApprovalDecision", 
+                rowIndex: rowSheetIndex, 
+                applicationId: appId, 
+                employeeId: empId, 
+                status: targetStatus, 
+                adminDecision: decisionType, 
+                finalApprovedDays: approvedDays, 
+                adminRemark: remarkText, 
+                adminName: currentUser.employeeName, 
+                adminApprovedDateString: adminApprovedDateString 
+            };
+            
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-                if ((await res.json()).status) { alert("Administrative transaction committed successfully!"); window.syncAdminLeaveMasterData(); }
+                if ((await res.json()).status) { 
+                    alert("Administrative transaction committed successfully!"); 
+                    window.syncAdminLeaveMasterData(); 
+                }
             } catch (e) { alert("Pipeline dropped out."); }
         };
 
-        // SAFETY INIT
         setTimeout(() => {
-            if (document.getElementById("admin-leave-table-body")) {
+            if (document.getElementById("admin-data-container")) {
                 window.syncAdminLeaveMasterData();
             }
         }, 50);
