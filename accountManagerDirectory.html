@@ -1,68 +1,51 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+<div class="w-full glass-panel p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
 
     <!-- DASHBOARD PANEL HEADER CONTROL BAR -->
-    <div class="border-b border-slate-300 pb-4 mb-6 gap-4">
+    <div class="border-b border-slate-300 pb-4 mb-4 sm:mb-6 gap-4">
 
         <div>
-            <h3 class="text-lg font-black tracking-tight text-slate-950 flex items-center gap-2">
+            <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-950 flex items-center gap-2">
                 <i data-lucide="users" class="text-sky-600 w-5 h-5"></i> Accounts Employee Directory
             </h3>
-            <p class="text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
+            <p class="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase tracking-wider mt-0.5">
                 Read-Only Employee Registry Viewer
             </p>
         </div>
 
         <br>
-        <div class="flex items-center gap-3 flex-wrap">
-            <div class="relative min-w-[300px] flex-1 max-w-md">
+        <div class="flex flex-col sm:flex-row items-center gap-3 flex-wrap">
+            <div class="relative w-full sm:w-auto sm:min-w-[300px] flex-1 max-w-md">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-600">
                     <i data-lucide="search" class="w-4 h-4"></i>
                 </span>
                 <input type="text" id="acc-search-input" oninput="window.handleAccRegistrySearchFilter()"
                     placeholder="Search employees by name or ID..."
-                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-600 focus:bg-white text-slate-900 transition shadow-inner">
+                    class="w-full pl-9 pr-4 py-2.5 sm:py-2 bg-slate-50 border border-slate-300 text-xs font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-600 focus:bg-white text-slate-900 transition shadow-inner">
             </div>
 
             <button onclick="window.refreshAccConsoleData()"
-                class="px-4 py-2 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                class="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-slate-950 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Directory
             </button>
         </div>
     </div>
 
-    <!-- MAIN INTERACTIVE IAM PROVISIONING GRID TABLE -->
-    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-5">
-        <div class="overflow-x-auto w-full border border-slate-200 rounded-xl max-h-[600px]">
-            <table class="w-full text-left border-collapse table-auto min-w-[1150px]">
-                <thead>
-                    <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
-                        <th class="px-3 py-3.5 w-20 text-center">Profile</th>
-                        <th class="px-3 py-3.5 w-48">Identity (Name & ID)</th>
-                        <th class="px-3 py-3.5 w-55">Contact Info</th>
-                        <th class="px-3 py-3.5 w-40">Designation</th>
-                        <th class="px-3 py-3.5 w-40">Appointed Projects</th>
-                        <th class="px-3 py-3.5  w-56">Supervisory Line Allocations</th>
-                        <th class="px-3 py-3.5 w-44">Education Attributes</th>
-                    </tr>
-                </thead>
-                <tbody id="acc-matrix-table-body" class="text-xs divide-y divide-slate-200 text-slate-900">
-                    <tr>
-                        <td colspan="7" class="px-4 py-12 text-center text-slate-600 font-bold animate-pulse">
-                            Loading employee directory...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- 🎯 DUAL LAYOUT CONTAINER FOR IAM PROVISIONING GRID -->
+    <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
+        <div id="acc-data-container" class="w-full">
+            <div class="text-center text-slate-600 font-bold py-12 animate-pulse">
+                Loading employee directory...
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Image Preview Modal -->
-<div id="image-preview-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4">
+<div id="image-preview-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
     <div class="bg-white p-2 rounded-2xl shadow-2xl max-w-sm w-full">
         <img id="full-profile-img" src="" class="w-full h-auto rounded-xl" alt="Profile">
         <button onclick="document.getElementById('image-preview-modal').classList.add('hidden')"
-            class="mt-3 w-full py-2 bg-slate-900 text-white font-black text-xs rounded-xl">Close Preview</button>
+            class="mt-3 w-full py-3 sm:py-2 bg-slate-900 text-white font-black text-xs uppercase tracking-wider rounded-xl transition hover:bg-slate-800">Close Preview</button>
     </div>
 </div>
 
@@ -70,49 +53,59 @@
     (() => {
         let employeeRegistryCache = [];
 
+        // 🎯 Mobile Accordion Toggle Logic
+        window.toggleAccRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
+
         window.refreshAccConsoleData = async function () {
-            const tbody = document.getElementById("acc-matrix-table-body");
-            tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-12 text-center text-slate-700 font-bold">Synchronizing directory...</td></tr>`;
+            const container = document.getElementById("acc-data-container");
+            container.innerHTML = `<div class="text-center text-slate-700 font-bold py-12">Synchronizing directory...</div>`;
             document.getElementById("acc-search-input").value = "";
 
             try {
-                // We use the existing API endpoint that retrieves all employees
                 const regRes = await fetch(`${API_URL}?action=getAllEmployeesMasterRegistry`);
                 const regResult = await regRes.json();
                 
                 if (!regResult.status) { 
-                    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-rose-700 font-black text-center">Sync rejected by database.</td></tr>`; 
+                    container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black border border-rose-200 rounded-xl bg-rose-50">Sync rejected by database.</div>`; 
                     return; 
                 }
 
                 employeeRegistryCache = regResult.data;
                 window.renderAccRegistryGridRows(employeeRegistryCache);
             } catch (e) { 
-                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-rose-700 font-black">Governance stack sync crash.</td></tr>`; 
+                container.innerHTML = `<div class="p-8 text-center text-rose-700 font-black border border-rose-200 rounded-xl bg-rose-50">Governance stack sync crash.</div>`; 
             }
         };
 
         window.renderAccRegistryGridRows = function (dataArray) {
-            const tbody = document.getElementById("acc-matrix-table-body");
+            const container = document.getElementById("acc-data-container");
             const currentYear = new Date().getFullYear();
 
             if(dataArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 font-bold">No employees match your search.</td></tr>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">No employees match your search.</div>`;
                 return;
             }
 
-            let outputRows = "";
-            dataArray.forEach((emp) => {
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+
+            dataArray.forEach((emp, idx) => {
+                const rowId = `acc_mob_row_${idx}`;
                 let dojParts = String(emp.dateOfJoining || "").split("-");
                 let displayDoj = (dojParts.length === 3) ? `${dojParts[2]}/${dojParts[1]}/${dojParts[0]}` : (emp.dateOfJoining || "N/A");
 
                 const yop = parseInt(emp.yearOfPassing);
                 const experience = (yop && !isNaN(yop)) ? (currentYear - yop) + " yrs" : "N/A";
+                const profileImgUrl = emp.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNjY2MiLz48L3N2Zz4=';
 
-                outputRows += `
-                <tr class="hover:bg-slate-100/80 transition-colors">
+                // 🎯 DESKTOP ROW HTML
+                desktopRowsHtml += `
+                <tr class="hover:bg-slate-100/80 transition-colors hidden md:table-row align-top border-b border-slate-200">
                     <td class="px-3 py-3.5 text-center">
-                        <img src="${emp.profilePhoto || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNjY2MiLz48L3N2Zz4='}" 
+                        <img src="${profileImgUrl}" 
                              onclick="window.showImageByEmpId('${emp.employeeId}')"
                              class="w-10 h-10 min-w-[40px] rounded-full border-2 border-slate-200 cursor-pointer object-cover shadow-sm hover:scale-110 transition-transform mx-auto" 
                              alt="Profile">
@@ -127,7 +120,7 @@
                         <div class="flex items-center gap-1.5 mt-1.5"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i><span class="text-[11px] font-bold text-slate-800">${emp.phone || 'N/A'}</span></div>
                     </td>
                     <td class="px-3 py-3.5">
-                        <span class="block text-slate-900 font-black text-xs">${emp.designation || 'Not Configured'}</span>
+                        <span class="inline-block bg-slate-200 border border-slate-300 text-slate-900 font-black text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">${emp.designation || 'Not Configured'}</span>
                     </td>
                     <td class="px-3 py-3.5 max-w-xs text-slate-800 font-bold leading-relaxed">
                         ${emp.appointedProjects || '<span class="italic text-slate-400 font-medium">Unassigned Workspace</span>'}
@@ -139,12 +132,102 @@
                     <td class="px-3 py-3.5 leading-normal">
                         <div class="text-slate-900 font-black text-xs">${emp.qualification || 'N/A'}</div>
                         <div class="text-[10px] font-bold text-slate-600 mt-0.5">Pass: ${emp.yearOfPassing || '--'}</div>
-                        <div class="text-[10px] font-black text-sky-700 mt-0.5">Exp: ${experience}</div>
+                        <div class="text-[10px] font-black text-sky-700 mt-0.5 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100 inline-block">Exp: ${experience}</div>
                     </td>
                 </tr>
-            `;
+                `;
+
+                // 🎯 MOBILE ACCORDION CARD HTML
+                mobileCardsHtml += `
+                <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                    <!-- Card Header (Visible on Mobile) -->
+                    <div class="px-4 py-3 bg-slate-50 flex justify-between items-start cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAccRowAccordion('${rowId}')">
+                        <div class="flex items-center gap-3 w-[85%]">
+                            <img src="${profileImgUrl}" 
+                                 onclick="event.stopPropagation(); window.showImageByEmpId('${emp.employeeId}')"
+                                 class="w-12 h-12 min-w-[48px] rounded-full border border-slate-300 object-cover shadow-sm" alt="Profile">
+                            <div class="pr-2 truncate w-full">
+                                <strong class="text-slate-950 block text-sm truncate font-black">${emp.employeeName}</strong>
+                                <span class="text-slate-500 font-mono text-[10px] font-bold block mt-0.5">ID: ${emp.employeeId}</span>
+                                <div class="mt-1 flex items-center gap-1.5 w-full">
+                                    <span class="inline-block bg-sky-100 border border-sky-200 text-sky-800 rounded px-1.5 py-0.5 text-[9px] font-black uppercase truncate max-w-full">${emp.designation || 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end justify-center w-[15%] pt-2">
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Card Body (Hidden on Mobile initially) -->
+                    <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                        
+                        <!-- Contact Info -->
+                        <div class="pb-3 border-b border-slate-100">
+                            <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Contact Information</span>
+                            <div class="flex items-center gap-2 mb-1.5"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i><a href="mailto:${emp.email}" class="text-[11px] font-bold text-sky-600 break-all hover:underline">${emp.email || 'N/A'}</a></div>
+                            <div class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i><a href="tel:${emp.phone}" class="text-[11px] font-bold text-sky-600 hover:underline">${emp.phone || 'N/A'}</a></div>
+                        </div>
+
+                        <!-- Projects & DOJ -->
+                        <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                            <div>
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Date of Joining</span>
+                                <span class="font-bold text-slate-800 font-mono text-[11px]">${displayDoj}</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Appointed Projects</span>
+                                <div class="font-bold text-slate-800 leading-relaxed">${emp.appointedProjects || '<span class="italic text-slate-400 font-medium">Unassigned Workspace</span>'}</div>
+                            </div>
+                        </div>
+
+                        <!-- Supervisory Line -->
+                        <div class="pb-3 border-b border-slate-100">
+                            <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Supervisory Line Allocations</span>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-inner">
+                                <div><span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Manager</span> <span class="font-black text-slate-900 truncate block">${emp.managerName || 'None'}</span></div>
+                                <div><span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Coordinator</span> <span class="font-black text-slate-900 truncate block">${emp.coordinatorName || 'None'}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Education Attributes -->
+                        <div class="pt-1">
+                            <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Education Attributes</span>
+                            <div class="font-bold text-slate-900 mb-1.5">${emp.qualification || 'N/A'}</div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-[10px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Pass Year: ${emp.yearOfPassing || '--'}</div>
+                                <div class="text-[10px] font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">Exp: ${experience}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
             });
-            tbody.innerHTML = outputRows;
+
+            // 🎯 INJECT DUAL LAYOUT
+            container.innerHTML = `
+                <div class="hidden md:block overflow-x-auto w-full max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse table-auto min-w-[1150px]">
+                        <thead>
+                            <tr class="bg-slate-950 text-white border-b border-slate-800 text-[10px] font-black uppercase tracking-wider sticky top-0 z-20">
+                                <th class="px-3 py-3.5 w-20 text-center">Profile</th>
+                                <th class="px-3 py-3.5 w-48">Identity (Name & ID)</th>
+                                <th class="px-3 py-3.5 w-55">Contact Info</th>
+                                <th class="px-3 py-3.5 w-40">Designation</th>
+                                <th class="px-3 py-3.5 w-40">Appointed Projects</th>
+                                <th class="px-3 py-3.5 w-56">Supervisory Line Allocations</th>
+                                <th class="px-3 py-3.5 w-44">Education Attributes</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs text-slate-900 bg-white">
+                            ${desktopRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="md:hidden flex flex-col pt-1">
+                    ${mobileCardsHtml}
+                </div>
+            `;
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
