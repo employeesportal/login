@@ -1,37 +1,30 @@
-<div class="w-full max-w-7xl mx-auto glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-6 gap-4">
-        <h3 class="text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+<div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-4 sm:mb-6 gap-4">
+        <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
             <i data-lucide="shield-check" class="text-blue-600 w-5 h-5"></i> Coordinator Field Review Portal
         </h3>
         <div class="flex items-center gap-3 w-full sm:w-auto">
-            <select id="coord-filter-job" onchange="window.filterCoordTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48">
+            <select id="coord-filter-job" onchange="window.filterCoordTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48 focus:ring-2 focus:ring-blue-500 outline-none">
                 <option value="">Filter by Job ID</option>
             </select>
         </div>
     </div>
 
-    <div class="overflow-x-auto border rounded-2xl max-h-[600px]">
-        <table class="w-full text-left border-collapse text-xs min-w-[1100px]">
-            <thead>
-                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
-                    <th class="p-3.5">Job & Entry ID</th>
-                    <th class="p-3.5">Employee & Project</th>
-                    <th class="p-3.5">Timeline, Movement & Description</th>
-                    <th class="p-3.5 bg-slate-900 border-l border-r border-slate-800">Manager & Admin Reviews</th>
-                    <th class="p-3.5">Coordinator Comment (Locked after save)</th>
-                    <th class="p-3.5 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="coord-tbody" class="divide-y text-slate-800 font-bold">
-                <tr><td colspan="6" class="p-8 text-center animate-pulse">Loading coordinator records...</td></tr>
-            </tbody>
-        </table>
+    <!-- 🎯 DUAL LAYOUT CONTAINER -->
+    <div id="coord-data-container" class="w-full bg-white border border-slate-200 rounded-2xl shadow-inner sm:overflow-hidden p-2 sm:p-0">
+        <div class="p-8 text-center text-slate-500 font-bold animate-pulse">Loading coordinator records...</div>
     </div>
 </div>
 
 <script>
     (() => {
         let coordCache = [];
+
+        // Accordion Toggle for Mobile Cards
+        window.toggleCoordRowAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
 
         function formatIndianDateTime(rawStr) {
             if (!rawStr) return "N/A";
@@ -50,6 +43,8 @@
         }
 
         async function initCoordPortal() {
+            const container = document.getElementById("coord-data-container");
+            container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold animate-pulse">Loading coordinator records...</div>`;
             try {
                 const res = await fetch(`${API_URL}?action=getFieldActivities&role=COORDINATOR&userId=${currentUser.employeeId}`);
                 const result = await res.json();
@@ -57,9 +52,11 @@
                     coordCache = result.data;
                     populateCoordJobDropdown(coordCache);
                     renderCoordTable(coordCache);
+                } else {
+                    container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Failed to load records: ${result.message}</div>`;
                 }
             } catch(e) {
-                document.getElementById("coord-tbody").innerHTML = `<tr><td colspan="6" class="p-6 text-center text-rose-600">Failed to load records.</td></tr>`;
+                container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Network failure. Could not load records.</div>`;
             }
         }
 
@@ -80,27 +77,29 @@
         };
 
         function renderCoordTable(data) {
-            const tbody = document.getElementById("coord-tbody");
+            const container = document.getElementById("coord-data-container");
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">No assigned field activities found.</td></tr>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No assigned field activities found.</div>`;
                 return;
             }
 
-            let html = "";
-            data.forEach(r => {
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+
+            data.forEach((r, idx) => {
                 const isLocked = r.coordinatorComment && r.coordinatorComment.trim() !== "";
+                const rowId = `coord_mob_row_${idx}`;
                 
-                // Split movement type in case it contains "From/To" on a new line
                 let movementParts = (r.movementType || 'N/A').split('\n');
                 let mainMovement = movementParts[0];
                 let locations = movementParts.length > 1 ? movementParts[1] : '';
 
-                // Attachment view file link generation
                 let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
-                    `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 underline block mt-1.5 text-[10px] font-mono flex items-center gap-1 font-black"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
+                    `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline mt-1.5 text-[10px] font-mono inline-flex items-center gap-1 font-black bg-blue-50 px-2 py-1 rounded"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
 
-                html += `
-                    <tr class="hover:bg-slate-50 align-top">
+                // 🎯 DESKTOP ROW HTML
+                desktopRowsHtml += `
+                    <tr class="hover:bg-slate-50 align-top hidden md:table-row">
                         <td class="p-3.5">
                             <span class="font-mono font-black text-indigo-700 block">${r.jobActivityId}</span>
                             <span class="font-mono text-slate-500 text-[10px]">Entry: ${r.entryId}</span>
@@ -120,8 +119,6 @@
                                 <div class="text-indigo-600">Logged: ${formatIndianDateTime(r.employeeTimestamp)}</div>
                             </div>
                         </td>
-                        
-                        <!-- READ-ONLY REVIEW COLUMN -->
                         <td class="p-3.5 max-w-xs bg-slate-50 border-l border-r border-slate-200">
                             <div class="mb-2.5">
                                 <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-0.5">Manager Status</span>
@@ -135,23 +132,105 @@
                                 </div>
                             </div>
                         </td>
-
                         <td class="p-3.5 max-w-sm">
-                            <textarea id="coord-txt-${r.rowIndex}" rows="3" placeholder="Write coordinator comment..." class="w-full p-2 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>${r.coordinatorComment || ''}</textarea>
+                            <textarea id="coord-txt-desk-${r.rowIndex}" rows="3" placeholder="Write coordinator comment..." class="w-full p-2 border rounded-lg text-xs bg-white font-normal" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>${r.coordinatorComment || ''}</textarea>
                             ${isLocked ? '<span class="text-[10px] text-emerald-700 font-bold block mt-1">🔒 Locked (Saved)</span>' : ''}
                         </td>
                         <td class="p-3.5 text-center align-middle">
-                            ${!isLocked ? `<button onclick="window.saveCoordComment(${r.rowIndex})" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Save</button>` : '<span class="text-xs text-slate-400">-</span>'}
+                            ${!isLocked ? `<button onclick="window.saveCoordComment(${r.rowIndex}, 'coord-txt-desk-${r.rowIndex}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition">Save</button>` : '<span class="text-xs text-slate-400">-</span>'}
                         </td>
                     </tr>
                 `;
+
+                // 🎯 MOBILE ACCORDION CARD HTML
+                mobileCardsHtml += `
+                    <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleCoordRowAccordion('${rowId}')">
+                            <div class="pr-2 w-[85%]">
+                                <strong class="text-slate-950 block text-xs sm:text-sm truncate font-black">${r.employeeName}</strong>
+                                <span class="text-slate-500 font-mono text-[10px] font-bold block mt-0.5 text-indigo-700">${r.jobActivityId} <span class="text-slate-400">| Entry: ${r.entryId}</span></span>
+                            </div>
+                            <div class="flex items-center justify-end w-[15%]">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Body (Hidden by default) -->
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-0.5">Project</span>
+                                <span class="font-bold text-slate-800">${r.project}</span>
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1">Movement Details</span>
+                                <div class="font-bold text-slate-900">${mainMovement} (${r.modeOfTravel})</div>
+                                ${locations ? `<div class="text-[10px] text-slate-500 italic mb-1">${locations}</div>` : ''}
+                                <p class="text-slate-600 italic text-[11px] mt-1 bg-slate-50 p-2 rounded border border-slate-200">"${r.activityDescription || 'No description provided'}"</p>
+                                ${docLink}
+                                <div class="font-mono text-[10px] text-slate-500 mt-2 space-y-1">
+                                    <div class="flex justify-between border-b border-slate-50 pb-1"><span>Travel:</span> <span class="font-bold text-slate-700">${formatIndianDateTime(r.tentativeTravelDate)}</span></div>
+                                    <div class="flex justify-between border-b border-slate-50 pb-1"><span>Reach:</span> <span class="font-bold text-slate-700">${formatIndianDateTime(r.dateToReachDestination)}</span></div>
+                                    <div class="flex justify-between text-indigo-700 font-bold"><span>Logged:</span> <span>${formatIndianDateTime(r.employeeTimestamp)}</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="pb-3 border-b border-slate-100">
+                                <span class="text-slate-400 uppercase text-[9px] font-black tracking-wider block mb-1.5">Supervisory Reviews</span>
+                                <div class="mb-2 bg-slate-50 p-2 rounded border border-slate-200">
+                                    <span class="text-[9px] uppercase text-slate-500 block font-bold">Manager Status:</span>
+                                    <span class="font-black text-slate-800 text-[11px]">${r.managerStatus || 'PENDING'}</span>
+                                    ${r.managerInstruction ? `<div class="text-[10px] text-indigo-800 italic mt-1 font-medium bg-indigo-50/50 p-1 rounded">"${r.managerInstruction}"</div>` : ''}
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <span class="text-[9px] uppercase text-slate-500 block font-bold">Admin Verdict:</span>
+                                    <span class="font-mono text-[10px] text-slate-800 font-black">${(r.adminVerdict || 'PENDING').split(' (By ')[0]}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-1">
+                                <span class="text-slate-500 uppercase text-[10px] font-black tracking-wider block mb-1.5 flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> Coordinator Comment</span>
+                                <textarea id="coord-txt-mob-${r.rowIndex}" rows="3" placeholder="Write coordinator comment..." class="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:ring-2 focus:ring-blue-500 outline-none" ${isLocked ? 'disabled bg-slate-100 text-slate-500' : ''}>${r.coordinatorComment || ''}</textarea>
+                                ${isLocked ? 
+                                    '<span class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded font-bold flex items-center gap-1 w-max mt-2"><i data-lucide="lock" class="w-3 h-3"></i> Locked (Saved)</span>' : 
+                                    `<button onclick="window.saveCoordComment(${r.rowIndex}, 'coord-txt-mob-${r.rowIndex}')" class="mt-3 w-full px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow transition flex items-center justify-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Save Comment</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-            tbody.innerHTML = html;
+
+            // 🎯 INJECT DUAL LAYOUT
+            container.innerHTML = `
+                <div class="hidden md:block overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left border-collapse text-xs min-w-[1100px]">
+                        <thead>
+                            <tr class="bg-slate-950 text-white font-black uppercase text-[10px] tracking-wider sticky top-0 z-10">
+                                <th class="p-3.5">Job & Entry ID</th>
+                                <th class="p-3.5">Employee & Project</th>
+                                <th class="p-3.5">Timeline, Movement & Description</th>
+                                <th class="p-3.5 bg-slate-900 border-l border-r border-slate-800">Manager & Admin Reviews</th>
+                                <th class="p-3.5">Coordinator Comment (Locked after save)</th>
+                                <th class="p-3.5 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y text-slate-800 font-bold bg-white">
+                            ${desktopRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="md:hidden flex flex-col w-full">
+                    ${mobileCardsHtml}
+                </div>
+            `;
             if (window.lucide) lucide.createIcons();
         }
 
-        window.saveCoordComment = async function(rowIndex) {
-            const comment = document.getElementById(`coord-txt-${rowIndex}`).value.trim();
+        // 🎯 UPDATED TO ACCEPT SPECIFIC TEXTAREA IDs
+        window.saveCoordComment = async function(rowIndex, textareaId) {
+            const comment = document.getElementById(textareaId).value.trim();
             if (!comment) { alert("Please write a comment before saving."); return; }
             if (!confirm("Are you sure you want to save and lock this comment? It cannot be edited further.")) return;
 
