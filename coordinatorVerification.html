@@ -70,7 +70,7 @@
             <tbody id="coordinator-roster-table-body"
                 class="text-xs divide-y divide-slate-100 text-slate-700 font-bold">
                 <tr>
-                    <td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">Fetching today's logs...
+                    <td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">Fetching today's logs & leave data...
                     </td>
                 </tr>
             </tbody>
@@ -96,10 +96,72 @@
 <script>
     (() => {
         let activeRosterDataCache = [];
+        let masterLeaveApplicationsCache = [];
         
-        // 🎯 FIXED: Generate DD-MM-YYYY specifically to match the backend's new logic
         const d = new Date();
         const todayDate = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth()+1).padStart(2, '0')}-${d.getFullYear()}`;
+
+        // 🎯 DATE PARSING HELPERS
+        function normalizeBackendObject(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            let cleanObj = {};
+            for (let key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    let normalizedKey = String(key).replace(/\s+/g, '').toLowerCase();
+                    cleanObj[normalizedKey] = obj[key];
+                }
+            }
+            return cleanObj;
+        }
+
+        function cleanToStandardISODate(dInput) {
+            if (!dInput) return "";
+            let cleanStr = String(dInput).trim().split(' ')[0];
+            if (cleanStr.includes('T')) cleanStr = cleanStr.split('T')[0];
+            
+            let parts = [];
+            if (cleanStr.includes('/')) parts = cleanStr.split('/');
+            else if (cleanStr.includes('-')) parts = cleanStr.split('-');
+            
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                if (parts[2].length === 4) return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+            }
+            return cleanStr;
+        }
+
+        function parseToTimestamp(dateStr) {
+            const normalized = cleanToStandardISODate(dateStr);
+            if (!normalized) return 0;
+            const dateObj = new Date(normalized);
+            dateObj.setHours(0,0,0,0);
+            return dateObj.getTime();
+        }
+
+        // 🎯 EVALUATE OVERLAPPING LEAVE DATES
+        function evaluateDateInsideLeaveBlock(checkTime, lvRecord) {
+            const cleanLv = normalizeBackendObject(lvRecord);
+            let startStr = cleanLv.fromdate || "";
+            let endStr = cleanLv.todate || "";
+            
+            const status = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+            
+            // If Approved, prioritize the Admin Approved Date range
+            if (status === "APPROVED" || status === "SHORT") {
+                if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).includes('to')) {
+                    let p = String(cleanLv.adminapproveddate).split('to');
+                    startStr = p[0].trim(); endStr = p[1].trim();
+                } else if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).trim() !== "") {
+                    startStr = cleanLv.adminapproveddate; endStr = cleanLv.adminapproveddate;
+                }
+            }
+            
+            const startT = parseToTimestamp(startStr);
+            const endT = parseToTimestamp(endStr) || startT; 
+            if (!startT) return false;
+            
+            return (checkTime >= startT && checkTime <= endT);
+        }
 
         window.recalculateRosterStatistics = () => {
             const total = activeRosterDataCache.length;
@@ -119,11 +181,17 @@
         window.fetchCoordinatorVerificationRoster = async () => {
             const tableBody = document.getElementById("coordinator-roster-table-body");
             document.getElementById("display-date-header").innerText = `Audit Date: ${todayDate}`;
+            const todayTimestamp = parseToTimestamp(todayDate);
 
             try {
-                // Fetch using the safely formatted DD-MM-YYYY date
-                const res = await fetch(`${API_URL}?action=getRosterForCoordinator&coordinatorId=${currentUser.employeeId}&date=${todayDate}`);
-                const result = await res.json();
+                // 🎯 Fetch both Roster Data AND Leave Application Data simultaneously
+                const [rosterRes, leaveRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getRosterForCoordinator&coordinatorId=${currentUser.employeeId}&date=${todayDate}`),
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`)
+                ]);
+                
+                const result = await rosterRes.json();
+                const leaveResult = await leaveRes.json();
 
                 if (!result.data || result.data.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-slate-400">No records found for today.</td></tr>`;
@@ -131,12 +199,47 @@
                 } else {
                     activeRosterDataCache = result.data;
                 }
+                
+                masterLeaveApplicationsCache = leaveResult.status ? leaveResult.data : [];
                 window.recalculateRosterStatistics();
 
                 let outputRows = "";
                 activeRosterDataCache.forEach((r, idx) => {
                     let stateBadge = "";
-                    if (r.trackingState === "MARKED_UNVERIFIED") {
+                    
+                    // 🎯 Check active leave blocks for this employee
+                    let isLeaveApplied = false;
+                    let isLeaveApproved = false;
+
+                    const activeLeave = masterLeaveApplicationsCache.find(lv => {
+                        const cleanLv = normalizeBackendObject(lv);
+                        if (String(cleanLv.employeeid || "").trim().toUpperCase() !== String(r.employeeId).trim().toUpperCase()) return false;
+                        
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "REJECTED" || stat === "DECLINED" || stat === "CANCELLED") return false;
+                        
+                        return evaluateDateInsideLeaveBlock(todayTimestamp, lv);
+                    });
+
+                    if (activeLeave) {
+                        const cleanLv = normalizeBackendObject(activeLeave);
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "APPROVED") {
+                            isLeaveApproved = true;
+                        } else {
+                            isLeaveApplied = true;
+                        }
+                    }
+
+                    // Save values back to Roster Cache for PDF Report usage
+                    r.isLeaveApproved = isLeaveApproved;
+                    r.isLeaveApplied = isLeaveApplied;
+
+                    if (isLeaveApproved) {
+                        stateBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">ON APPROVED LEAVE</span>`;
+                    } else if (isLeaveApplied) {
+                        stateBadge = `<span class="bg-orange-100 border border-orange-400 text-orange-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">APPLIED FOR LEAVE</span>`;
+                    } else if (r.trackingState === "MARKED_UNVERIFIED") {
                         stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED / VERIFICATION PENDING</span>`;
                     } else if (r.trackingState === "NOT_MARKED") {
                         stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">NOT MARKED</span>`;
@@ -144,6 +247,13 @@
                         stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED AND VERIFIED BY COORDINATOR</span>`;
                     } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
                         stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED BY COORDINATOR ONLY</span>`;
+                    }
+
+                    // 🎯 Smart Pre-Selection for Audit Remark based on Leave Overlaps
+                    let currentRemark = r.coordinatorRemark || "Pending";
+                    if (currentRemark === "Pending" || currentRemark === "") {
+                        if (isLeaveApproved) currentRemark = "On Leave";
+                        else if (isLeaveApplied) currentRemark = "Leave Applied";
                     }
 
                     let projSelect = `<select id="proj_sel_${idx}" class="px-2 py-1 w-50 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.handleCoordRowProjectChange(${idx}, this.value)">`;
@@ -227,18 +337,18 @@
                             <td class="px-4 py-3">${historyHtml}</td>
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <select id="remark_${idx}" class="px-2 py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs focus:ring-1" style="width:185px;">
-                                    <option value="Pending" ${!r.coordinatorRemark || r.coordinatorRemark === "Pending" ? "selected" : ""}>Pending</option>
-                                    <option value="Verified" ${r.coordinatorRemark === "Verified" ? "selected" : ""}>Verified</option>
-                                    <option value="Present" ${r.coordinatorRemark === "Present" ? "selected" : ""}>Present</option>
-                                    <option value="Absent" ${r.coordinatorRemark === "Absent" ? "selected" : ""}>Absent</option>
-                                    <option value="On Leave" ${r.coordinatorRemark === "On Leave" ? "selected" : ""}>On Leave</option>
-                                    <option value="Leave Applied" ${r.coordinatorRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
-                                    <option value="Half-Day" ${r.coordinatorRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
-                                    <option value="Holiday" ${r.coordinatorRemark === "Holiday" ? "selected" : ""}>Holiday</option>
-                                    <option value="On Duty" ${r.coordinatorRemark === "On Duty" ? "selected" : ""}>On Duty</option>
-                                    <option value="Field Visit" ${r.coordinatorRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
-                                    <option value="Location Wrongly Marked" ${r.coordinatorRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
-                                    <option value="Status Unknown-Audit Please" ${r.coordinatorRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
+                                    <option value="Pending" ${currentRemark === "Pending" ? "selected" : ""}>Pending</option>
+                                    <option value="Verified" ${currentRemark === "Verified" ? "selected" : ""}>Verified</option>
+                                    <option value="Present" ${currentRemark === "Present" ? "selected" : ""}>Present</option>
+                                    <option value="Absent" ${currentRemark === "Absent" ? "selected" : ""}>Absent</option>
+                                    <option value="On Leave" ${currentRemark === "On Leave" ? "selected" : ""}>On Leave</option>
+                                    <option value="Leave Applied" ${currentRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
+                                    <option value="Half-Day" ${currentRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
+                                    <option value="Holiday" ${currentRemark === "Holiday" ? "selected" : ""}>Holiday</option>
+                                    <option value="On Duty" ${currentRemark === "On Duty" ? "selected" : ""}>On Duty</option>
+                                    <option value="Field Visit" ${currentRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
+                                    <option value="Location Wrongly Marked" ${currentRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
+                                    <option value="Status Unknown-Audit Please" ${currentRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
                                 </select>
                             </td>
                             <td class="px-3 py-3">
@@ -256,7 +366,7 @@
                 tableBody.innerHTML = outputRows;
                 if (window.lucide) window.lucide.createIcons();
             } catch (err) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-rose-500 font-black bg-rose-50/40">Failed parsing data.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-rose-500 font-black bg-rose-50/40">Failed loading synchronization data.</td></tr>`;
             }
         };
 
@@ -300,7 +410,7 @@
 
             const singleSubmitPayload = {
                 action: "processCoordinatorVerificationData",
-                date: todayDate, // 🎯 FIXED: Ensures the safe DD-MM-YYYY is saved to the sheet
+                date: todayDate, 
                 coordinatorId: currentUser.employeeId,
                 coordinatorName: currentUser.employeeName,
                 records: targetRowPayload
@@ -356,10 +466,16 @@
                                 const locLink = hasLocation
                                     ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
                                     : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
+                                
+                                // 🎯 Map Leaf Status to Report PDF Ledger Display
+                                let displayState = r.trackingState;
+                                if (r.isLeaveApproved) displayState = "ON APPROVED LEAVE";
+                                else if (r.isLeaveApplied) displayState = "APPLIED FOR LEAVE";
+
                                 return `
                                     <tr class="align-top">
                                         <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
-                                        <td class="py-4 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block">${r.trackingState}</span></td>
+                                        <td class="py-4 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block font-bold">${displayState.replace(/_/g, ' ')}</span></td>
                                         <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
                                         <td class="py-4 text-slate-600 break-words">
                                             <div>${r.todaysPlan || '-'}</div>
