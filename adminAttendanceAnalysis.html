@@ -66,7 +66,7 @@
         </div>
     </div>
 
-    <!-- Summary Statistics Pane (Expanded to 7 Columns for Sundays) -->
+    <!-- Summary Statistics Pane (Clickable Filter Cards) -->
     <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
 
     <!-- Data Matrix Viewport -->
@@ -112,6 +112,20 @@
         window.toggleAnalysisRowAccordion = function(id) {
             const el = document.getElementById(id);
             if (el) el.classList.toggle('hidden');
+        };
+
+        // 🎯 NEW: Summary Card Clickable Filter Handler
+        window.handleSummaryCardFilterClick = function(targetStatusValue) {
+            const statusSelect = document.getElementById("anly-status-filter");
+            if (!statusSelect) return;
+
+            // If already selected, toggle back to ALL
+            if (statusSelect.value === targetStatusValue) {
+                statusSelect.value = "ALL";
+            } else {
+                statusSelect.value = targetStatusValue;
+            }
+            window.executeAttendanceAnalysisPipeline();
         };
 
         function normalizeBackendObject(obj) {
@@ -476,7 +490,7 @@
             if (statusFilter !== "ALL") {
                 filteredRows = processedRows.filter(r => {
                     const s = String(r.status);
-                    if (statusFilter === "PRESENT") return s === "PRESENT";
+                    if (statusFilter === "PRESENT") return s === "PRESENT" || s === "COORD LEAVE MARK"; // include coordinate remarks if needed or keep strict
                     if (statusFilter === "APPROVED_LEAVE") return s === "APPROVED LEAVE";
                     if (statusFilter === "APPLIED_LEAVE") return s === "APPLIED LEAVE";
                     if (statusFilter === "COORD_LEAVE") return s === "COORD LEAVE MARK";
@@ -487,7 +501,13 @@
                 });
             }
 
-            // 🎯 Render Summary Boxes with Filtered Record Header & Sundays
+            // Helper for active styling on summary cards
+            const getCardStyle = (val) => {
+                const isActive = statusFilter === val;
+                return isActive ? 'ring-2 ring-indigo-600 scale-[1.02] shadow-md' : 'hover:opacity-90';
+            };
+
+            // 🎯 Render Summary Boxes with Clickable Filter Action
             if (summaryBox) {
                 summaryBox.innerHTML = `
                     <div class="col-span-2 sm:col-span-4 lg:col-span-7 bg-slate-900 border border-slate-800 p-3 sm:px-5 sm:py-4 rounded-xl shadow-inner flex justify-between items-center transition-all duration-300">
@@ -504,31 +524,31 @@
                         </div>
                     </div>
                     
-                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('PRESENT')" class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('PRESENT')}" title="Click to filter Present records">
                         <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present</span>
                         <strong class="text-lg font-mono font-black text-emerald-800">${countPresent}</strong>
                     </div>
-                    <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('APPROVED_LEAVE')" class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPROVED_LEAVE')}" title="Click to filter Approved Leave records">
                         <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">Appr Leave</span>
                         <strong class="text-lg font-mono font-black text-indigo-800">${countApprLeave}</strong>
                     </div>
-                    <div class="bg-orange-50 border border-orange-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('APPLIED_LEAVE')" class="bg-orange-50 border border-orange-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPLIED_LEAVE')}" title="Click to filter Applied Leave records">
                         <span class="text-[9px] font-black text-orange-600 uppercase block tracking-wider mb-1">Appl Leave</span>
                         <strong class="text-lg font-mono font-black text-orange-800">${countApplLeave}</strong>
                     </div>
-                    <div class="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('COORD_LEAVE')" class="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_LEAVE')}" title="Click to filter Coordinator Leave records">
                         <span class="text-[9px] font-black text-fuchsia-600 uppercase block tracking-wider mb-1">Coord Leave</span>
                         <strong class="text-lg font-mono font-black text-fuchsia-800">${countCoordLeave}</strong>
                     </div>
-                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('ABSENT')" class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('ABSENT')}" title="Click to filter Absent records">
                         <span class="text-[9px] font-black text-amber-600 uppercase block tracking-wider mb-1">Absent</span>
                         <strong class="text-lg font-mono font-black text-amber-800">${countAbsent}</strong>
                     </div>
-                    <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('SUNDAY')" class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('SUNDAY')}" title="Click to filter Sundays">
                         <span class="text-[9px] font-black text-cyan-600 uppercase block tracking-wider mb-1">Sundays</span>
                         <strong class="text-lg font-mono font-black text-cyan-800">${countSunday}</strong>
                     </div>
-                    <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-inner">
+                    <div onclick="window.handleSummaryCardFilterClick('NOT_MARKED')" class="bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('NOT_MARKED')}" title="Click to filter Unmarked records">
                         <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1">Unmarked</span>
                         <strong class="text-lg font-mono font-black text-rose-800">${countIdle}</strong>
                     </div>
