@@ -1,5 +1,5 @@
 <div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <!-- 🎯 Header Section: Title on top line, Filters moved to the next line for clean alignment -->
+    <!-- Header Section: Title on top line, Filters and Clear Filters button on the next line -->
     <div class="border-b border-slate-200 pb-4 mb-4 sm:mb-6 space-y-4">
         <div class="flex items-center justify-between">
             <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
@@ -25,6 +25,11 @@
             <select id="admin-filter-job" onchange="window.filterAdminTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold flex-1 sm:max-w-xs focus:ring-2 focus:ring-rose-500 outline-none">
                 <option value="">Filter by Job ID</option>
             </select>
+
+            <!-- 🎯 Clear Filters Button -->
+            <button onclick="window.clearAdminFilters()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-sm" title="Clear All Filters">
+                <i data-lucide="x-circle" class="w-4 h-4 text-rose-600"></i> Clear Filters
+            </button>
         </div>
     </div>
 
@@ -111,7 +116,24 @@
             });
         }
 
-        // 🎯 When employee dropdown changes, dynamically update Job ID dropdown options to only contain jobs for that employee
+        // 🎯 Reset all filters and restore full Job ID options list
+        window.clearAdminFilters = function() {
+            const empSearchEl = document.getElementById("admin-filter-emp");
+            const selectEmpEl = document.getElementById("admin-select-emp");
+            const selectJobEl = document.getElementById("admin-filter-job");
+
+            if (empSearchEl) empSearchEl.value = "";
+            if (selectEmpEl) selectEmpEl.value = "";
+            
+            // Reset Job ID dropdown back to all options
+            if (selectJobEl) {
+                populateAdminJobDropdown(adminCache);
+                selectJobEl.value = "";
+            }
+
+            renderAdminTable(adminCache);
+        };
+
         window.handleEmployeeDropdownChange = function() {
             const selectEmpEl = document.getElementById("admin-select-emp");
             const selectJobEl = document.getElementById("admin-filter-job");
@@ -133,7 +155,6 @@
                     selectJobEl.appendChild(opt);
                 });
 
-                // Retain previously selected job if it still applies to the newly filtered list
                 if (availableJobs.includes(currentJobVal)) {
                     selectJobEl.value = currentJobVal;
                 } else {
