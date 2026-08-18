@@ -21,13 +21,15 @@
             </p>
         </div>
         
-        <!-- Interactive Status Filter -->
+        <!-- Interactive Status Filter (Expanded for split Coord statuses) -->
         <div class="w-full md:w-auto bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl border border-slate-200 md:border-none flex flex-col md:flex-row md:items-center gap-2">
             <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">Filter Status:</label>
             <select id="roster-status-filter" onchange="window.renderRosterTable(this.value)" class="w-full md:w-auto px-4 md:px-3 py-2.5 md:py-2 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none transition">
                 <option value="ALL">Show All Employees</option>
                 <option value="EMP_MARKED">Emp Marked</option>
-                <option value="COORD_MARKED">Coord Marked</option>
+                <option value="COORD_MARKED_PRESENT">Coord Marked (Present)</option>
+                <option value="COORD_MARKED_ABSENT">Coord Marked (Absent)</option>
+                <option value="COORD_MARKED_LEAVE">Coord Marked (Leave Applied)</option>
                 <option value="ON_LEAVE">On Leave (Appr)</option>
                 <option value="APPLIED_LEAVE">Applied Leave</option>
                 <option value="NOT_MARKED">Not Marked</option>
@@ -35,32 +37,9 @@
         </div>
     </div>
 
-    <!-- Metrics Summary -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Staff</span>
-            <strong id="stat-total" class="text-xl font-black text-blue-700 font-mono">0</strong>
-        </div>
-        <div class="bg-amber-50/60 border border-amber-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider block mb-1">Emp Marked</span>
-            <strong id="stat-emp-marked" class="text-xl font-black text-amber-700 font-mono">0</strong>
-        </div>
-        <div class="bg-purple-50/50 border border-purple-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-purple-600 uppercase tracking-wider block mb-1">Coord Marked</span>
-            <strong id="stat-coord-marked" class="text-xl font-black text-purple-700 font-mono">0</strong>
-        </div>
-        <div class="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block mb-1">On Leave (Appr)</span>
-            <strong id="stat-on-leave" class="text-xl font-black text-emerald-700 font-mono">0</strong>
-        </div>
-        <div class="bg-orange-50/50 border border-orange-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-orange-600 uppercase tracking-wider block mb-1">Applied Leave</span>
-            <strong id="stat-applied-leave" class="text-xl font-black text-orange-700 font-mono">0</strong>
-        </div>
-        <div class="bg-rose-50/50 border border-rose-100 p-3 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-rose-500 uppercase tracking-wider block mb-1">Not Marked</span>
-            <strong id="stat-not-marked" class="text-xl font-black text-rose-700 font-mono">0</strong>
-        </div>
+    <!-- Metrics Summary Grid (Expanded to 8 Cards) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-6" id="stat-cards-wrapper">
+        <!-- Injected dynamically via JS -->
     </div>
 
     <!-- 🎯 DUAL LAYOUT CONTAINER -->
@@ -93,6 +72,18 @@
         window.toggleRosterAccordion = function(id) {
             const el = document.getElementById(id);
             if (el) el.classList.toggle('hidden');
+        };
+
+        window.handleSummaryCardFilterClick = function(targetStatusValue) {
+            const statusSelect = document.getElementById("roster-status-filter");
+            if (!statusSelect) return;
+
+            if (statusSelect.value === targetStatusValue) {
+                statusSelect.value = "ALL";
+            } else {
+                statusSelect.value = targetStatusValue;
+            }
+            window.renderRosterTable(statusSelect.value);
         };
 
         function normalizeBackendObject(obj) {
@@ -153,27 +144,81 @@
 
         window.recalculateRosterStatistics = () => {
             const total = activeRosterDataCache.length;
-            let empM = 0, coordM = 0, onLeave = 0, appliedLeave = 0, notM = 0;
+            let empM = 0, coordPres = 0, coordAbs = 0, coordLeave = 0, onLeave = 0, appliedLeave = 0, notM = 0;
             
             activeRosterDataCache.forEach(r => {
-                if (r.isLeaveApproved) onLeave++;
-                else if (r.isLeaveApplied) appliedLeave++;
-                else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") empM++;
-                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordM++;
-                else notM++;
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
+                
+                if (r.isLeaveApproved) {
+                    onLeave++;
+                } else if (r.isLeaveApplied) {
+                    appliedLeave++;
+                } else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") {
+                    empM++;
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    // Split coord marked categories based on coordinator remark
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                        coordAbs++;
+                    } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                        coordLeave++;
+                    } else {
+                        coordPres++;
+                    }
+                } else {
+                    notM++;
+                }
             });
             
-            document.getElementById("stat-total").innerText = total;
-            document.getElementById("stat-emp-marked").innerText = empM;
-            document.getElementById("stat-coord-marked").innerText = coordM;
-            document.getElementById("stat-on-leave").innerText = onLeave;
-            document.getElementById("stat-applied-leave").innerText = appliedLeave;
-            document.getElementById("stat-not-marked").innerText = notM;
+            const currentFilter = document.getElementById("roster-status-filter") ? document.getElementById("roster-status-filter").value : "ALL";
+            const getCardStyle = (val) => currentFilter === val ? 'ring-2 ring-indigo-600 scale-[1.02] shadow-md' : 'hover:opacity-90';
+
+            const cardsWrapper = document.getElementById("stat-cards-wrapper");
+            if (cardsWrapper) {
+                cardsWrapper.innerHTML = `
+                    <div onclick="window.handleSummaryCardFilterClick('ALL')" class="bg-blue-50/50 border border-blue-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('ALL')}" title="Click to show all">
+                        <span class="text-[8px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Staff</span>
+                        <strong class="text-base font-black text-blue-700 font-mono">${total}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('EMP_MARKED')" class="bg-amber-50/60 border border-amber-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('EMP_MARKED')}" title="Click to filter Emp Marked">
+                        <span class="text-[8px] font-black text-amber-700 uppercase tracking-wider block mb-1">Emp Marked</span>
+                        <strong class="text-base font-black text-amber-700 font-mono">${empM}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('COORD_MARKED_PRESENT')" class="bg-purple-50/50 border border-purple-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_PRESENT')}" title="Click to filter Coord Marked Present">
+                        <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider block mb-1">Coord (Pres)</span>
+                        <strong class="text-base font-black text-purple-700 font-mono">${coordPres}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('COORD_MARKED_ABSENT')" class="bg-rose-50/50 border border-rose-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_ABSENT')}" title="Click to filter Coord Marked Absent">
+                        <span class="text-[8px] font-black text-rose-600 uppercase tracking-wider block mb-1">Coord (Abs)</span>
+                        <strong class="text-base font-black text-rose-700 font-mono">${coordAbs}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('COORD_MARKED_LEAVE')" class="bg-fuchsia-50/50 border border-fuchsia-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_LEAVE')}" title="Click to filter Coord Marked Leave">
+                        <span class="text-[8px] font-black text-fuchsia-600 uppercase tracking-wider block mb-1">Coord (Leave)</span>
+                        <strong class="text-base font-black text-fuchsia-700 font-mono">${coordLeave}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('ON_LEAVE')" class="bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('ON_LEAVE')}" title="Click to filter On Leave">
+                        <span class="text-[8px] font-black text-emerald-600 uppercase tracking-wider block mb-1">On Leave</span>
+                        <strong class="text-base font-black text-emerald-700 font-mono">${onLeave}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('APPLIED_LEAVE')" class="bg-orange-50/50 border border-orange-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPLIED_LEAVE')}" title="Click to filter Applied Leave">
+                        <span class="text-[8px] font-black text-orange-600 uppercase tracking-wider block mb-1">Appl Leave</span>
+                        <strong class="text-base font-black text-orange-700 font-mono">${appliedLeave}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('NOT_MARKED')" class="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('NOT_MARKED')}" title="Click to filter Not Marked">
+                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider block mb-1">Not Marked</span>
+                        <strong class="text-base font-black text-slate-700 font-mono">${notM}</strong>
+                    </div>
+                `;
+            }
         };
 
-        // 🎯 DYNAMIC RENDERER: Builds Desktop & Mobile Views
         window.renderRosterTable = (filterStatus = "ALL") => {
             const container = document.getElementById("coordinator-data-container");
+            const selectEl = document.getElementById("roster-status-filter");
+            if (selectEl && selectEl.value !== filterStatus) {
+                selectEl.value = filterStatus;
+            }
+
+            window.recalculateRosterStatistics();
             
             if (activeRosterDataCache.length === 0) {
                 container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No records found.</div>`;
@@ -185,35 +230,47 @@
             let displayedCount = 0;
 
             activeRosterDataCache.forEach((r, idx) => {
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
                 let category = "NOT_MARKED";
-                if (r.isLeaveApproved) category = "ON_LEAVE";
-                else if (r.isLeaveApplied) category = "APPLIED_LEAVE";
-                else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") category = "EMP_MARKED";
-                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") category = "COORD_MARKED";
+
+                if (r.isLeaveApproved) {
+                    category = "ON_LEAVE";
+                } else if (r.isLeaveApplied) {
+                    category = "APPLIED_LEAVE";
+                } else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") {
+                    category = "EMP_MARKED";
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                        category = "COORD_MARKED_ABSENT";
+                    } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                        category = "COORD_MARKED_LEAVE";
+                    } else {
+                        category = "COORD_MARKED_PRESENT";
+                    }
+                }
 
                 if (filterStatus !== "ALL" && filterStatus !== category) return;
                 displayedCount++;
 
                 let stateBadge = "";
-                let shortStatus = "";
                 if (r.isLeaveApproved) {
                     stateBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">ON APPROVED LEAVE</span>`;
-                    shortStatus = "ON LEAVE";
                 } else if (r.isLeaveApplied) {
                     stateBadge = `<span class="bg-orange-100 border border-orange-400 text-orange-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">APPLIED FOR LEAVE</span>`;
-                    shortStatus = "APPL LEAVE";
                 } else if (r.trackingState === "MARKED_UNVERIFIED") {
                     stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED / PENDING</span>`;
-                    shortStatus = "PENDING";
                 } else if (r.trackingState === "NOT_MARKED") {
                     stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">NOT MARKED</span>`;
-                    shortStatus = "NOT MARKED";
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR") {
                     stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">VERIFIED BY COORD</span>`;
-                    shortStatus = "VERIFIED";
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
-                    stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED BY COORD ONLY</span>`;
-                    shortStatus = "COORD ONLY";
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                        stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">COORD MARKED (ABSENT)</span>`;
+                    } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                        stateBadge = `<span class="bg-fuchsia-100 border border-fuchsia-300 text-fuchsia-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">COORD MARKED (LEAVE)</span>`;
+                    } else {
+                        stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">COORD MARKED (PRESENT)</span>`;
+                    }
                 }
 
                 let currentRemark = r.coordinatorRemark || "Pending";
@@ -226,7 +283,6 @@
                 const baseDistrictVal = isDistrictOther ? "OTHER" : r.district;
                 const customDistrictVal = isDistrictOther ? String(r.district).replace("OTHER-", "") : "";
 
-                // Generate Controls Helper
                 const generateControls = (prefix) => {
                     let projSelect = `<select id="${prefix}_proj_sel_${idx}" class="w-full px-2 py-2 sm:py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-indigo-500" onchange="window.handleCoordRowProjectChange(${idx}, this.value, '${prefix}')">`;
                     projSelect += `<option value="">-- Choose Project --</option>`;
@@ -309,7 +365,6 @@
 
                 const rowId = `roster_mob_row_${idx}`;
 
-                // 🎯 DESKTOP ROW HTML
                 desktopRowsHtml += `
                     <tr class="hover:bg-slate-50/50 transition-colors align-top hidden lg:table-row">
                         <td class="px-3 py-3 whitespace-nowrap">
@@ -332,7 +387,6 @@
                     </tr>
                 `;
 
-                // 🎯 MOBILE ACCORDION CARD HTML
                 mobileCardsHtml += `
                     <div class="lg:hidden bg-white border border-slate-200 rounded-2xl shadow-sm mb-3 overflow-hidden">
                         <div class="px-4 py-3 bg-slate-50 flex justify-between items-start cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleRosterAccordion('${rowId}')">
@@ -349,7 +403,6 @@
                         </div>
                         
                         <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
-                            <!-- Location & Assignments -->
                             <div class="pb-3 border-b border-slate-100 space-y-3">
                                 <div>
                                     <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Project</label>
@@ -361,7 +414,6 @@
                                 </div>
                             </div>
 
-                            <!-- Execution & Tracking -->
                             <div class="pb-3 border-b border-slate-100 space-y-3">
                                 <div>
                                     <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Today's Plan</span>
@@ -377,7 +429,6 @@
                                 </div>
                             </div>
 
-                            <!-- Audit Controls -->
                             <div class="pt-1 space-y-3">
                                 <span class="text-[10px] font-black uppercase text-indigo-700 tracking-wider flex items-center gap-1.5 mb-2"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Coordinator Audit Input</span>
                                 <div>
@@ -487,7 +538,6 @@
             }
         };
 
-        // 🎯 UPDATED TO USE PREFIX FOR DYNAMIC TARGETING
         window.handleCoordRowProjectChange = function (index, newProjectValue, prefix = 'desk') {
             const distSel = document.getElementById(`${prefix}_dist_sel_${index}`);
             const cacheItem = activeRosterDataCache[index];
@@ -551,12 +601,17 @@
             const coordName = currentUser.employeeName || "Coordinator";
 
             const total = activeRosterDataCache.length;
-            let empM = 0, coordM = 0, onLeave = 0, appliedLeave = 0, notM = 0;
+            let empM = 0, coordPres = 0, coordAbs = 0, coordLeave = 0, onLeave = 0, appliedLeave = 0, notM = 0;
             activeRosterDataCache.forEach(r => {
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
                 if (r.isLeaveApproved) onLeave++;
                 else if (r.isLeaveApplied) appliedLeave++;
                 else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") empM++;
-                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordM++;
+                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") coordAbs++;
+                    else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") coordLeave++;
+                    else coordPres++;
+                }
                 else notM++;
             });
 
@@ -570,13 +625,15 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-8">
-                        <div class="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center"><p class="text-[8px] font-black text-blue-600 uppercase">Total</p><strong class="text-sm font-mono">${total}</strong></div>
-                        <div class="bg-amber-50 p-2 rounded-xl border border-amber-100 text-center"><p class="text-[8px] font-black text-amber-600 uppercase">Emp Marked</p><strong class="text-sm font-mono">${empM}</strong></div>
-                        <div class="bg-purple-50 p-2 rounded-xl border border-purple-100 text-center"><p class="text-[8px] font-black text-purple-600 uppercase">Coord Marked</p><strong class="text-sm font-mono">${coordM}</strong></div>
-                        <div class="bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-center"><p class="text-[8px] font-black text-emerald-600 uppercase">On Leave</p><strong class="text-sm font-mono">${onLeave}</strong></div>
-                        <div class="bg-orange-50 p-2 rounded-xl border border-orange-100 text-center"><p class="text-[8px] font-black text-orange-600 uppercase">App Leave</p><strong class="text-sm font-mono">${appliedLeave}</strong></div>
-                        <div class="bg-rose-50 p-2 rounded-xl border border-rose-100 text-center"><p class="text-[8px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-sm font-mono">${notM}</strong></div>
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-1.5 mb-8">
+                        <div class="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center"><p class="text-[7px] font-black text-blue-600 uppercase">Total</p><strong class="text-xs font-mono">${total}</strong></div>
+                        <div class="bg-amber-50 p-2 rounded-xl border border-amber-100 text-center"><p class="text-[7px] font-black text-amber-600 uppercase">Emp Marked</p><strong class="text-xs font-mono">${empM}</strong></div>
+                        <div class="bg-purple-50 p-2 rounded-xl border border-purple-100 text-center"><p class="text-[7px] font-black text-purple-600 uppercase">Coord (Pres)</p><strong class="text-xs font-mono">${coordPres}</strong></div>
+                        <div class="bg-rose-50 p-2 rounded-xl border border-rose-100 text-center"><p class="text-[7px] font-black text-rose-600 uppercase">Coord (Abs)</p><strong class="text-xs font-mono">${coordAbs}</strong></div>
+                        <div class="bg-fuchsia-50 p-2 rounded-xl border border-fuchsia-100 text-center"><p class="text-[7px] font-black text-fuchsia-600 uppercase">Coord (Leave)</p><strong class="text-xs font-mono">${coordLeave}</strong></div>
+                        <div class="bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-center"><p class="text-[7px] font-black text-emerald-600 uppercase">On Leave</p><strong class="text-xs font-mono">${onLeave}</strong></div>
+                        <div class="bg-orange-50 p-2 rounded-xl border border-orange-100 text-center"><p class="text-[7px] font-black text-orange-600 uppercase">App Leave</p><strong class="text-xs font-mono">${appliedLeave}</strong></div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center"><p class="text-[7px] font-black text-slate-600 uppercase">Not Marked</p><strong class="text-xs font-mono">${notM}</strong></div>
                     </div>
 
                     <div class="overflow-x-auto w-full">
@@ -606,7 +663,7 @@
                                         <tr class="align-top hover:bg-slate-50">
                                             <td class="py-4 px-3 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
                                             <td class="py-4 px-3 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block font-bold">${displayState.replace(/_/g, ' ')}</span></td>
-                                            <td class="py-4 px-3 font-medium break-words leading-tight">${r.currentProject || '-'}<br><span class="text-[9px] text-slate-500 block mt-1">${r.district || '-'}</span></td>
+                                            <td class="py-4 px-3 font-medium break-words leading-tight">${r.currentProject || '-'}<br><span class="text-[9px] font-slate-500 block mt-1">${r.district || '-'}</span></td>
                                             <td class="py-4 px-3 text-slate-600 break-words leading-snug">
                                                 <div class="italic mb-1 text-[11px]">"${r.todaysPlan || '-'}"</div>
                                                 <div class="font-mono text-emerald-600 font-bold mb-1">In: ${r.loginTime || '--:--'}</div>
