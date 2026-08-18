@@ -1,5 +1,5 @@
 <div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <!-- 🎯 Header Section: Title on top line, Filters and Refresh button moved to the next line -->
+    <!-- Header Section: Title on top line, Filters and Clear Filters button on the next line -->
     <div class="border-b border-slate-200 pb-4 mb-4 sm:mb-6 space-y-4">
         <div class="flex items-center justify-between">
             <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
@@ -13,7 +13,7 @@
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                     <i data-lucide="search" class="w-4 h-4"></i>
                 </span>
-                <input type="text" id="acc-filter-emp" oninput="window.filterAccTable()" placeholder="Search Name/ID..." class="w-full pl-9 pr-4 py-2 border rounded-xl text-xs bg-slate-50 font-bold focus:ring-2 focus:ring-sky-500 outline-none text-slate-900">
+                <input type="text" id="acc-filter-emp" oninput="window.handleAccountsSearchInput()" placeholder="Search Name/ID..." class="w-full pl-9 pr-4 py-2 border rounded-xl text-xs bg-slate-50 font-bold focus:ring-2 focus:ring-sky-500 outline-none text-slate-900">
             </div>
 
             <!-- Employee Name & ID Dropdown Selector -->
@@ -25,6 +25,11 @@
             <select id="acc-filter-job" onchange="window.filterAccTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold flex-1 sm:max-w-xs focus:ring-2 focus:ring-sky-500 outline-none">
                 <option value="">Filter by Job ID</option>
             </select>
+
+            <!-- Clear Filters Button -->
+            <button onclick="window.clearAccountsFilters()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-sm" title="Clear All Filters">
+                <i data-lucide="x-circle" class="w-4 h-4 text-sky-600"></i> Clear Filters
+            </button>
 
             <!-- Refresh Button -->
             <button onclick="window.initAccountsPortal()" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0" title="Refresh Data">
@@ -104,7 +109,7 @@
             const printSelect = document.getElementById("acc-print-job-select");
             if (!filterSelect || !printSelect) return;
 
-            const uniqueJobs = [...new Set(data.map(d => String(d.jobActivityId || '').trim()))].filter(Boolean);
+            const uniqueJobs = [...new Set(data.map(d => String(d.jobActivityId || '').trim()))].filter(Boolean).sort();
             
             filterSelect.innerHTML = '<option value="">Filter by Job ID</option>';
             printSelect.innerHTML = '<option value="">-- Choose Job ID --</option>';
@@ -128,8 +133,11 @@
                 }
             });
 
+            // 🎯 Sort employees alphabetically by name
+            const sortedEmployees = [...uniqueEmployeesMap.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+
             select.innerHTML = '<option value="">Filter by Employee Name & ID</option>';
-            uniqueEmployeesMap.forEach((name, id) => {
+            sortedEmployees.forEach(([id, name]) => {
                 let opt = document.createElement("option"); 
                 opt.value = id; 
                 opt.textContent = `${name} (${id})`;
@@ -137,17 +145,87 @@
             });
         }
 
+        // 🎯 Reset all filters and restore full dropdowns list
+        window.clearAccountsFilters = function() {
+            const empSearchEl = document.getElementById("acc-filter-emp");
+            const selectEmpEl = document.getElementById("acc-select-emp");
+            const selectJobEl = document.getElementById("acc-filter-job");
+
+            if (empSearchEl) empSearchEl.value = "";
+            if (selectEmpEl) selectEmpEl.value = "";
+            
+            populateAccountsEmployeeDropdown(accountsCache);
+            if (selectJobEl) {
+                populateAccountsJobDropdown(accountsCache);
+                selectJobEl.value = "";
+            }
+
+            renderAccountsTable(accountsCache);
+        };
+
+        // 🎯 When typing in the search box, filter both the table and narrow down the employee dropdown alphabetically
+        window.handleAccountsSearchInput = function() {
+            const empSearchEl = document.getElementById("acc-filter-emp");
+            const selectEmpEl = document.getElementById("acc-select-emp");
+            const empQuery = empSearchEl ? empSearchEl.value.trim().toLowerCase() : "";
+            const currentSelectedEmp = selectEmpEl ? selectEmpEl.value : "";
+
+            // Filter cache for matching employees based on search query
+            const matchingData = empQuery ? accountsCache.filter(d => 
+                String(d.employeeName || "").toLowerCase().includes(empQuery) || 
+                String(d.employeeId || "").toLowerCase().includes(empQuery)
+            ) : accountsCache;
+
+            // Re-populate employee dropdown with filtered items sorted alphabetically
+            if (selectEmpEl) {
+                const uniqueEmployeesMap = new Map();
+                matchingData.forEach(d => {
+                    if (d.employeeId && !uniqueEmployeesMap.has(d.employeeId)) {
+                        uniqueEmployeesMap.set(d.employeeId, d.employeeName || "Unknown");
+                    }
+                });
+
+                const sortedEmployees = [...uniqueEmployeesMap.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+
+                selectEmpEl.innerHTML = '<option value="">Filter by Employee Name & ID</option>';
+                sortedEmployees.forEach(([id, name]) => {
+                    let opt = document.createElement("option"); 
+                    opt.value = id; 
+                    opt.textContent = `${name} (${id})`;
+                    selectEmpEl.appendChild(opt);
+                });
+
+                if (uniqueEmployeesMap.has(currentSelectedEmp)) {
+                    selectEmpEl.value = currentSelectedEmp;
+                } else {
+                    selectEmpEl.value = "";
+                }
+            }
+
+            window.handleAccountsEmployeeDropdownChange();
+        };
+
         window.handleAccountsEmployeeDropdownChange = function() {
             const selectEmpEl = document.getElementById("acc-select-emp");
             const selectJobEl = document.getElementById("acc-filter-job");
             const printSelect = document.getElementById("acc-print-job-select");
+            const empSearchEl = document.getElementById("acc-filter-emp");
+            
             const selectedEmpId = selectEmpEl ? selectEmpEl.value : "";
+            const empQuery = empSearchEl ? empSearchEl.value.trim().toLowerCase() : "";
 
             let matchingData = accountsCache;
-            if (selectedEmpId) {
-                matchingData = accountsCache.filter(d => String(d.employeeId) === selectedEmpId);
+            if (empQuery) {
+                matchingData = matchingData.filter(d => 
+                    String(d.employeeName || "").toLowerCase().includes(empQuery) || 
+                    String(d.employeeId || "").toLowerCase().includes(empQuery)
+                );
             }
-            const availableJobs = [...new Set(matchingData.map(d => String(d.jobActivityId || '').trim()))].filter(Boolean);
+            if (selectedEmpId) {
+                matchingData = matchingData.filter(d => String(d.employeeId) === selectedEmpId);
+            }
+
+            const availableJobs = [...new Set(matchingData.map(d => String(d.jobActivityId || '').trim()))].filter(Boolean).sort();
 
             if (selectJobEl) {
                 const currentJobVal = selectJobEl.value;
