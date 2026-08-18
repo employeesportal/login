@@ -1,10 +1,28 @@
 <div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 mb-4 sm:mb-6 gap-4">
-        <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
-            <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Field Audit & Verdict Console
-        </h3>
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-            <select id="admin-filter-job" onchange="window.filterAdminTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold w-full sm:w-48 focus:ring-2 focus:ring-rose-500 outline-none">
+    <!-- 🎯 Header Section: Title on top line, Filters moved to the next line for clean alignment -->
+    <div class="border-b border-slate-200 pb-4 mb-4 sm:mb-6 space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
+                <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Field Audit & Verdict Console
+            </h3>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+            <!-- Search Input for Name or ID -->
+            <div class="relative flex-1 sm:max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input type="text" id="admin-filter-emp" oninput="window.filterAdminTable()" placeholder="Search Name or ID..." class="w-full pl-9 pr-4 py-2 border rounded-xl text-xs bg-slate-50 font-bold focus:ring-2 focus:ring-rose-500 outline-none text-slate-900">
+            </div>
+
+            <!-- Employee Name & ID Dropdown Selector -->
+            <select id="admin-select-emp" onchange="window.handleEmployeeDropdownChange()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold flex-1 sm:max-w-xs focus:ring-2 focus:ring-rose-500 outline-none">
+                <option value="">Filter by Employee Name & ID</option>
+            </select>
+
+            <!-- Job ID Dropdown Selector -->
+            <select id="admin-filter-job" onchange="window.filterAdminTable()" class="px-3 py-2 border rounded-xl text-xs bg-slate-50 font-bold flex-1 sm:max-w-xs focus:ring-2 focus:ring-rose-500 outline-none">
                 <option value="">Filter by Job ID</option>
             </select>
         </div>
@@ -52,6 +70,7 @@
                 if (result.status) {
                     adminCache = result.data;
                     populateAdminJobDropdown(adminCache);
+                    populateAdminEmployeeDropdown(adminCache);
                     renderAdminTable(adminCache);
                 } else {
                     if(container) container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Failed to load records: ${result.message}</div>`;
@@ -72,11 +91,79 @@
             });
         }
 
+        function populateAdminEmployeeDropdown(data) {
+            const select = document.getElementById("admin-select-emp");
+            if (!select) return;
+            
+            const uniqueEmployeesMap = new Map();
+            data.forEach(d => {
+                if (d.employeeId && !uniqueEmployeesMap.has(d.employeeId)) {
+                    uniqueEmployeesMap.set(d.employeeId, d.employeeName || "Unknown");
+                }
+            });
+
+            select.innerHTML = '<option value="">Filter by Employee Name & ID</option>';
+            uniqueEmployeesMap.forEach((name, id) => {
+                let opt = document.createElement("option"); 
+                opt.value = id; 
+                opt.textContent = `${name} (${id})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // 🎯 When employee dropdown changes, dynamically update Job ID dropdown options to only contain jobs for that employee
+        window.handleEmployeeDropdownChange = function() {
+            const selectEmpEl = document.getElementById("admin-select-emp");
+            const selectJobEl = document.getElementById("admin-filter-job");
+            const selectedEmpId = selectEmpEl ? selectEmpEl.value : "";
+
+            if (selectJobEl) {
+                let matchingData = adminCache;
+                if (selectedEmpId) {
+                    matchingData = adminCache.filter(d => String(d.employeeId) === selectedEmpId);
+                }
+                const availableJobs = [...new Set(matchingData.map(d => d.jobActivityId))];
+                
+                const currentJobVal = selectJobEl.value;
+                selectJobEl.innerHTML = '<option value="">Filter by Job ID</option>';
+                availableJobs.forEach(job => {
+                    let opt = document.createElement("option"); 
+                    opt.value = job; 
+                    opt.textContent = job;
+                    selectJobEl.appendChild(opt);
+                });
+
+                // Retain previously selected job if it still applies to the newly filtered list
+                if (availableJobs.includes(currentJobVal)) {
+                    selectJobEl.value = currentJobVal;
+                } else {
+                    selectJobEl.value = "";
+                }
+            }
+
+            window.filterAdminTable();
+        };
+
         window.filterAdminTable = function() {
-            const selectEl = document.getElementById("admin-filter-job");
-            if (!selectEl) return;
-            const val = selectEl.value;
-            const filtered = val ? adminCache.filter(d => d.jobActivityId === val) : adminCache;
+            const selectJobEl = document.getElementById("admin-filter-job");
+            const selectEmpEl = document.getElementById("admin-select-emp");
+            const empSearchEl = document.getElementById("admin-filter-emp");
+            
+            const jobVal = selectJobEl ? selectJobEl.value : "";
+            const selectEmpVal = selectEmpEl ? selectEmpEl.value : "";
+            const empQuery = empSearchEl ? empSearchEl.value.trim().toLowerCase() : "";
+
+            const filtered = adminCache.filter(d => {
+                const matchesJob = !jobVal || d.jobActivityId === jobVal;
+                const matchesDropdownEmp = !selectEmpVal || String(d.employeeId) === selectEmpVal;
+                
+                const matchesSearchEmp = !empQuery || 
+                    String(d.employeeName || "").toLowerCase().includes(empQuery) || 
+                    String(d.employeeId || "").toLowerCase().includes(empQuery);
+
+                return matchesJob && matchesDropdownEmp && matchesSearchEmp;
+            });
+
             renderAdminTable(filtered);
         };
 
@@ -85,7 +172,7 @@
             if (!container) return;
 
             if (data.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No field activity audit records found.</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No field activity audit records found matching criteria.</div>`;
                 return;
             }
 
@@ -104,7 +191,7 @@
                 let docLink = r.attachmentUrl && r.attachmentUrl.trim() !== "" ? 
                     `<a href="${r.attachmentUrl}" target="_blank" class="text-blue-600 hover:text-blue-800 underline mt-1.5 text-[10px] font-mono inline-flex items-center gap-1 font-black bg-blue-50 px-2 py-1 rounded"><i data-lucide="paperclip" class="w-3 h-3"></i> View File</a>` : '';
 
-                // 🎯 DESKTOP ROW HTML
+                // Desktop Row HTML
                 desktopRowsHtml += `
                     <tr class="hover:bg-slate-50 align-top hidden md:table-row">
                         <td class="p-3.5">
@@ -174,10 +261,9 @@
                     </tr>
                 `;
 
-                // 🎯 MOBILE ACCORDION CARD HTML
+                // Mobile Accordion Card HTML
                 mobileCardsHtml += `
                     <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
-                        <!-- Card Header -->
                         <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAdminRowAccordion('${rowId}')">
                             <div class="pr-2 w-[85%]">
                                 <strong class="text-slate-950 block text-xs sm:text-sm truncate font-black">${r.employeeName}</strong>
@@ -188,7 +274,6 @@
                             </div>
                         </div>
                         
-                        <!-- Card Body (Hidden by default) -->
                         <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
                             <div class="pb-3 border-b border-slate-100 flex justify-between">
                                 <div>
@@ -261,7 +346,6 @@
                 `;
             });
 
-            // 🎯 INJECT DUAL LAYOUT
             container.innerHTML = `
                 <div class="hidden md:block overflow-x-auto max-h-[600px]">
                     <table class="w-full text-left border-collapse text-xs min-w-[1400px]">
@@ -285,10 +369,11 @@
                     ${mobileCardsHtml}
                 </div>
             `;
-            if (window.lucide) lucide.createIcons();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
 
-        // 🎯 UPDATED: Dynamic Prefixing to handle Desktop vs Mobile input fields
         window.saveAdminVerdict = async function(rowIndex, prefix = 'desk') {
             const statusVal = document.getElementById(`${prefix}-admin-status-${rowIndex}`).value;
             const commentVal = document.getElementById(`${prefix}-admin-comment-${rowIndex}`).value.trim();
