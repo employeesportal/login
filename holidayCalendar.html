@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    <!-- Dual Layout Viewport (Desktop Table + Mobile Cards without Expand) -->
+    <!-- Dual Layout Viewport (Desktop Table + Mobile Cards) -->
     <div id="employee-holiday-container" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-2 sm:p-4 shadow-inner">
         <div class="p-8 text-center text-slate-400 font-bold animate-pulse">Loading holiday schedules...</div>
     </div>
@@ -25,6 +25,8 @@
             const yearLbl = document.getElementById("lbl-current-year");
             const currentYear = new Date().getFullYear();
             if (yearLbl) yearLbl.innerText = currentYear;
+
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
             try {
                 const res = await fetch(`${API_URL}?action=getAllHolidays`);
@@ -42,19 +44,25 @@
 
                 holidays.forEach((h) => {
                     const parts = h.date.split("-");
+                    let dayName = "";
                     let isToday = false;
+
                     if (parts.length === 3) {
                         const hDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                        const today = new Date();
-                        isToday = hDate.toDateString() === today.toDateString();
+                        if (!isNaN(hDate.getTime())) {
+                            dayName = dayNames[hDate.getDay()];
+                            const today = new Date();
+                            isToday = hDate.toDateString() === today.toDateString();
+                        }
                     }
 
                     const badgeHtml = isToday ? '<span class="ml-2 px-2 py-0.5 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded text-[9px] font-black uppercase">Today</span>' : '';
 
-                    // Desktop Table Row (Fixed Widths)
+                    // Desktop Table Row (Separate Columns for Date and Day)
                     desktopRowsHtml += `
                         <tr class="hover:bg-slate-50 transition-colors ${isToday ? 'bg-emerald-50/40' : ''}">
-                            <td class="p-3.5 w-48 font-mono font-black text-slate-800 whitespace-nowrap">${h.date} ${badgeHtml}</td>
+                            <td class="p-3.5 w-40 font-mono font-black text-slate-800 whitespace-nowrap">${h.date} ${badgeHtml}</td>
+                            <td class="p-3.5 w-36 font-bold text-indigo-600">${dayName}</td>
                             <td class="p-3.5 text-slate-900 font-bold">${h.description}</td>
                         </tr>
                     `;
@@ -63,8 +71,9 @@
                     mobileCardsHtml += `
                         <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 mb-3 flex items-center justify-between gap-3 ${isToday ? 'border-emerald-300 bg-emerald-50/30' : ''}">
                             <div>
-                                <div class="flex items-center gap-1.5 mb-1">
+                                <div class="flex items-center gap-2 mb-1">
                                     <span class="text-indigo-700 font-mono text-xs font-black">${h.date}</span>
+                                    <span class="text-slate-500 text-[11px] font-bold">(${dayName})</span>
                                     ${badgeHtml}
                                 </div>
                                 <h4 class="text-slate-950 text-sm font-black">${h.description}</h4>
@@ -78,7 +87,8 @@
                         <table class="w-full text-left border-collapse text-xs table-fixed">
                             <thead>
                                 <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
-                                    <th class="p-3.5 w-48">Date</th>
+                                    <th class="p-3.5 w-40">Date</th>
+                                    <th class="p-3.5 w-36">Day</th>
                                     <th class="p-3.5">Holiday Description</th>
                                 </tr>
                             </thead>
