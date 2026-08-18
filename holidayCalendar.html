@@ -1,0 +1,102 @@
+<div class="w-full max-w-4xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-300 shadow-xl bg-white fade-in-up">
+    <div class="border-b border-slate-200 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <i data-lucide="calendar-days" class="text-indigo-600 w-5 h-5"></i> Official Holiday Calendar
+            </h3>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">View Company Declared Holidays & Off Days</p>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-2 rounded-xl text-xs font-black text-slate-700">
+            <i data-lucide="info" class="w-4 h-4 text-indigo-600"></i>
+            <span>Current Year: <span id="lbl-current-year" class="font-mono text-indigo-700">--</span></span>
+        </div>
+    </div>
+
+    <!-- Dual Layout Viewport (Desktop Table + Mobile Cards without Expand) -->
+    <div id="employee-holiday-container" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-2 sm:p-4 shadow-inner">
+        <div class="p-8 text-center text-slate-400 font-bold animate-pulse">Loading holiday schedules...</div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        async function fetchEmployeeHolidays() {
+            const container = document.getElementById("employee-holiday-container");
+            const yearLbl = document.getElementById("lbl-current-year");
+            const currentYear = new Date().getFullYear();
+            if (yearLbl) yearLbl.innerText = currentYear;
+
+            try {
+                const res = await fetch(`${API_URL}?action=getAllHolidays`);
+                const result = await res.json();
+                if (!result.status) throw new Error(result.message);
+
+                const holidays = result.data || [];
+                if (holidays.length === 0) {
+                    container.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold bg-white rounded-xl">No holidays declared for this period.</div>`;
+                    return;
+                }
+
+                let desktopRowsHtml = "";
+                let mobileCardsHtml = "";
+
+                holidays.forEach((h) => {
+                    const parts = h.date.split("-");
+                    let isToday = false;
+                    if (parts.length === 3) {
+                        const hDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        const today = new Date();
+                        isToday = hDate.toDateString() === today.toDateString();
+                    }
+
+                    const badgeHtml = isToday ? '<span class="ml-2 px-2 py-0.5 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded text-[9px] font-black uppercase">Today</span>' : '';
+
+                    // Desktop Table Row (Fixed Widths)
+                    desktopRowsHtml += `
+                        <tr class="hover:bg-slate-50 transition-colors ${isToday ? 'bg-emerald-50/40' : ''}">
+                            <td class="p-3.5 w-48 font-mono font-black text-slate-800 whitespace-nowrap">${h.date} ${badgeHtml}</td>
+                            <td class="p-3.5 text-slate-900 font-bold">${h.description}</td>
+                        </tr>
+                    `;
+
+                    // Mobile Card (Static View, No Expand Required)
+                    mobileCardsHtml += `
+                        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 mb-3 flex items-center justify-between gap-3 ${isToday ? 'border-emerald-300 bg-emerald-50/30' : ''}">
+                            <div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span class="text-indigo-700 font-mono text-xs font-black">${h.date}</span>
+                                    ${badgeHtml}
+                                </div>
+                                <h4 class="text-slate-950 text-sm font-black">${h.description}</h4>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="hidden md:block overflow-x-auto border border-slate-200 rounded-2xl shadow-inner bg-slate-50 max-h-[550px]">
+                        <table class="w-full text-left border-collapse text-xs table-fixed">
+                            <thead>
+                                <tr class="bg-slate-950 text-white font-black uppercase text-[10px] sticky top-0 z-10">
+                                    <th class="p-3.5 w-48">Date</th>
+                                    <th class="p-3.5">Holiday Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-800 font-bold bg-white">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="md:hidden flex flex-col w-full">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
+            } catch(e) {
+                container.innerHTML = `<div class="p-6 text-center text-rose-600 font-black bg-white rounded-xl">Failed loading holiday schedules.</div>`;
+            }
+            if (window.lucide) lucide.createIcons();
+        };
+
+        fetchEmployeeHolidays();
+    })();
+</script>
