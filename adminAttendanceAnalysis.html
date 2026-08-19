@@ -331,15 +331,18 @@
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
                         let uRem = String(rem).toUpperCase();
+                        let planStr = String(cleanLog.todaysplan || "").toLowerCase();
                         
+                        // 🎯 Explicit check for coordinator bypassed / coordinator lookup entries
+                        const isBypassedByCoord = planStr.includes("bypassed by coordinator") || planStr.includes("attendance marked by coordinator");
+
                         if (uRem === "ON LEAVE" || uRem === "LEAVE APPLIED" || uRem === "HALF-DAY") {
                             status = "COORD LEAVE MARK"; badge = "bg-fuchsia-100 text-fuchsia-950 border border-fuchsia-300";
                         } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
                             status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                        } else if (isBypassedByCoord) {
+                            status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
                         } else {
-                            // Check who marked or check submission source tags if available, 
-                            // otherwise distinguish by coordinator remark content or login source signatures.
-                            // If marked directly by worker or regular attendance check-in:
                             if (uRem && uRem !== "PENDING" && uRem !== "VERIFIED" && uRem !== "APPROVED") {
                                 status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
                             } else {
@@ -451,11 +454,17 @@
                     if (attLog) {
                         let rem = cleanLog.coordinatorremark || "";
                         let uRem = String(rem).toUpperCase();
+                        let planStr = String(cleanLog.todaysplan || "").toLowerCase();
                         
+                        // 🎯 Explicit check for coordinator bypassed / coordinator lookup entries
+                        const isBypassedByCoord = planStr.includes("bypassed by coordinator") || planStr.includes("attendance marked by coordinator");
+
                         if (uRem === "ON LEAVE" || uRem === "LEAVE APPLIED" || uRem === "HALF-DAY") {
                             status = "COORD LEAVE MARK"; badge = "bg-fuchsia-100 text-fuchsia-950 border border-fuchsia-300";
                         } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
                             status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
+                        } else if (isBypassedByCoord) {
+                            status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
                         } else {
                             if (uRem && uRem !== "PENDING" && uRem !== "VERIFIED" && uRem !== "APPROVED") {
                                 status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
