@@ -32,7 +32,8 @@
                 <label class="block text-[10px] text-slate-700 font-black uppercase mb-1">Filter By Duty Status</label>
                 <select id="anly-status-filter" onchange="window.executeAttendanceAnalysisPipeline()" class="w-full px-3 py-2 border border-slate-300 text-slate-900 rounded-xl bg-white font-black text-indigo-700">
                     <option value="ALL">Show All Statuses</option>
-                    <option value="PRESENT">Present & Verified</option>
+                    <option value="PRESENT_EMP">Present (Marked by Employee)</option>
+                    <option value="PRESENT_COORD">Present (Marked by Coordinator)</option>
                     <option value="APPROVED_LEAVE">Approved Leaves (System)</option>
                     <option value="APPLIED_LEAVE">Applied Leaves (Pending)</option>
                     <option value="COORD_LEAVE">Leave Marked by Coordinator</option>
@@ -67,7 +68,7 @@
     </div>
 
     <!-- Summary Statistics Pane (Clickable Filter Cards) -->
-    <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
+    <div id="anly-summary-cards-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3"></div>
 
     <!-- Data Matrix Viewport -->
     <div class="bg-white border border-slate-300 rounded-2xl shadow-inner p-3 sm:p-5">
@@ -114,12 +115,10 @@
             if (el) el.classList.toggle('hidden');
         };
 
-        // 🎯 NEW: Summary Card Clickable Filter Handler
         window.handleSummaryCardFilterClick = function(targetStatusValue) {
             const statusSelect = document.getElementById("anly-status-filter");
             if (!statusSelect) return;
 
-            // If already selected, toggle back to ALL
             if (statusSelect.value === targetStatusValue) {
                 statusSelect.value = "ALL";
             } else {
@@ -278,7 +277,7 @@
             
             if (masterRegistryEmployees.length === 0) return;
 
-            let countPresent = 0, countApprLeave = 0, countApplLeave = 0, countCoordLeave = 0, countAbsent = 0, countSunday = 0, countIdle = 0;
+            let countPresentEmp = 0, countPresentCoord = 0, countApprLeave = 0, countApplLeave = 0, countCoordLeave = 0, countAbsent = 0, countSunday = 0, countIdle = 0;
             let processedRows = [];
             let daysToConsider = 0;
 
@@ -338,7 +337,14 @@
                         } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
                             status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
                         } else {
-                            status = "PRESENT"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                            // Check who marked or check submission source tags if available, 
+                            // otherwise distinguish by coordinator remark content or login source signatures.
+                            // If marked directly by worker or regular attendance check-in:
+                            if (uRem && uRem !== "PENDING" && uRem !== "VERIFIED" && uRem !== "APPROVED") {
+                                status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
+                            } else {
+                                status = "PRESENT (EMP)"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                            }
                         }
                         
                         if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
@@ -356,7 +362,8 @@
                         else if (isSunday) { status = "SUNDAY"; badge = "bg-cyan-100 text-cyan-950 border border-cyan-300"; }
                     }
 
-                    if (status === "PRESENT") countPresent++;
+                    if (status === "PRESENT (EMP)") countPresentEmp++;
+                    else if (status === "PRESENT (COORD)") countPresentCoord++;
                     else if (status === "APPROVED LEAVE") countApprLeave++;
                     else if (status === "APPLIED LEAVE") countApplLeave++;
                     else if (status === "COORD LEAVE MARK") countCoordLeave++;
@@ -450,7 +457,11 @@
                         } else if (uRem === "ABSENT" || uRem === "REJECTED" || uRem === "C-AB") {
                             status = "ABSENT"; badge = "bg-rose-100 text-rose-950 border border-rose-300";
                         } else {
-                            status = "PRESENT"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                            if (uRem && uRem !== "PENDING" && uRem !== "VERIFIED" && uRem !== "APPROVED") {
+                                status = "PRESENT (COORD)"; badge = "bg-teal-100 text-teal-950 border border-teal-300";
+                            } else {
+                                status = "PRESENT (EMP)"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-400";
+                            }
                         }
                         
                         if (isLeaveApproved) { status = "APPROVED LEAVE"; badge = "bg-emerald-100 text-emerald-950 border border-emerald-500"; }
@@ -468,7 +479,8 @@
                         else if (isSunday) { status = "SUNDAY"; badge = "bg-cyan-100 text-cyan-950 border border-cyan-300"; }
                     }
 
-                    if (status === "PRESENT") countPresent++;
+                    if (status === "PRESENT (EMP)") countPresentEmp++;
+                    else if (status === "PRESENT (COORD)") countPresentCoord++;
                     else if (status === "APPROVED LEAVE") countApprLeave++;
                     else if (status === "APPLIED LEAVE") countApplLeave++;
                     else if (status === "COORD LEAVE MARK") countCoordLeave++;
@@ -485,12 +497,13 @@
                 }
             }
 
-            // 🎯 Apply Filter logic
+            // Apply Filter logic
             let filteredRows = processedRows;
             if (statusFilter !== "ALL") {
                 filteredRows = processedRows.filter(r => {
                     const s = String(r.status);
-                    if (statusFilter === "PRESENT") return s === "PRESENT" || s === "COORD LEAVE MARK"; // include coordinate remarks if needed or keep strict
+                    if (statusFilter === "PRESENT_EMP") return s === "PRESENT (EMP)";
+                    if (statusFilter === "PRESENT_COORD") return s === "PRESENT (COORD)";
                     if (statusFilter === "APPROVED_LEAVE") return s === "APPROVED LEAVE";
                     if (statusFilter === "APPLIED_LEAVE") return s === "APPLIED LEAVE";
                     if (statusFilter === "COORD_LEAVE") return s === "COORD LEAVE MARK";
@@ -501,16 +514,15 @@
                 });
             }
 
-            // Helper for active styling on summary cards
             const getCardStyle = (val) => {
                 const isActive = statusFilter === val;
                 return isActive ? 'ring-2 ring-indigo-600 scale-[1.02] shadow-md' : 'hover:opacity-90';
             };
 
-            // 🎯 Render Summary Boxes with Clickable Filter Action
+            // Render Summary Boxes with Separate Present Cards
             if (summaryBox) {
                 summaryBox.innerHTML = `
-                    <div class="col-span-2 sm:col-span-4 lg:col-span-7 bg-slate-900 border border-slate-800 p-3 sm:px-5 sm:py-4 rounded-xl shadow-inner flex justify-between items-center transition-all duration-300">
+                    <div class="col-span-2 sm:col-span-4 lg:col-span-8 bg-slate-900 border border-slate-800 p-3 sm:px-5 sm:py-4 rounded-xl shadow-inner flex justify-between items-center transition-all duration-300">
                         <div class="flex items-center gap-3">
                             <i data-lucide="filter" class="w-5 h-5 text-indigo-400"></i>
                             <div>
@@ -524,38 +536,41 @@
                         </div>
                     </div>
                     
-                    <div onclick="window.handleSummaryCardFilterClick('PRESENT')" class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('PRESENT')}" title="Click to filter Present records">
-                        <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present</span>
-                        <strong class="text-lg font-mono font-black text-emerald-800">${countPresent}</strong>
+                    <div onclick="window.handleSummaryCardFilterClick('PRESENT_EMP')" class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('PRESENT_EMP')}" title="Filter Present (By Employee)">
+                        <span class="text-[9px] font-black text-emerald-600 uppercase block tracking-wider mb-1">Present (Emp)</span>
+                        <strong class="text-lg font-mono font-black text-emerald-800">${countPresentEmp}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('APPROVED_LEAVE')" class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPROVED_LEAVE')}" title="Click to filter Approved Leave records">
+                    <div onclick="window.handleSummaryCardFilterClick('PRESENT_COORD')" class="bg-teal-50 border border-teal-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('PRESENT_COORD')}" title="Filter Present (By Coordinator)">
+                        <span class="text-[9px] font-black text-teal-600 uppercase block tracking-wider mb-1">Present (Coord)</span>
+                        <strong class="text-lg font-mono font-black text-teal-800">${countPresentCoord}</strong>
+                    </div>
+                    <div onclick="window.handleSummaryCardFilterClick('APPROVED_LEAVE')" class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPROVED_LEAVE')}" title="Filter Approved Leave">
                         <span class="text-[9px] font-black text-indigo-600 uppercase block tracking-wider mb-1">Appr Leave</span>
                         <strong class="text-lg font-mono font-black text-indigo-800">${countApprLeave}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('APPLIED_LEAVE')" class="bg-orange-50 border border-orange-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPLIED_LEAVE')}" title="Click to filter Applied Leave records">
+                    <div onclick="window.handleSummaryCardFilterClick('APPLIED_LEAVE')" class="bg-orange-50 border border-orange-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPLIED_LEAVE')}" title="Filter Applied Leave">
                         <span class="text-[9px] font-black text-orange-600 uppercase block tracking-wider mb-1">Appl Leave</span>
                         <strong class="text-lg font-mono font-black text-orange-800">${countApplLeave}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('COORD_LEAVE')" class="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_LEAVE')}" title="Click to filter Coordinator Leave records">
+                    <div onclick="window.handleSummaryCardFilterClick('COORD_LEAVE')" class="bg-fuchsia-50 border border-fuchsia-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_LEAVE')}" title="Filter Coordinator Leave">
                         <span class="text-[9px] font-black text-fuchsia-600 uppercase block tracking-wider mb-1">Coord Leave</span>
                         <strong class="text-lg font-mono font-black text-fuchsia-800">${countCoordLeave}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('ABSENT')" class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('ABSENT')}" title="Click to filter Absent records">
+                    <div onclick="window.handleSummaryCardFilterClick('ABSENT')" class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('ABSENT')}" title="Filter Absent">
                         <span class="text-[9px] font-black text-amber-600 uppercase block tracking-wider mb-1">Absent</span>
                         <strong class="text-lg font-mono font-black text-amber-800">${countAbsent}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('SUNDAY')" class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('SUNDAY')}" title="Click to filter Sundays">
+                    <div onclick="window.handleSummaryCardFilterClick('SUNDAY')" class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('SUNDAY')}" title="Filter Sundays">
                         <span class="text-[9px] font-black text-cyan-600 uppercase block tracking-wider mb-1">Sundays</span>
                         <strong class="text-lg font-mono font-black text-cyan-800">${countSunday}</strong>
                     </div>
-                    <div onclick="window.handleSummaryCardFilterClick('NOT_MARKED')" class="bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('NOT_MARKED')}" title="Click to filter Unmarked records">
+                    <div onclick="window.handleSummaryCardFilterClick('NOT_MARKED')" class="bg-rose-50 border border-rose-200 p-3 rounded-xl shadow-inner cursor-pointer transition-all ${getCardStyle('NOT_MARKED')}" title="Filter Unmarked">
                         <span class="text-[9px] font-black text-rose-600 uppercase block tracking-wider mb-1">Unmarked</span>
                         <strong class="text-lg font-mono font-black text-rose-800">${countIdle}</strong>
                     </div>
                 `;
             }
 
-            // 🎯 Construct DUAL Layout (Desktop Table + Mobile Cards)
             if (filteredRows.length === 0) {
                 dataContainer.innerHTML = `<div class="p-10 text-center text-slate-500 font-bold border border-slate-200 rounded-xl bg-slate-50">No records found matching the chosen criteria.</div>`;
             } else {
@@ -565,7 +580,6 @@
                 filteredRows.forEach((r, idx) => {
                     const rowId = `anly_row_${idx}`;
                     
-                    // Desktop Row HTML
                     desktopRowsHtml += `
                         <tr class="hover:bg-slate-50 transition-colors align-top hidden md:table-row">
                             <td class="px-4 py-3 whitespace-nowrap font-mono text-slate-700">${r.date}</td>
@@ -598,7 +612,6 @@
                         </tr>
                     `;
 
-                    // Mobile Accordion Card HTML
                     mobileCardsHtml += `
                         <div class="md:hidden bg-white border border-slate-200 rounded-xl shadow-sm mb-3 overflow-hidden">
                             <div class="px-4 py-3 bg-slate-50 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAnalysisRowAccordion('${rowId}')">
