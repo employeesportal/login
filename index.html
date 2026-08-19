@@ -467,6 +467,22 @@
             loadApplicationFrame("login.html");
         };
 
+            window.switchAdminLeaveTab = function (tabName) {
+            const tabBtn1 = document.getElementById("tab-btn-1");
+            const tabBtn2 = document.getElementById("tab-btn-2");
+            const tabContent1 = document.getElementById("tab-content-1");
+            const tabContent2 = document.getElementById("tab-content-2");
+
+            // Safe checks: Only update elements if they actually exist on the current page
+            if (tabBtn1) tabBtn1.className = tabName === 'pending' ? 'active-tab-class' : 'inactive-tab-class';
+            if (tabBtn2) tabBtn2.className = tabName === 'history' ? 'active-tab-class' : 'inactive-tab-class';
+
+            if (tabContent1) tabContent1.style.display = tabName === 'pending' ? 'block' : 'none';
+            if (tabContent2) tabContent2.style.display = tabName === 'history' ? 'block' : 'none';
+        };
+
+        
+
         window.logout = window.performManualLogout;
     </script>
 </body>
