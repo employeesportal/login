@@ -1,112 +1,64 @@
-<div class="w-full glass-panel p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up"
-    id="admin-verification-portal-container">
+<div class="w-full glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl fade-in-up" id="admin-verification-portal-container">
 
-
-    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4 mb-5">
+    <!-- Header Section & Filters -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-4 mb-5 gap-4">
         <div>
-            <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <h3 class="text-lg sm:text-xl font-black tracking-tight text-slate-800 flex items-center gap-2">
                 <i data-lucide="shield-alert" class="text-rose-600 w-5 h-5"></i> Admin Leave & Global Attendance Console
             </h3>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+            <p class="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1" id="admin-display-date-header">
                 Bypassed Master Matrix Control — Global Employee Roster Records
             </p>
         </div>
-
-        <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-            <div class="flex items-center gap-2">
-                <label class="text-[10px] font-black text-slate-500 uppercase px-1">Target Audit Date:</label>
+        
+        <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <label class="text-[9px] font-black text-slate-500 uppercase px-1">Target Audit Date:</label>
                 <input type="date" id="admin-audit-date" onchange="window.fetchAdminVerificationRoster()"
                     class="bg-white border border-slate-300 text-xs font-bold rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
             </div>
+
+            <div class="bg-slate-50 md:bg-transparent p-2 md:p-0 rounded-xl border border-slate-200 md:border-none flex items-center gap-2">
+                <label class="text-[9px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">Filter Status:</label>
+                <select id="admin-status-filter" onchange="window.renderAdminTable(this.value)" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-2 focus:ring-rose-500 shadow-sm outline-none transition">
+                    <option value="ALL">Show All Employees</option>
+                    <option value="EMP_MARKED">Emp Marked</option>
+                    <option value="COORD_MARKED_PRESENT">Coord Marked (Present)</option>
+                    <option value="COORD_MARKED_ABSENT">Coord Marked (Absent)</option>
+                    <option value="COORD_MARKED_LEAVE">Coord Marked (Leave Applied)</option>
+                    <option value="ON_LEAVE">On Leave (Appr)</option>
+                    <option value="APPLIED_LEAVE">Applied Leave</option>
+                    <option value="NOT_MARKED">Not Marked</option>
+                </select>
+            </div>
+
             <button onclick="window.openAdminReportModal()"
-                class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
+                class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-xl transition shadow-sm flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Show Global Summary Report
             </button>
         </div>
-
-        <!-- Add this near your Date Selector -->
-        <div class="flex items-center gap-2">
-            <label class="text-[10px] font-black text-slate-500 uppercase px-1">Status Filter:</label>
-            <select id="admin-status-filter" onchange="window.renderAdminTable()"
-                class="bg-white border border-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
-                <option value="ALL">All Statuses</option>
-                <option value="NOT_MARKED">Not Marked</option>
-                <option value="MARKED_UNVERIFIED">Marked (Unverified)</option>
-                <option value="MARKED_BY_COORDINATOR_ONLY">Marked by Coord Only</option>
-                <option value="MARKED_BY_COORDINATOR">Marked & Verified</option>
-            </select>
-        </div>
-
     </div>
 
-    <!-- Metrics Summary -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Selected Audit
-                Date</span>
-            <strong id="admin-stat-date" class="text-sm font-bold text-slate-700 font-mono">-</strong>
-        </div>
-        <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Employees
-                (Global)</span>
-            <strong id="admin-stat-total" class="text-xl font-black text-blue-700 font-mono">0</strong>
-        </div>
-        <div class="bg-amber-50/60 border border-amber-100 p-4 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider block mb-1">Marked by Emp</span>
-            <strong id="admin-stat-emp-marked" class="text-xl font-black text-amber-700 font-mono">0</strong>
-        </div>
-        <div class="bg-purple-50/50 border border-purple-100 p-4 rounded-2xl shadow-inner">
-            <span class="text-[9px] font-black text-purple-600 uppercase tracking-wider block mb-1">Marked by
-                Admin/Coord</span>
-            <strong id="admin-stat-coord-marked" class="text-xl font-black text-purple-700 font-mono">0</strong>
-        </div>
-        <div class="bg-rose-50/50 border border-rose-100 p-4 rounded-2xl shadow-inner col-span-2 md:col-span-1">
-            <span class="text-[9px] font-black text-rose-500 uppercase tracking-wider block mb-1">Not Marked
-                Roster</span>
-            <strong id="admin-stat-not-marked" class="text-xl font-black text-rose-700 font-mono">0</strong>
-        </div>
+    <!-- Metrics Summary Grid (Expanded to 8 Cards) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-6" id="admin-stat-cards-wrapper">
+        <!-- Injected dynamically via JS -->
     </div>
 
-    <!-- Roster Table Wrapper -->
-    <div class="overflow-x-auto w-full border border-slate-200 rounded-2xl bg-white shadow-inner max-h-[600px] mb-4">
-        <table class="w-full text-left border-collapse table-auto min-w-[2000px]">
-            <thead>
-                <tr
-                    class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
-                    <th class="px-3 py-3.5 whitespace-nowrap">Employee Details</th>
-                    <th class="px-3 py-3.5 whitespace-wrap">Status</th>
-                    <th class="px-3 py-3.5 w-60">Project Sector</th>
-                    <th class="px-3 py-3.5 w-50">Operating District</th>
-                    <th class="px-3 py-3.5 w-50 text-center">Login Location</th>
-                    <th class="px-3 py-3.5 w-70 text-white">Today's Plan</th>
-                    <th class="px-3 py-3.5 w-40 whitespace-nowrap">Login Time</th>
-                    <th class="px-4 py-3.5 w-60">Last Progress</th>
-                    <th class="px-3 py-3.5 w-60 whitespace-nowrap">Audit Remark</th>
-                    <th class="px-3 py-3.5 w-60">Comments</th>
-                    <th class="px-3 py-3.5 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody id="admin-roster-table-body" class="text-xs divide-y divide-slate-100 text-slate-700 font-bold">
-                <tr>
-                    <td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">
-                        Initializing global operations registry parameters...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- DUAL LAYOUT CONTAINER -->
+    <div id="admin-data-container" class="w-full bg-white border border-slate-200 rounded-2xl shadow-inner sm:overflow-hidden p-2 sm:p-0 mb-4">
+        <div class="p-12 text-center text-slate-500 font-bold animate-pulse">Initializing global operations registry parameters...</div>
     </div>
 </div>
 
 <!-- Admin Report Dynamic Modal Overlay Context -->
-<div id="admin-report-modal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-8 relative">
+<div id="admin-report-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl p-6 sm:p-8 relative">
         <button onclick="document.getElementById('admin-report-modal').classList.add('hidden')"
-            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition">
-            <i data-lucide="x" class="w-5 h-5"></i>
+            class="absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
         </button>
         <div id="admin-report-content">
-            <h2 class="text-xl font-black mb-6">Global Master Attendance Verification Ledger</h2>
+            <h2 class="text-xl font-black mb-6 pr-10">Global Master Attendance Verification Ledger</h2>
             <div id="admin-modal-report-body">Loading dynamic global indices...</div>
         </div>
     </div>
@@ -115,198 +67,501 @@
 <script>
     (() => {
         let activeAdminRosterCache = [];
+        let masterLeaveApplicationsCache = [];
         const dateSelector = document.getElementById("admin-audit-date");
 
-        // Default execution environment setup targeting current local timestamp parameters
         if (dateSelector) dateSelector.value = new Date().toISOString().split('T')[0];
+
+        window.toggleAdminAccordion = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        };
+
+        window.handleAdminSummaryCardFilterClick = function(targetStatusValue) {
+            const statusSelect = document.getElementById("admin-status-filter");
+            if (!statusSelect) return;
+
+            if (statusSelect.value === targetStatusValue) {
+                statusSelect.value = "ALL";
+            } else {
+                statusSelect.value = targetStatusValue;
+            }
+            window.renderAdminTable(statusSelect.value);
+        };
+
+        function normalizeBackendObject(obj) {
+            if (!obj || typeof obj !== 'object') return {};
+            let cleanObj = {};
+            for (let key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    let normalizedKey = String(key).replace(/\s+/g, '').toLowerCase();
+                    cleanObj[normalizedKey] = obj[key];
+                }
+            }
+            return cleanObj;
+        }
+
+        function cleanToStandardISODate(dInput) {
+            if (!dInput) return "";
+            let cleanStr = String(dInput).trim().split(' ')[0];
+            if (cleanStr.includes('T')) cleanStr = cleanStr.split('T')[0];
+            let parts = [];
+            if (cleanStr.includes('/')) parts = cleanStr.split('/');
+            else if (cleanStr.includes('-')) parts = cleanStr.split('-');
+            
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                if (parts[2].length === 4) return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+            }
+            return cleanStr;
+        }
+
+        function parseToTimestamp(dateStr) {
+            const normalized = cleanToStandardISODate(dateStr);
+            if (!normalized) return 0;
+            const dateObj = new Date(normalized);
+            dateObj.setHours(0,0,0,0);
+            return dateObj.getTime();
+        }
+
+        function evaluateDateInsideLeaveBlock(checkTime, lvRecord) {
+            const cleanLv = normalizeBackendObject(lvRecord);
+            let startStr = cleanLv.fromdate || "";
+            let endStr = cleanLv.todate || "";
+            const status = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+            
+            if (status === "APPROVED" || status === "SHORT") {
+                if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).includes('to')) {
+                    let p = String(cleanLv.adminapproveddate).split('to');
+                    startStr = p[0].trim(); endStr = p[1].trim();
+                } else if (cleanLv.adminapproveddate && String(cleanLv.adminapproveddate).trim() !== "") {
+                    startStr = cleanLv.adminapproveddate; endStr = cleanLv.adminapproveddate;
+                }
+            }
+            
+            const startT = parseToTimestamp(startStr);
+            const endT = parseToTimestamp(endStr) || startT; 
+            if (!startT) return false;
+            return (checkTime >= startT && checkTime <= endT);
+        }
 
         window.recalculateAdminRosterStatistics = () => {
             const total = activeAdminRosterCache.length;
-            let empM = 0, coordM = 0, notM = 0;
-
+            let empM = 0, coordPres = 0, coordAbs = 0, coordLeave = 0, onLeave = 0, appliedLeave = 0, notM = 0;
+            
             activeAdminRosterCache.forEach(r => {
-                if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") empM++;
-                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordM++;
-                else if (r.trackingState === "NOT_MARKED") notM++;
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
+                
+                if (r.isLeaveApproved) {
+                    onLeave++;
+                } else if (r.isLeaveApplied) {
+                    appliedLeave++;
+                } else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") {
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                        coordAbs++;
+                    } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                        coordLeave++;
+                    } else {
+                        empM++;
+                    }
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                        coordAbs++;
+                    } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                        coordLeave++;
+                    } else {
+                        coordPres++;
+                    }
+                } else {
+                    notM++;
+                }
             });
+            
+            const currentFilter = document.getElementById("admin-status-filter") ? document.getElementById("admin-status-filter").value : "ALL";
+            const getCardStyle = (val) => currentFilter === val ? 'ring-2 ring-rose-600 scale-[1.02] shadow-md' : 'hover:opacity-90';
 
-            let rawDate = dateSelector.value;
-            let displayDate = rawDate ? rawDate.split("-").reverse().join("/") : "-";
-
-            document.getElementById("admin-stat-date").innerText = displayDate;
-            document.getElementById("admin-stat-total").innerText = total;
-            document.getElementById("admin-stat-emp-marked").innerText = empM;
-            document.getElementById("admin-stat-coord-marked").innerText = coordM;
-            document.getElementById("admin-stat-not-marked").innerText = notM;
-        };
-
-
-
-        window.fetchAdminVerificationRoster = async () => {
-            const tableBody = document.getElementById("admin-roster-table-body");
-            const targetDate = document.getElementById("admin-audit-date").value;
-            if (!targetDate) return;
-
-            tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-12 text-center text-slate-400 font-medium">Querying database...</td></tr>`;
-
-            try {
-                const res = await fetch(`${API_URL}?action=getGlobalRoster&targetDate=${targetDate}`);
-                const result = await res.json();
-                activeAdminRosterCache = result.data || [];
-                window.renderAdminTable(); // Trigger render after fetch
-            } catch (err) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-rose-500 font-black">Fetch Error</td></tr>`;
+            const cardsWrapper = document.getElementById("admin-stat-cards-wrapper");
+            if (cardsWrapper) {
+                cardsWrapper.innerHTML = `
+                    <div onclick="window.handleAdminSummaryCardFilterClick('ALL')" class="bg-blue-50/50 border border-blue-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('ALL')}" title="Click to show all">
+                        <span class="text-[8px] font-black text-blue-500 uppercase tracking-wider block mb-1">Total Staff</span>
+                        <strong class="text-base font-black text-blue-700 font-mono">${total}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('EMP_MARKED')" class="bg-amber-50/60 border border-amber-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('EMP_MARKED')}" title="Click to filter Emp Marked">
+                        <span class="text-[8px] font-black text-amber-700 uppercase tracking-wider block mb-1">Emp Marked</span>
+                        <strong class="text-base font-black text-amber-700 font-mono">${empM}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('COORD_MARKED_PRESENT')" class="bg-purple-50/50 border border-purple-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_PRESENT')}" title="Click to filter Coord Marked Present">
+                        <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider block mb-1">Coord (Pres)</span>
+                        <strong class="text-base font-black text-purple-700 font-mono">${coordPres}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('COORD_MARKED_ABSENT')" class="bg-rose-50/50 border border-rose-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_ABSENT')}" title="Click to filter Coord Marked Absent">
+                        <span class="text-[8px] font-black text-rose-600 uppercase tracking-wider block mb-1">Coord (Abs)</span>
+                        <strong class="text-base font-black text-rose-700 font-mono">${coordAbs}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('COORD_MARKED_LEAVE')" class="bg-fuchsia-50/50 border border-fuchsia-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('COORD_MARKED_LEAVE')}" title="Click to filter Coord Marked Leave">
+                        <span class="text-[8px] font-black text-fuchsia-600 uppercase tracking-wider block mb-1">Coord (Leave)</span>
+                        <strong class="text-base font-black text-fuchsia-700 font-mono">${coordLeave}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('ON_LEAVE')" class="bg-emerald-50/50 border border-emerald-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('ON_LEAVE')}" title="Click to filter On Leave">
+                        <span class="text-[8px] font-black text-emerald-600 uppercase tracking-wider block mb-1">On Leave</span>
+                        <strong class="text-base font-black text-emerald-700 font-mono">${onLeave}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('APPLIED_LEAVE')" class="bg-orange-50/50 border border-orange-100 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('APPLIED_LEAVE')}" title="Click to filter Applied Leave">
+                        <span class="text-[8px] font-black text-orange-600 uppercase tracking-wider block mb-1">Appl Leave</span>
+                        <strong class="text-base font-black text-orange-700 font-mono">${appliedLeave}</strong>
+                    </div>
+                    <div onclick="window.handleAdminSummaryCardFilterClick('NOT_MARKED')" class="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl shadow-inner cursor-pointer transition-all ${getCardStyle('NOT_MARKED')}" title="Click to filter Not Marked">
+                        <span class="text-[8px] font-black text-slate-500 uppercase tracking-wider block mb-1">Not Marked</span>
+                        <strong class="text-base font-black text-slate-700 font-mono">${notM}</strong>
+                    </div>
+                `;
             }
         };
 
+        window.renderAdminTable = (filterStatus = "ALL") => {
+            const container = document.getElementById("admin-data-container");
+            const selectEl = document.getElementById("admin-status-filter");
+            if (selectEl && selectEl.value !== filterStatus) {
+                selectEl.value = filterStatus;
+            }
 
+            window.recalculateAdminRosterStatistics();
 
-
-
-        window.renderAdminTable = () => {
-            const tableBody = document.getElementById("admin-roster-table-body");
-            const statusFilter = document.getElementById("admin-status-filter").value;
-
-            // Filter the cache based on selection
-            const filteredData = statusFilter === "ALL"
-                ? activeAdminRosterCache
-                : activeAdminRosterCache.filter(r => r.trackingState === statusFilter);
-
-            if (filteredData.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="11" class="px-4 py-10 text-center text-slate-400 font-bold">No records found for this status.</td></tr>`;
+            if (activeAdminRosterCache.length === 0) {
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No records found.</div>`;
                 return;
             }
 
-            let outputRows = "";
-            // 🎯 FIX: Use filteredData here instead of activeAdminRosterCache
-            filteredData.forEach((r, idx) => {
-                let stateBadge = "";
-                if (r.trackingState === "MARKED_UNVERIFIED") {
-                    stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED / VERIFICATION PENDING</span>`;
-                } else if (r.trackingState === "NOT_MARKED") {
-                    stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">NOT MARKED</span>`;
-                } else if (r.trackingState === "MARKED_BY_COORDINATOR") {
-                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED AND VERIFIED BY COORDINATOR</span>`;
+            let desktopRowsHtml = "";
+            let mobileCardsHtml = "";
+            let displayedCount = 0;
+
+            activeAdminRosterCache.forEach((r, idx) => {
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
+                let category = "NOT_MARKED";
+
+                if (r.isLeaveApproved) {
+                    category = "ON_LEAVE";
+                } else if (r.isLeaveApplied) {
+                    category = "APPLIED_LEAVE";
+                } else if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                    category = "COORD_MARKED_ABSENT";
+                } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                    category = "COORD_MARKED_LEAVE";
+                } else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") {
+                    category = "EMP_MARKED";
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
-                    stateBadge = `<span class="bg-indigo-100 border border-indigo-300 text-indigo-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal leading-tight">MARKED BY COORDINATOR ONLY</span>`;
+                    category = "COORD_MARKED_PRESENT";
                 }
 
-                // To maintain correct reference, we use the original index if available in the object, 
-                // or ensure the ID is unique. Assuming your logic handles idx globally:
-                let projSelect = `<select id="admin_proj_sel_${idx}" class="px-2 py-1 w-50 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.handleAdminRowProjectChange(${idx}, this.value)">`;
-                projSelect += `<option value="">-- Choose Project --</option>`;
-                r.appointedProjectsList.forEach(p => {
-                    projSelect += `<option value="${p}" ${p === r.currentProject ? "selected" : ""}>${p}</option>`;
-                });
-                projSelect += `</select>`;
+                if (filterStatus !== "ALL" && filterStatus !== category) return;
+                displayedCount++;
+
+                let stateBadge = "";
+                if (r.isLeaveApproved) {
+                    stateBadge = `<span class="bg-emerald-100 border border-emerald-400 text-emerald-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">ON APPROVED LEAVE</span>`;
+                } else if (r.isLeaveApplied) {
+                    stateBadge = `<span class="bg-orange-100 border border-orange-400 text-orange-800 px-2 py-1 rounded-md font-black text-[10px] block whitespace-normal">APPLIED FOR LEAVE</span>`;
+                } else if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
+                    stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED (ABSENT)</span>`;
+                } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
+                    stateBadge = `<span class="bg-fuchsia-100 border border-fuchsia-300 text-fuchsia-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED (LEAVE)</span>`;
+                } else if (r.trackingState === "MARKED_UNVERIFIED") {
+                    stateBadge = `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">MARKED / PENDING</span>`;
+                } else if (r.trackingState === "NOT_MARKED") {
+                    stateBadge = `<span class="bg-rose-100 border border-rose-300 text-rose-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">NOT MARKED</span>`;
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR") {
+                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-800 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">VERIFIED BY COORD</span>`;
+                } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
+                    stateBadge = `<span class="bg-purple-100 border border-purple-300 text-purple-900 px-2 py-1 rounded-md font-bold text-[10px] block whitespace-normal">COORD MARKED (PRESENT)</span>`;
+                }
+
+                let currentRemark = r.coordinatorRemark || "Pending";
+                if (currentRemark === "Pending" || currentRemark === "") {
+                    if (r.isLeaveApproved) currentRemark = "On Leave";
+                    else if (r.isLeaveApplied) currentRemark = "Leave Applied";
+                }
 
                 const isDistrictOther = String(r.district || "").startsWith("OTHER");
                 const baseDistrictVal = isDistrictOther ? "OTHER" : r.district;
                 const customDistrictVal = isDistrictOther ? String(r.district).replace("OTHER-", "") : "";
 
-                let distSelect = `
-                <div class="space-y-1.5 w-50">
-                    <select id="admin_dist_sel_${idx}" class="w-50 px-2 py-1 border border-slate-300 rounded-lg text-xs bg-white font-bold" onchange="window.toggleAdminRowCustomDistrictField(${idx}, this.value)">
-                        <option value="">-- Choose District --</option>`;
-                r.availableDistrictsList.forEach(d => {
-                    distSelect += `<option value="${d}" ${d === baseDistrictVal ? "selected" : ""}>${d}</option>`;
-                });
-                distSelect += `
-                    </select>
-                    <input type="text" id="admin_custom_dist_name_${idx}" value="${customDistrictVal}" placeholder="Specify sub-district name" 
-                           class="w-full px-2 py-1 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-1 focus:ring-orange-500 font-bold bg-white">
-                </div>`;
+                const generateControls = (prefix) => {
+                    let projSelect = `<select id="${prefix}_admin_proj_sel_${idx}" class="w-full px-2 py-2 sm:py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-rose-500" onchange="window.handleAdminRowProjectChange(${idx}, this.value, '${prefix}')">`;
+                    projSelect += `<option value="">-- Choose Project --</option>`;
+                    r.appointedProjectsList.forEach(p => {
+                        projSelect += `<option value="${p}" ${p === r.currentProject ? "selected" : ""}>${p}</option>`;
+                    });
+                    projSelect += `</select>`;
+
+                    let distSelect = `
+                        <div class="space-y-1.5 w-full">
+                            <select id="${prefix}_admin_dist_sel_${idx}" class="w-full px-2 py-2 sm:py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-rose-500" onchange="window.toggleAdminRowCustomDistrictField(${idx}, this.value, '${prefix}')">
+                                <option value="">-- Choose District --</option>`;
+                    r.availableDistrictsList.forEach(d => {
+                        distSelect += `<option value="${d}" ${d === baseDistrictVal ? "selected" : ""}>${d}</option>`;
+                    });
+                    distSelect += `
+                            </select>
+                            <input type="text" id="${prefix}_admin_custom_dist_name_${idx}" value="${customDistrictVal}" placeholder="Specify sub-district name" 
+                                   class="w-full px-2 py-2 sm:py-1.5 border border-orange-300 rounded-lg text-xs ${isDistrictOther ? '' : 'hidden'} focus:ring-2 focus:ring-orange-500 font-bold bg-white outline-none">
+                        </div>`;
+
+                    let remarkSelect = `
+                        <select id="${prefix}_admin_remark_${idx}" class="w-full px-2 py-2.5 sm:py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs outline-none focus:ring-2 focus:ring-rose-500">
+                            <option value="Pending" ${currentRemark === "Pending" ? "selected" : ""}>Pending</option>
+                            <option value="Verified" ${currentRemark === "Verified" ? "selected" : ""}>Verified</option>
+                            <option value="Present" ${currentRemark === "Present" ? "selected" : ""}>Present</option>
+                            <option value="Absent" ${currentRemark === "Absent" ? "selected" : ""}>Absent</option>
+                            <option value="On Leave" ${currentRemark === "On Leave" ? "selected" : ""}>On Leave</option>
+                            <option value="Leave Applied" ${currentRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
+                            <option value="Half-Day" ${currentRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
+                            <option value="Holiday" ${currentRemark === "Holiday" ? "selected" : ""}>Holiday</option>
+                            <option value="On Duty" ${currentRemark === "On Duty" ? "selected" : ""}>On Duty</option>
+                            <option value="Field Visit" ${currentRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
+                            <option value="Location Wrongly Marked" ${currentRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
+                            <option value="Status Unknown-Audit Please" ${currentRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
+                        </select>
+                    `;
+
+                    let commentArea = `<textarea id="${prefix}_admin_comment_${idx}" rows="3" class="w-full min-w-[320px] sm:min-w-[380px] px-3 py-2.5 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-rose-500 leading-relaxed" placeholder="Provide master override logs...">${r.coordinatorComment || ''}</textarea>`;
+
+                    let saveBtn = `<button onclick="window.saveAdminRowDirectly(${idx}, '${prefix}')" class="w-full sm:w-auto px-4 py-3 sm:py-2 bg-rose-600 hover:bg-rose-700 text-white border border-rose-700 font-bold rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"><i data-lucide="check-square" class="w-4 h-4"></i> Commit Row</button>`;
+
+                    return { projSelect, distSelect, remarkSelect, commentArea, saveBtn };
+                };
+
+                const deskCtrls = generateControls('desk');
+                const mobCtrls = generateControls('mob');
 
                 let locationLink = '<span class="text-slate-400 font-normal italic">No Geo Record</span>';
                 let locStr = String(r.location || "").trim();
-
                 if (locStr && locStr !== "--" && locStr !== "undefined") {
-                    const btnClass = "w-32 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
-
+                    const btnClass = "w-28 px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700 font-black rounded text-[10px] inline-flex items-center justify-center gap-0.5 transition shadow-sm";
                     if (locStr.includes("||")) {
-                        let segments = locStr.split("||");
-                        let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
-                        locationLink = `<a href="${parsedUrl}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        let segments = locStr.split("||"); let parsedUrl = segments[1] ? segments[1].trim() : segments[0].trim();
+                        locationLink = `<a href="${parsedUrl}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else if (locStr.startsWith("http://") || locStr.startsWith("https://")) {
-                        locationLink = `<a href="${locStr}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="${locStr}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else if (locStr.includes(',') || /[0-9]{2}\.[0-9]+/.test(locStr)) {
-                        locationLink = `<a href="https://maps.google.com/?q=${encodeURIComponent(locStr)}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View On Map</a>`;
+                        locationLink = `<a href="https://maps.google.com/?q=${encodeURIComponent(locStr)}" target="_blank" class="${btnClass}"><i data-lucide="map-pin" class="w-2.5 h-2.5"></i> View Map</a>`;
                     } else {
                         locationLink = `<span class="text-slate-800 font-bold break-words">${locStr}</span>`;
                     }
                 }
 
-                let historyHtml = '<span class="text-slate-300 italic">No history found</span>';
+                let historyHtml = '<span class="text-slate-400 italic">No history found</span>';
                 if (r.historyObj && r.historyObj.hasHistory) {
                     historyHtml = `
-                            <div class="space-y-1 bg-slate-50 border border-slate-200/60 p-3 rounded-xl shadow-inner text-[11px] leading-normal font-medium text-slate-600 min-w-[300px]">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b><span class="font-mono text-slate-900 font-bold ml-1">${r.historyObj.date}</span>
-                                    </div>
-                                    <div>
-                                        <b class="text-slate-400 uppercase text-[8px]">Logout:</b><span class="font-mono text-slate-900 font-bold ml-1">${r.historyObj.logout}</span>
-                                    </div>
-                                </div>
-                                <div class="border-t border-slate-200/60 pt-1 mt-1">
-                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b>
-                                    <p class="italic text-slate-700 font-normal leading-tight mt-0.5">${r.historyObj.progress}</p>
-                                </div>
-                            </div>`;
+                        <div class="space-y-1 text-[11px] leading-normal font-medium text-slate-600">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Date</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span></div>
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Logout</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span></div>
+                            </div>
+                            <div class="border-t border-slate-200/60 pt-1 mt-1">
+                                <span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Progress</span>
+                                <span class="italic text-slate-700">${r.historyObj.progress}</span>
+                            </div>
+                        </div>
+                    `;
                 }
 
-                outputRows += `
-                        <tr class="hover:bg-slate-50/50 transition-colors align-top">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <strong class="text-slate-900 block font-semibold text-xs">${r.employeeName}</strong>
-                                <span class="font-mono text-[11px] text-slate-400 block">ID: ${r.employeeId}</span>
-                            </td>
-                            <td class="px-3 py-3 break-words whitespace-normal">${stateBadge}</td>
-                            <td class="px-3 py-3">${projSelect}</td>
-                            <td class="px-3 py-3">
-                                ${distSelect}
-                                <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
-                            </td>
-                            <td class="w-60 px-3 py-3 text-center align-middle">${locationLink}</td> 
-                            <td class="w-70 px-3 py-3 break-words font-medium text-slate-600 italic">"${r.todaysPlan || 'None'}"</td>
-                            <td class="w-40 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
-                            <td class="px-4 py-3">${historyHtml}</td>
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <select id="admin_remark_${idx}" class="px-2 py-1.5 border border-slate-300 rounded-xl bg-white font-black text-xs focus:ring-1" style="width:185px;">
-                                    <option value="Pending" ${!r.coordinatorRemark || r.coordinatorRemark === "Pending" ? "selected" : ""}>Pending</option>
-                                    <option value="Verified" ${r.coordinatorRemark === "Verified" ? "selected" : ""}>Verified</option>
-                                    <option value="Present" ${r.coordinatorRemark === "Present" ? "selected" : ""}>Present</option>
-                                    <option value="Absent" ${r.coordinatorRemark === "Absent" ? "selected" : ""}>Absent</option>
-                                    <option value="On Leave" ${r.coordinatorRemark === "On Leave" ? "selected" : ""}>On Leave</option>
-                                    <option value="Leave Applied" ${r.coordinatorRemark === "Leave Applied" ? "selected" : ""}>Leave Applied</option>
-                                    <option value="Half-Day" ${r.coordinatorRemark === "Half-Day" ? "selected" : ""}>Half-Day</option>
-                                    <option value="Holiday" ${r.coordinatorRemark === "Holiday" ? "selected" : ""}>Holiday</option>
-                                    <option value="On Duty" ${r.coordinatorRemark === "On Duty" ? "selected" : ""}>On Duty</option>
-                                    <option value="Field Visit" ${r.coordinatorRemark === "Field Visit" ? "selected" : ""}>Field Visit</option>
-                                    <option value="Location Wrongly Marked" ${r.coordinatorRemark === "Location Wrongly Marked" ? "selected" : ""}>Location Wrongly Marked</option>
-                                    <option value="Status Unknown-Audit Please" ${r.coordinatorRemark === "Status Unknown-Audit Please" ? "selected" : ""}>Status Unknown-Audit Please</option>
-                                </select>
-                            </td>
-                            <td class="px-3 py-3">
-                                <textarea id="admin_comment_${idx}" rows="3" class="w-full min-w-[220px] px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-rose-500" placeholder="Provide system master override logs...">${r.coordinatorComment || ''}</textarea>
-                            </td>
-                            <td class="px-3 py-3 text-center whitespace-nowrap">
-                                <button onclick="window.saveAdminRowDirectly(${idx})" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white border border-rose-700 font-bold rounded-xl transition cursor-pointer shadow-sm flex items-center gap-1.5">
-                                    <i data-lucide="check-square" class="w-3.5 h-3.5"></i> Commit Row
-                                </button>
-                            </td>
-                        </tr>`;
+                const rowId = `admin_roster_mob_row_${idx}`;
+
+                desktopRowsHtml += `
+                    <tr class="hover:bg-slate-50/50 transition-colors align-top hidden lg:table-row">
+                        <td class="px-3 py-3 whitespace-nowrap w-40">
+                            <strong class="text-slate-900 block font-semibold text-xs">${r.employeeName}</strong>
+                            <span class="font-mono text-[11px] text-slate-400 block mt-0.5">ID: ${r.employeeId}</span>
+                        </td>
+                        <td class="px-3 py-3 whitespace-nowrap w-36">
+                            <span class="text-slate-700 font-bold text-xs block">${r.coordinatorName || 'Unassigned'}</span>
+                        </td>
+                        <td class="px-3 py-3 whitespace-nowrap w-36">${stateBadge}</td>
+                        <td class="px-3 py-3 w-64">${deskCtrls.projSelect}</td>
+                        <td class="px-3 py-3 w-56">
+                            ${deskCtrls.distSelect}
+                            <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
+                        </td>
+                        <td class="w-44 px-3 py-3 text-center align-middle">${locationLink}</td> 
+                        <td class="w-60 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap text-[11px]">"${r.todaysPlan || 'None'}"</td>
+                        <td class="w-32 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
+                        <td class="px-4 py-3 bg-slate-50/50 rounded-lg border border-slate-100 shadow-inner m-1 block w-64">${historyHtml}</td>
+                        <td class="px-3 py-3 whitespace-nowrap w-48">${deskCtrls.remarkSelect}</td>
+                        <td class="px-3 py-3 w-96">${deskCtrls.commentArea}</td>
+                        <td class="px-3 py-3 text-center whitespace-nowrap w-40">${deskCtrls.saveBtn}</td>
+                    </tr>
+                `;
+
+                mobileCardsHtml += `
+                    <div class="lg:hidden bg-white border border-slate-200 rounded-2xl shadow-sm mb-3 overflow-hidden">
+                        <div class="px-4 py-3 bg-slate-50 flex justify-between items-start cursor-pointer hover:bg-slate-100 transition" onclick="window.toggleAdminAccordion('${rowId}')">
+                            <div class="pr-2 w-[85%]">
+                                <strong class="text-slate-950 block text-sm truncate font-black">${r.employeeName}</strong>
+                                <span class="text-slate-500 font-mono text-[10px] font-bold block mt-0.5">ID: ${r.employeeId}</span>
+                                <div class="text-[11px] font-bold text-slate-600 mt-1">Coord: ${r.coordinatorName || 'Unassigned'}</div>
+                                <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                                    ${stateBadge.replace('block', 'inline-block').replace('text-[10px]', 'text-[9px]')}
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end justify-center w-[15%] pt-2">
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="${rowId}" class="hidden p-4 space-y-4 text-xs border-t border-slate-100 bg-white">
+                            <div class="pb-3 border-b border-slate-100 space-y-3">
+                                <div>
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Project</label>
+                                    ${mobCtrls.projSelect}
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">District</label>
+                                    ${mobCtrls.distSelect}
+                                </div>
+                            </div>
+
+                            <div class="pb-3 border-b border-slate-100 space-y-3">
+                                <div>
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Today's Plan</span>
+                                    <div class="text-slate-700 italic text-[11px] leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">"${r.todaysPlan || 'None'}"</div>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Last Progress Log</span>
+                                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-inner">${historyHtml}</div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 text-[10px] font-mono mt-1 border-t border-slate-50 pt-3">
+                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Login</span> <span class="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">${r.loginTime || '--:--'}</span></div>
+                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Geo Tag</span> ${locationLink} <div class="text-[9px] text-slate-400 mt-1">Acc: ±${r.accuracy || '--'}m</div></div>
+                                </div>
+                            </div>
+
+                            <div class="pt-1 space-y-3">
+                                <span class="text-[10px] font-black uppercase text-rose-700 tracking-wider flex items-center gap-1.5 mb-2"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Admin Override Input</span>
+                                <div>
+                                    <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Audit Remark Status</label>
+                                    ${mobCtrls.remarkSelect}
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] uppercase text-slate-600 font-black mb-1">Audit Comments</label>
+                                    ${mobCtrls.commentArea}
+                                </div>
+                                <div class="pt-2">
+                                    ${mobCtrls.saveBtn}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
 
-            tableBody.innerHTML = outputRows;
-            window.recalculateAdminRosterStatistics();
+            if (displayedCount === 0) {
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-slate-50 rounded-2xl">No records match the selected filter.</div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="hidden lg:block overflow-x-auto w-full max-h-[600px]">
+                        <table class="w-full text-left border-collapse table-auto min-w-[2050px]">
+                            <thead>
+                                <tr class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
+                                    <th class="px-3 py-3.5 whitespace-nowrap w-40">Employee Details</th>
+                                    <th class="px-3 py-3.5 whitespace-nowrap w-36">Coordinator</th>
+                                    <th class="px-3 py-3.5 whitespace-wrap w-36">Status</th>
+                                    <th class="px-3 py-3.5 w-64">Project Sector</th>
+                                    <th class="px-3 py-3.5 w-56">Operating District</th>
+                                    <th class="px-3 py-3.5 w-44 text-center">Login Location</th>
+                                    <th class="px-3 py-3.5 w-60 text-white">Today's Plan</th>
+                                    <th class="px-3 py-3.5 w-32 whitespace-nowrap">Login Time</th>
+                                    <th class="px-4 py-3.5 w-64">Last Progress</th>
+                                    <th class="px-3 py-3.5 w-48 whitespace-nowrap">Audit Remark</th>
+                                    <th class="px-3 py-3.5 w-96">Comments</th>
+                                    <th class="px-3 py-3.5 text-center w-40">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-100 text-slate-700 font-bold bg-white">
+                                ${desktopRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="lg:hidden flex flex-col w-full pt-1">
+                        ${mobileCardsHtml}
+                    </div>
+                `;
+            }
             if (window.lucide) window.lucide.createIcons();
         };
 
+        window.fetchAdminVerificationRoster = async () => {
+            const container = document.getElementById("admin-data-container");
+            const targetDate = dateSelector.value;
+            if (!targetDate) return;
 
+            container.innerHTML = `
+                <div class="p-12 text-center text-slate-400 font-bold animate-pulse flex flex-col items-center justify-center gap-2">
+                    <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-rose-600"></i>
+                    <span>Querying global employee records for ${targetDate}...</span>
+                </div>
+            `;
+            if (window.lucide) window.lucide.createIcons();
 
-        window.handleAdminRowProjectChange = function (index, newProjectValue) {
-            const distSel = document.getElementById(`admin_dist_sel_${index}`);
+            const parts = targetDate.split("-");
+            const formattedDateLabel = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            document.getElementById("admin-display-date-header").innerText = `Audit Target Date: ${formattedDateLabel.replace(/-/g, '/')}`;
+            const targetTimestamp = parseToTimestamp(formattedDateLabel);
+
+            try {
+                const [rosterRes, leaveRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getAdminGlobalRoster&targetDate=${formattedDateLabel}`),
+                    fetch(`${API_URL}?action=getAdminLeaveDataBundles`)
+                ]);
+                
+                const result = await rosterRes.json();
+                const leaveResult = await leaveRes.json();
+
+                if (!result.data || result.data.length === 0) {
+                    activeAdminRosterCache = [];
+                    window.renderAdminTable();
+                    return;
+                } else {
+                    activeAdminRosterCache = result.data;
+                }
+                
+                masterLeaveApplicationsCache = leaveResult.status ? leaveResult.data : [];
+                
+                activeAdminRosterCache.forEach(r => {
+                    let isLeaveApplied = false;
+                    let isLeaveApproved = false;
+
+                    const activeLeave = masterLeaveApplicationsCache.find(lv => {
+                        const cleanLv = normalizeBackendObject(lv);
+                        if (String(cleanLv.employeeid || "").trim().toUpperCase() !== String(r.employeeId).trim().toUpperCase()) return false;
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "REJECTED" || stat === "DECLINED" || stat === "CANCELLED") return false;
+                        return evaluateDateInsideLeaveBlock(targetTimestamp, lv);
+                    });
+
+                    if (activeLeave) {
+                        const cleanLv = normalizeBackendObject(activeLeave);
+                        const stat = String(cleanLv.status || cleanLv.admindecision || "").toUpperCase();
+                        if (stat === "APPROVED") isLeaveApproved = true;
+                        else isLeaveApplied = true;
+                    }
+
+                    r.isLeaveApproved = isLeaveApproved;
+                    r.isLeaveApplied = isLeaveApplied;
+                });
+
+                window.recalculateAdminRosterStatistics();
+                const currentFilter = document.getElementById("admin-status-filter").value;
+                window.renderAdminTable(currentFilter);
+
+            } catch (err) {
+                container.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold bg-rose-50 rounded-2xl border border-rose-200">Failed syncing data. Check connection.</div>`;
+            }
+        };
+
+        window.handleAdminRowProjectChange = function (index, newProjectValue, prefix = 'desk') {
+            const distSel = document.getElementById(`${prefix}_admin_dist_sel_${index}`);
             const cacheItem = activeAdminRosterCache[index];
             cacheItem.currentProject = newProjectValue;
             if (!newProjectValue) { distSel.innerHTML = '<option value="">-- Choose District --</option>'; return; }
@@ -315,24 +570,26 @@
             let dOptions = '<option value="">-- Choose District --</option>';
             dList.forEach(d => { dOptions += `<option value="${d}">${d}</option>`; });
             distSel.innerHTML = dOptions;
-            window.toggleAdminRowCustomDistrictField(index, distSel.value);
+            window.toggleAdminRowCustomDistrictField(index, distSel.value, prefix);
         };
 
-        window.toggleAdminRowCustomDistrictField = function (index, selectedDistrictValue) {
-            const txtInput = document.getElementById(`admin_custom_dist_name_${index}`);
+        window.toggleAdminRowCustomDistrictField = function (index, selectedDistrictValue, prefix = 'desk') {
+            const txtInput = document.getElementById(`${prefix}_admin_custom_dist_name_${index}`);
             if (selectedDistrictValue === "OTHER") txtInput.classList.remove("hidden");
             else txtInput.classList.add("hidden");
         };
 
-        window.saveAdminRowDirectly = async function (idx) {
+        window.saveAdminRowDirectly = async function (idx, prefix = 'desk') {
             const r = activeAdminRosterCache[idx];
             const targetDate = dateSelector.value;
+            const parts = targetDate.split("-");
+            const formattedDateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-            const selectedProj = document.getElementById(`admin_proj_sel_${idx}`).value;
-            let selectedDist = document.getElementById(`admin_dist_sel_${idx}`).value;
-            const customDistName = document.getElementById(`admin_custom_dist_name_${idx}`).value.trim();
-            const selectedRemark = document.getElementById(`admin_remark_${idx}`).value;
-            const typedComment = document.getElementById(`admin_comment_${idx}`).value.trim();
+            const selectedProj = document.getElementById(`${prefix}_admin_proj_sel_${idx}`).value;
+            let selectedDist = document.getElementById(`${prefix}_admin_dist_sel_${idx}`).value;
+            const customDistName = document.getElementById(`${prefix}_admin_custom_dist_name_${idx}`).value.trim();
+            const selectedRemark = document.getElementById(`${prefix}_admin_remark_${idx}`).value;
+            let typedComment = document.getElementById(`${prefix}_admin_comment_${idx}`).value.trim();
 
             if (!selectedProj) { alert(`Admin Override Refused: Project field missing for ${r.employeeName}.`); return; }
             if (!selectedDist) { alert(`Admin Override Refused: District tracking field missing for ${r.employeeName}.`); return; }
@@ -341,6 +598,10 @@
             if (!typedComment) { alert(`Admin Override Refused: Strategic description verification comments required.`); return; }
 
             if (selectedDist === "OTHER") selectedDist = "OTHER-" + customDistName;
+
+            if (!typedComment.toLowerCase().startsWith("revised by admin")) {
+                typedComment = `Revised by Admin: ${typedComment}`;
+            }
 
             const confirmSubmission = confirm(`Execute Master Admin Roster Rewrite Strategy for ${r.employeeName}?`);
             if (!confirmSubmission) return;
@@ -351,7 +612,7 @@
             }];
 
             const masterPayload = {
-                action: "processCoordinatorVerificationData", date: targetDate,
+                action: "processCoordinatorVerificationData", date: formattedDateStr,
                 coordinatorId: currentUser.employeeId, coordinatorName: currentUser.employeeName, records: targetRowPayload
             };
 
@@ -379,70 +640,97 @@
 
             const adminExecutorName = currentUser.employeeName || "Master Administrator";
 
+            const total = activeAdminRosterCache.length;
+            let empM = 0, coordPres = 0, coordAbs = 0, coordLeave = 0, onLeave = 0, appliedLeave = 0, notM = 0;
+            activeAdminRosterCache.forEach(r => {
+                const remarkUpper = String(r.coordinatorRemark || "").trim().toUpperCase();
+                if (r.isLeaveApproved) onLeave++;
+                else if (r.isLeaveApplied) appliedLeave++;
+                else if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") coordAbs++;
+                else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") coordLeave++;
+                else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") empM++;
+                else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") coordPres++;
+                else notM++;
+            });
+
             body.innerHTML = `
-                <div id="admin-pdf-content-area" class="p-4">
+                <div id="admin-pdf-content-area" class="p-4 bg-white">
                     <div class="mb-6 border-b pb-4 border-rose-200">
                         <h2 class="text-xl font-black text-slate-800 mb-2">Global Roster Master Verification Summary Ledger</h2>
-                        <div class="flex gap-8 text-xs font-bold text-slate-600">
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-8 text-xs font-bold text-slate-600">
                             <p>Report Target Date: <span class="text-rose-600">${formattedReportDate}</span></p>
                             <p>Auditor Identity: <span class="text-slate-900">${adminExecutorName} (Admin Status)</span></p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-4 mb-8">
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100"><p class="text-[9px] font-black text-slate-400 uppercase">Global Total</p><strong class="text-lg">${activeAdminRosterCache.length}</strong></div>
-                        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100"><p class="text-[9px] font-black text-amber-600 uppercase">Marked by Emp</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState.includes("MARKED")).length}</strong></div>
-                        <div class="bg-purple-50 p-4 rounded-2xl border border-purple-100"><p class="text-[9px] font-black text-purple-600 uppercase">Marked by Authority</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState === "MARKED_BY_COORDINATOR").length}</strong></div>
-                        <div class="bg-rose-50 p-4 rounded-2xl border border-rose-100"><p class="text-[9px] font-black text-rose-600 uppercase">Not Marked</p><strong class="text-lg">${activeAdminRosterCache.filter(r => r.trackingState === "NOT_MARKED").length}</strong></div>
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-1.5 mb-8">
+                        <div class="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center"><p class="text-[7px] font-black text-blue-600 uppercase">Total</p><strong class="text-xs font-mono">${total}</strong></div>
+                        <div class="bg-amber-50 p-2 rounded-xl border border-amber-100 text-center"><p class="text-[7px] font-black text-amber-600 uppercase">Emp Marked</p><strong class="text-xs font-mono">${empM}</strong></div>
+                        <div class="bg-purple-50 p-2 rounded-xl border border-purple-100 text-center"><p class="text-[7px] font-black text-purple-600 uppercase">Coord (Pres)</p><strong class="text-xs font-mono">${coordPres}</strong></div>
+                        <div class="bg-rose-50 p-2 rounded-xl border border-rose-100 text-center"><p class="text-[7px] font-black text-rose-600 uppercase">Coord (Abs)</p><strong class="text-xs font-mono">${coordAbs}</strong></div>
+                        <div class="bg-fuchsia-50 p-2 rounded-xl border border-fuchsia-100 text-center"><p class="text-[7px] font-black text-fuchsia-600 uppercase">Coord (Leave)</p><strong class="text-xs font-mono">${coordLeave}</strong></div>
+                        <div class="bg-emerald-50 p-2 rounded-xl border border-emerald-100 text-center"><p class="text-[7px] font-black text-emerald-600 uppercase">On Leave</p><strong class="text-xs font-mono">${onLeave}</strong></div>
+                        <div class="bg-orange-50 p-2 rounded-xl border border-orange-100 text-center"><p class="text-[7px] font-black text-orange-600 uppercase">App Leave</p><strong class="text-xs font-mono">${appliedLeave}</strong></div>
+                        <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center"><p class="text-[7px] font-black text-slate-600 uppercase">Not Marked</p><strong class="text-xs font-mono">${notM}</strong></div>
                     </div>
 
-                    <table class="w-full text-left border-collapse table-fixed">
-                        <thead>
-                            <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200">
-                                <th class="pb-3 px-3 w-32">Employee Details</th>
-                                <th class="pb-3 px-3 w-25">Status</th>
-                                <th class="pb-3 px-3 w-30">Project / District</th>
-                                <th class="pb-3 px-3 w-50">Plan / Login / Loc</th>
-                                <th class="pb-3 px-3 w-50">Last Day Progress</th>
-                                <th class="pb-3 px-3 w-50">Audit Remark</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs divide-y divide-slate-100">
-                            ${activeAdminRosterCache.map(r => {
-                const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
-                const locLink = hasLocation
-                    ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
-                    : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
-                return `
-                                    <tr class="align-top">
-                                        <td class="py-4 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
-                                        <td class="py-4 break-words whitespace-normal"> 
-                                            <span class="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block"> ${r.trackingState}</span>
-                                        </td>
-                                        <td class="py-4 font-medium break-words">${r.currentProject || '-'}<br><span class="text-[10px] text-slate-500">${r.district || '-'}</span></td>
-                                        <td class="py-4 text-slate-600 break-words">
-                                            <div>${r.todaysPlan || '-'}</div>
-                                            <div class="font-mono text-emerald-600 font-bold">${r.loginTime || '--:--'}</div>
-                                            ${locLink}
-                                        </td>
-                                        <td class="py-4 text-[10px] text-slate-600">
-                                            ${r.historyObj?.hasHistory ? `
-                                                <div class="bg-slate-50 p-2 rounded border border-slate-100">
-                                                    <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
-                                                    <b class="text-slate-400 uppercase text-[8px]">Work Progress:</b><br>${r.historyObj.progress}<br>
-                                                    <b class="text-slate-400 uppercase text-[8px]">Logout:</b> ${r.historyObj.logout}
-                                                </div>
-                                            ` : 'No history'}
-                                        </td>
-                                        <td class="py-4 font-bold text-slate-800 break-words">${r.coordinatorRemark || '-'}<br><span class="text-[10px] font-normal text-slate-500">${r.coordinatorComment || ''}</span></td>
-                                    </tr>`;
-            }).join('')}
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse table-fixed min-w-[900px]">
+                            <thead>
+                                <tr class="text-[9px] font-black text-slate-400 uppercase border-b border-slate-200 bg-slate-50">
+                                    <th class="py-3 px-3 w-36">Employee Details</th>
+                                    <th class="py-3 px-3 w-32">Coordinator</th>
+                                    <th class="py-3 px-3 w-28">Status</th>
+                                    <th class="py-3 px-3 w-32">Project/District</th>
+                                    <th class="py-3 px-3 w-44">Plan / Login / Loc</th>
+                                    <th class="py-3 px-3 w-44">Last Day Progress</th>
+                                    <th class="py-3 px-3 w-44">Audit Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-100">
+                                ${activeAdminRosterCache.map(r => {
+                                    const hasLocation = r.location && r.location !== "--" && r.location !== "undefined";
+                                    const locLink = hasLocation
+                                        ? `<a href="${r.location}" target="_blank" class="text-blue-600 underline text-[10px] font-bold">View Map</a>`
+                                        : `<span class="text-slate-400 text-[10px] italic">No location</span>`;
+                                    
+                                    let displayState = r.trackingState;
+                                    if (r.isLeaveApproved) displayState = "ON APPROVED LEAVE";
+                                    else if (r.isLeaveApplied) displayState = "APPLIED FOR LEAVE";
+
+                                    return `
+                                        <tr class="align-top hover:bg-slate-50">
+                                            <td class="py-4 px-3 font-bold truncate">${r.employeeName}<br><span class="text-[10px] text-slate-400 font-mono">${r.employeeId}</span></td>
+                                            <td class="py-4 px-3 font-medium truncate">${r.coordinatorName || 'Unassigned'}</td>
+                                            <td class="py-4 px-3 break-words whitespace-wrap"><span class="whitespace-wrap px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 text-[9px] block font-bold">${displayState.replace(/_/g, ' ')}</span></td>
+                                            <td class="py-4 px-3 font-medium break-words leading-tight">${r.currentProject || '-'}<br><span class="text-[9px] font-slate-500 block mt-1">${r.district || '-'}</span></td>
+                                            <td class="py-4 px-3 text-slate-600 break-words leading-snug">
+                                                <div class="italic mb-1 text-[11px]">"${r.todaysPlan || '-'}"</div>
+                                                <div class="font-mono text-emerald-600 font-bold mb-1">In: ${r.loginTime || '--:--'}</div>
+                                                ${locLink}
+                                            </td>
+                                            <td class="py-4 px-3 text-[10px] text-slate-600">
+                                                ${r.historyObj?.hasHistory ? `
+                                                    <div class="bg-slate-50 p-2 rounded border border-slate-100 leading-tight">
+                                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
+                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Work Progress:</b>${r.historyObj.progress}<br>
+                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Logout:</b> ${r.historyObj.logout}
+                                                    </div>
+                                                ` : '<span class="italic text-slate-400">No history</span>'}
+                                            </td>
+                                            <td class="py-4 px-3 font-bold text-slate-800 break-words leading-snug">
+                                                <div class="text-rose-700 uppercase text-[10px]">${r.coordinatorRemark || '-'}</div>
+                                                <div class="text-[10px] font-normal text-slate-500 italic mt-1">"${r.coordinatorComment || ''}"</div>
+                                            </td>
+                                        </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div class="mt-6 border-t pt-4">
-                    <button onclick="window.downloadAdminReportPDF()" class="w-full py-3 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 transition">
+                    <button onclick="window.downloadAdminReportPDF()" class="w-full py-3 sm:py-2.5 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 transition cursor-pointer">
                         Download Master PDF Audit Report
                     </button>
                 </div>
@@ -465,7 +753,6 @@
             html2pdf().set(opt).from(element).save();
         };
 
-        // Automatic compilation on module mapping load routines
         window.fetchAdminVerificationRoster();
     })();
 </script>
