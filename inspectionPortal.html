@@ -45,7 +45,7 @@
 <datalist id="existing-items"></datalist>
 <datalist id="existing-tkcs"></datalist>
 
-<!-- Modal: Create / Edit Target (DataCoordinator Only) -->
+<!-- Modal: Create / Edit Target (DataCoordinator / Admin Only) -->
 <div id="modal-target" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white w-full max-w-2xl max-h-[95vh] overflow-y-auto rounded-3xl shadow-2xl p-5 sm:p-6 relative">
         <h3 id="target-modal-title" class="text-lg font-black text-slate-900 border-b pb-3 mb-4">Create Inspection Target</h3>
@@ -74,7 +74,7 @@
                     <option value="Lot">Lot</option>
                 </select>
             </div>
-            <div class="hidden sm:block"></div> <!-- empty spacer -->
+            <div class="hidden sm:block"></div>
 
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500">Total Sanctioned Qty</label><input type="number" step="0.001" id="t-sanc-qty" class="w-full p-2 border rounded-lg bg-slate-50"></div>
             <div><label class="block mb-1 text-[10px] uppercase text-slate-500 text-indigo-600">Target Qty to Inspect</label><input type="number" step="0.001" id="t-target-qty" class="w-full p-2 border border-indigo-200 rounded-lg bg-indigo-50 text-indigo-900"></div>
@@ -167,7 +167,6 @@
             if (el) el.classList.toggle('hidden');
         };
 
-        // 🎯 Helper logic to decouple summary toggling from accordion row toggling
         window.toggleSummary = function(e, id) {
             if (e) e.stopPropagation();
             window.toggleAccordion(id);
@@ -238,7 +237,7 @@
                     if (r.District) uniqueDistricts.add(r.District.trim());
                     if (r.Phase) uniquePhases.add(r.Phase.trim());
                     if (r.Item_Type) uniqueItems.add(r.Item_Type.trim());
-                    if (r.TKC_Name) uniqueTkcs.add(r.TKC_Name.trim());
+                    if (r.TKC_Name && r.TKC_Name.trim() !== "" && r.TKC_Name.trim() !== "--") uniqueTkcs.add(r.TKC_Name.trim());
                 }
             });
 
@@ -291,7 +290,7 @@
                 const t = currentTargetData[key];
                 const dist = t.District ? t.District.trim() : "Unassigned";
                 const phase = t.Phase ? t.Phase.trim() : "1st Phase";
-                const tkc = t.TKC_Name ? t.TKC_Name.trim() : "Unknown TKC";
+                const tkc = (t.TKC_Name && t.TKC_Name.trim() !== "" && t.TKC_Name.trim() !== "--") ? t.TKC_Name.trim() : "Unassigned TKC";
                 const item = t.Item_Type ? t.Item_Type.trim() : "Unknown";
                 
                 if (distVal !== "ALL" && dist !== distVal) return;
@@ -348,13 +347,15 @@
                     const safeTkcId = safeDpId + '_tkc_' + tkcKey.replace(/[^a-zA-Z0-9]/g, '_');
                     const safeTkcSummaryId = safeTkcId + '_summary';
 
-                    // 🎯 Generate summary specifically for this TKC
                     let tkcSummaryArr = [];
                     Object.keys(tkcData.items).forEach(item => {
                         const iData = tkcData.items[item];
                         tkcSummaryArr.push(`<span class="text-indigo-500">${item}:</span> ${formatQty(iData.totalInspected)} / ${formatQty(iData.totalTarget)} ${iData.unit}`);
                     });
                     const tkcSummaryStr = tkcSummaryArr.join(' <span class="text-indigo-300 font-black px-1">|</span> ');
+
+                    // Check if this TKC is unassigned
+                    const isUnassignedTkc = (tkcKey === "Unassigned TKC");
 
                     html += `
                         <!-- TIER 2: TKC Level -->
@@ -363,12 +364,10 @@
                                 <div class="flex items-start sm:items-center gap-2 w-[90%]">
                                     <i data-lucide="briefcase" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0 mt-0.5 sm:mt-0"></i>
                                     <div class="w-full pr-2">
-                                        <div class="flex items-center gap-2">
-                                            <h5 class="text-[11px] sm:text-xs font-black text-indigo-900 uppercase tracking-wider">TKC: ${tkcKey}</h5>
-                                            <!-- 🎯 NEW: Summary Toggle Button -->
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h5 class="text-[11px] sm:text-xs font-black ${isUnassignedTkc ? 'text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200' : 'text-indigo-900'} uppercase tracking-wider">TKC: ${tkcKey}</h5>
                                             <button onclick="window.toggleSummary(event, '${safeTkcSummaryId}')" class="px-2 py-0.5 bg-indigo-200/80 hover:bg-indigo-300 text-indigo-800 rounded text-[8px] font-black uppercase transition shadow-sm border border-indigo-300">Summary</button>
                                         </div>
-                                        <!-- 🎯 NEW: Hidden Summary Container -->
                                         <div id="${safeTkcSummaryId}" class="hidden text-[9px] sm:text-[10px] text-indigo-800 font-mono mt-2 pt-1.5 border-t border-indigo-200/60 leading-relaxed whitespace-normal break-words w-full pr-2">
                                             ${tkcSummaryStr}
                                         </div>
@@ -387,7 +386,7 @@
                         const unitStr = iData.unit ? ` ${iData.unit}` : '';
 
                         html += `
-                            <!-- TIER 3: Item Level (RESPONSIVE CARDS) -->
+                            <!-- TIER 3: Item Level -->
                             <div class="border border-sky-200 rounded-lg overflow-hidden bg-white shadow-sm">
                                 <div class="px-3 py-2 bg-sky-100 flex justify-between items-center cursor-pointer hover:bg-sky-200 transition" onclick="window.toggleAccordion('${safeItemId}')">
                                     <div class="flex items-start gap-2">
@@ -436,7 +435,6 @@
                                     
                                     fData.logs.forEach(l => {
                                         let rawDate = String(l.Timestamp || '');
-                                        let dStr = rawDate.includes(' ') ? rawDate.split(' ')[0] : rawDate;
                                         
                                         const timeSpan = isCoordinator ? `<span class="text-slate-400 font-mono text-[9px]">${rawDate}</span>` : '';
                                         const delBtn = isCoordinator ? `<button onclick="window.deleteLogAction(${l.rowIndex})" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>` : '';
@@ -476,7 +474,15 @@
                             });
                             feedersHtml += `</div></div>`;
 
-                            // 🎯 MOBILE-FIRST TARGET CARD
+                            // 🎯 Check if TKC is missing on this specific target card
+                            const isTargetTkcMissing = !t.TKC_Name || t.TKC_Name.trim() === "" || t.TKC_Name.trim() === "--";
+                            const tkcFillBoxHtml = isTargetTkcMissing ? `
+                                <div class="mt-2 p-2 bg-amber-50 border border-amber-300 rounded-lg flex items-center gap-2">
+                                    <input type="text" id="tkc-fill-${t.Call_ID}" list="existing-tkcs" autocomplete="off" placeholder="Enter TKC Name..." class="w-full p-1.5 text-[10px] border border-amber-300 rounded bg-white font-bold text-slate-800">
+                                    <button onclick="window.saveTkcOnceAction('${t.Call_ID}')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[9px] font-black uppercase tracking-wider rounded whitespace-nowrap shadow-sm">Save TKC</button>
+                                </div>
+                            ` : '';
+
                             html += `
                                 <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden relative">
                                     <div class="flex flex-col md:flex-row md:divide-x divide-slate-100">
@@ -486,8 +492,9 @@
                                             <div class="font-black text-slate-900 text-[11px] uppercase tracking-wide pr-8">${t.Item_Type}</div>
                                             <div class="text-[10px] text-slate-500 mt-1">Phase: <strong class="text-slate-700">${t.Phase}</strong></div>
                                             <div class="text-[9px] text-slate-400 font-mono mt-0.5 truncate">Call: ${t.Call_ID}</div>
+                                            ${tkcFillBoxHtml}
                                             
-                                            ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="absolute top-2 right-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded transition"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>` : ''}
+                                            ${isCoordinator ? `<button onclick="window.openTargetModal('${t.Call_ID}')" class="absolute top-2 right-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 rounded transition" title="Edit Target"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>` : ''}
                                         </div>
                                         
                                         <!-- Card Col 2: Progress -->
@@ -611,6 +618,37 @@
             }
 
             document.getElementById('modal-target').classList.add('hidden');
+            await executeApiCall(payload);
+        };
+
+        // 🎯 One-time TKC save action for blank TKC entries
+        window.saveTkcOnceAction = async function(callId) {
+            const t = currentTargetData[callId];
+            const inputEl = document.getElementById(`tkc-fill-${callId}`);
+            if (!inputEl) return;
+            
+            const newTkc = inputEl.value.trim();
+            if (!newTkc) {
+                alert("Please enter a valid TKC name.");
+                return;
+            }
+
+            const payload = {
+                action: "editInspectionTarget",
+                project: projSelect.value,
+                rowIndex: t.rowIndex,
+                district: t.District,
+                phase: t.Phase,
+                tkc: newTkc,
+                item: t.Item_Type,
+                itemUnit: t.Item_Unit || "Nos",
+                feeder: t.Feeder_Name,
+                sancQty: t.Sanctioned_Qty,
+                targetQty: t.Target_Inspect_Qty,
+                userId: currentUser.employeeId,
+                userName: currentUser.employeeName
+            };
+
             await executeApiCall(payload);
         };
 
