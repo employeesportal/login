@@ -28,10 +28,10 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbzTsEsZah7LX5cmC14IdU6MFP1UQzrjhzaPlQjVmKKr6NWuhTbwrQgp8Wnajb6qtW55/exec";
         let currentUser = null;
     </script>
-    
+
 
     <div id="app-root" class="flex-1 flex flex-col h-screen overflow-hidden"> </div>
-    
+
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -115,7 +115,7 @@
             };
 
             buildNavigationMenuByRole();
-            
+
             // Load topbar component into both desktop and mobile slots
             loadComponentToContainer("topbar.html", "topbar-mount-node");
             loadComponentToContainer("topbar.html", "mobile-topbar-mount-node");
@@ -126,8 +126,8 @@
             window.startGlobalSessionManager();
         }
 
-        // 🎯 OPTIMIZED: Synchronous load without backend API checks
-        window.showWelcomeMessage = function () {
+        // 🎯 OPTIMIZED: Synchronous load without duplicate notice board code
+        window.showWelcomeMessage = async function () {
             document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
             const view = document.getElementById("view-port");
 
@@ -138,7 +138,7 @@
             ` : '';
 
             view.innerHTML = `
-                <div class="text-center max-w-md p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full">
+                <div class="text-center max-w-2xl p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full">
                     <div class="inline-flex p-4 bg-slate-100 text-slate-950 border border-slate-200 rounded-2xl mb-4">
                         <i data-lucide="smile" class="w-10 h-10"></i>
                     </div>
@@ -151,6 +151,11 @@
                     <p class="text-slate-800 text-xs font-medium mt-4 leading-relaxed border-t border-slate-200 pt-3 mb-6">
                         Select a module from the left bar layout panel to begin managing your day.
                     </p>
+
+                    <!-- 🎯 DYNAMIC MOUNT CONTAINER FOR NOTICE BOARD (Loaded from adminNotice.html) -->
+                    <div id="notice-board-container" class="w-full">
+                        <div class="p-6 text-center text-slate-400 font-bold animate-pulse text-xs">Loading notice board...</div>
+                    </div>
                
                     <!-- STATIC REMINDER BANNER -->
                     <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
@@ -184,6 +189,27 @@
                     </div>
                 </div>
             `;
+
+            // Fetch and mount adminNotice.html component cleanly
+            try {
+                const res = await fetch("adminNotice.html");
+                const htmlText = await res.text();
+                const container = document.getElementById("notice-board-container");
+                if (container) {
+                    container.innerHTML = htmlText;
+                    const scripts = container.getElementsByTagName("script");
+                    for (let s of scripts) {
+                        const sc = document.createElement("script");
+                        sc.textContent = s.textContent;
+                        document.head.appendChild(sc);
+                        document.head.removeChild(sc);
+                    }
+                }
+            } catch (e) {
+                const container = document.getElementById("notice-board-container");
+                if (container) container.innerHTML = `<div class="text-xs text-rose-500 p-2">Failed to load notice board component.</div>`;
+            }
+
             if (window.lucide) lucide.createIcons();
         }
 
@@ -194,7 +220,6 @@
             const rawRoles = (currentUser.role || "").split(",");
             const normalizedRoles = rawRoles.map(r => String(r).trim().toUpperCase().replace(/[^A-Z0-9]/g, ""));
 
-            // Role Flags
             const isGlobalAdmin = normalizedRoles.includes("ADMIN");
             const isL3Admin = normalizedRoles.includes("ADMINL3") || normalizedRoles.includes("ADMIN_L3") || normalizedRoles.includes("L3ADMIN");
             const isL2Admin = normalizedRoles.includes("ADMINL2") || normalizedRoles.includes("ADMIN_L2") || normalizedRoles.includes("L2ADMIN");
@@ -210,15 +235,14 @@
                 <button onclick="loadTabModule('leavePortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="plane-takeoff" class="w-4 h-4 text-rose-500 shrink-0"></i> Leave Portal</button>
                 <button onclick="loadTabModule('holidayCalendar.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="calendar-days" class="w-4 h-4 text-indigo-400 shrink-0"></i> Holiday Calendar</button>
             `;
-                 // Everyone (Coordinators and Employees) gets access to this portal. 
-                // The frontend handles who sees the "Create" button vs "Log" button based on their role.
-           outputHtml += `
+
+            outputHtml += `
               <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">FWQI Progress Tracker</span></div>
                 <button onclick="loadTabModule('inspectionPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
                     <i data-lucide="map" class="w-4 h-4 text-indigo-400 shrink-0"></i> Field Inspection Tracker
                 </button>
             `;
-         
+
             outputHtml += `
                 <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Field Operations</span></div>
                 <button onclick="loadTabModule('fieldActivityPortal.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left"><i data-lucide="map-pin" class="w-4 h-4 text-sky-400 shrink-0"></i> Field Activity Portal</button>
@@ -254,7 +278,6 @@
                 `;
             }
 
-            // ACCCOUNT MANAGER PORTALS
             if (isAccountManager) {
                 outputHtml += `
                     <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Accounts & Finance</span></div>
@@ -276,7 +299,6 @@
                 `;
             }
 
-            
             if (isL3Admin) {
                 outputHtml += `
                     <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">ADMIN CONSOLE FOR FIELD ACTIVITY APPROVAL</span></div>
@@ -374,7 +396,7 @@
         // =====================================================================
         // GLOBAL PERSISTENT SESSION MANAGER
         // =====================================================================
-        window.startGlobalSessionManager = function() {
+        window.startGlobalSessionManager = function () {
             if (window.topbarSessionInterval) clearInterval(window.topbarSessionInterval);
 
             window.topbarSessionInterval = setInterval(() => {
@@ -396,8 +418,8 @@
                         const mins = Math.floor(timeLeftMs / 60000);
                         const secs = Math.floor((timeLeftMs % 60000) / 1000);
                         el.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-                        
-                        if(timeLeftMs <= 60000) el.classList.add("text-rose-600", "animate-pulse");
+
+                        if (timeLeftMs <= 60000) el.classList.add("text-rose-600", "animate-pulse");
                         else el.classList.remove("text-rose-600", "animate-pulse");
                     }
                 });
@@ -418,7 +440,7 @@
             }, 1000);
         };
 
-        window.showSessionWarningModal = function() {
+        window.showSessionWarningModal = function () {
             if (document.getElementById("session-warning-modal")) return;
 
             const modalHtml = `
@@ -440,13 +462,13 @@
             if (window.lucide) lucide.createIcons();
         };
 
-        window.extendSession = function() {
+        window.extendSession = function () {
             const SESSION_DURATION_MINUTES = 30;
             const newEpoch = Date.now() + (SESSION_DURATION_MINUTES * 60 * 1000);
-            
+
             localStorage.setItem("session_expiration_epoch", newEpoch);
             localStorage.setItem("session_warned", "false");
-            
+
             const modal = document.getElementById("session-warning-modal");
             if (modal) modal.remove();
         };
@@ -467,21 +489,18 @@
             loadApplicationFrame("login.html");
         };
 
-            window.switchAdminLeaveTab = function (tabName) {
+        window.switchAdminLeaveTab = function (tabName) {
             const tabBtn1 = document.getElementById("tab-btn-1");
             const tabBtn2 = document.getElementById("tab-btn-2");
             const tabContent1 = document.getElementById("tab-content-1");
             const tabContent2 = document.getElementById("tab-content-2");
 
-            // Safe checks: Only update elements if they actually exist on the current page
             if (tabBtn1) tabBtn1.className = tabName === 'pending' ? 'active-tab-class' : 'inactive-tab-class';
             if (tabBtn2) tabBtn2.className = tabName === 'history' ? 'active-tab-class' : 'inactive-tab-class';
 
             if (tabContent1) tabContent1.style.display = tabName === 'pending' ? 'block' : 'none';
             if (tabContent2) tabContent2.style.display = tabName === 'history' ? 'block' : 'none';
         };
-
-        
 
         window.logout = window.performManualLogout;
     </script>
