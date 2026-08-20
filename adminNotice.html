@@ -1,0 +1,246 @@
+<!-- 🎯 SYSTEM ANNOUNCEMENT & NOTICE BOARD (ROLE-BASED MANAGEMENT PORTAL) -->
+<div class="w-full max-w-7xl mx-auto glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-xl bg-white fade-in-up mb-6">
+    <div class="flex items-center justify-between border-b pb-4 mb-4">
+        <h3 class="text-lg font-black tracking-tight text-slate-800 flex items-center gap-2">
+            <i data-lucide="megaphone" class="text-amber-600 w-5 h-5"></i> Announcement & Notice Board
+        </h3>
+        <span class="text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full uppercase tracking-wider">Live Broadcasts Management</span>
+    </div>
+
+    <!-- 🎯 1. Notice Feed Display Container (Shown First) -->
+    <div id="notice-board-feed" class="space-y-3 max-h-72 overflow-y-auto pr-1 mb-5">
+        <div class="p-6 text-center text-slate-400 font-bold animate-pulse text-xs">Synchronizing system notices...</div>
+    </div>
+
+    <!-- 🎯 2. Authorized Roles Post / Edit Box (Shown Below Feed, Conditionally Displayed via JS) -->
+    <div id="admin-notice-composer" class="hidden p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h4 id="notice-form-title" class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <i data-lucide="edit-3" class="w-4 h-4 text-amber-600"></i> Broadcast New Notice
+            </h4>
+            <button id="notice-cancel-edit-btn" onclick="window.resetNoticeForm()" class="hidden text-xs text-rose-600 font-bold hover:underline">Cancel Edit</button>
+        </div>
+
+        <input type="hidden" id="edit-notice-id" value="">
+        <textarea id="notice-msg-input" rows="2" placeholder="Type official announcement message here..." class="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-amber-500 text-slate-900"></textarea>
+        <div class="flex justify-end gap-2">
+            <button onclick="window.submitSystemNotice()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i> <span id="notice-submit-btn-lbl">Publish Notice</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        let allNoticesCache = [];
+
+        window.initNoticeBoardFeed = async function () {
+            const composer = document.getElementById("admin-notice-composer");
+            let canPost = false;
+            let isGlobalAdmin = false;
+
+            if (typeof currentUser !== 'undefined' && currentUser.role) {
+                const roles = String(currentUser.role).toUpperCase().split(",").map(r => r.trim());
+
+                if (roles.includes("ADMIN") || roles.includes("SUPER_ADMIN")) {
+                    isGlobalAdmin = true;
+                    canPost = true;
+                } else if (roles.includes("ADMINL3") || roles.includes("ADMIN_L3") || roles.includes("MANAGER") || roles.includes("COORDINATOR")) {
+                    canPost = true;
+                }
+
+                if (composer && canPost) {
+                    composer.classList.remove("hidden");
+                }
+            }
+
+            const feed = document.getElementById("notice-board-feed");
+            if (!feed) return;
+
+            try {
+                const res = await fetch(`${API_URL}?action=getNotices`);
+                const result = await res.json();
+
+                if (result.status && result.data && result.data.length > 0) {
+                    allNoticesCache = result.data;
+                    let html = "";
+
+                    result.data.forEach(n => {
+                        let actionButtons = "";
+                        const posterName = String(n.postedBy || "").trim().toLowerCase();
+                        const currentUserName = String(currentUser.employeeName || "").trim().toLowerCase();
+                        const isAuthor = posterName === currentUserName;
+
+                        if (isGlobalAdmin || isAuthor) {
+                            actionButtons = `
+                                <div class="flex items-center gap-1 shrink-0 ml-2">
+                                    <button onclick="window.prepareEditNotice('${n.noticeId}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer" title="Edit Notice">
+                                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="window.deleteSystemNotice('${n.noticeId}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition cursor-pointer" title="Delete Notice">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+
+                        // 🎯 Format Date & Time strictly into IST: "19, Aug 2026 at 03:12:05 PM"
+                        let rawTime = String(n.timestamp || "").trim();
+                        let noticeDateOnly = rawTime;
+                        try {
+                            let dObj = new Date(rawTime);
+                            if (!isNaN(dObj.getTime())) {
+                                let optionsDate = { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' };
+                                let optionsTime = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                                
+                                let formattedDate = new Intl.DateTimeFormat('en-US', optionsDate).format(dObj);
+                                let formattedTime = new Intl.DateTimeFormat('en-US', optionsTime).format(dObj);
+                                
+                                let parts = formattedDate.replace(',', '').split(' '); // ['Aug', '19', '2026']
+                                if (parts.length === 3) {
+                                    noticeDateOnly = `${parts[1]}, ${parts[0]} ${parts[2]} at ${formattedTime}`;
+                                } else {
+                                    noticeDateOnly = `${formattedDate} at ${formattedTime}`;
+                                }
+                            }
+                        } catch (e) { }
+
+                        let pName = String(n.postedBy || "").trim();
+                        let designation = String(n.designation || "").trim();
+                        let upperName = pName.toUpperCase();
+                        let upperDesig = designation.toUpperCase();
+                        let authorDisplay = "Admin";
+
+                        if (upperName === "ADMIN" || upperName.includes("ADMINISTRATOR") || (upperDesig === "ADMIN" && upperName === "ADMIN")) {
+                            authorDisplay = "Admin";
+                        } else if (pName) {
+                            if (designation && upperDesig !== "ADMIN" && upperDesig !== "ADMINISTRATOR") {
+                                authorDisplay = `${pName} (${designation})`;
+                            } else {
+                                authorDisplay = pName;
+                            }
+                        } else {
+                            authorDisplay = "Admin";
+                        }
+
+                        html += `
+                            <div class="p-3 bg-amber-50/50 border border-amber-200/60 rounded-xl shadow-sm flex items-start justify-between gap-2 text-left">
+                                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                                    <div class="p-1.5 bg-amber-100 text-amber-800 rounded-lg shrink-0 mt-0.5">
+                                        <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-[10px] font-mono font-black text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded">${noticeDateOnly}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-900 font-bold leading-relaxed break-words">${n.message}</p>
+                                        <div class="flex items-center gap-2 mt-1.5 text-[10px] text-slate-500 font-mono font-bold">
+                                            <span>By: <strong class="text-slate-700">${authorDisplay}</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${actionButtons}
+                            </div>
+                        `;
+                    });
+                    feed.innerHTML = html;
+                } else {
+                    feed.innerHTML = `<div class="p-4 text-center text-slate-400 font-medium text-xs bg-slate-50 rounded-xl border border-slate-100">No active system notices broadcasted at this moment.</div>`;
+                }
+                if (window.lucide) lucide.createIcons();
+            } catch (e) {
+                feed.innerHTML = `<div class="p-3 text-center text-rose-600 text-xs font-bold">Failed to load notice board feed.</div>`;
+            }
+        };
+
+        window.prepareEditNotice = function (noticeId) {
+            const target = allNoticesCache.find(n => String(n.noticeId) === String(noticeId));
+            if (!target) return;
+
+            document.getElementById("edit-notice-id").value = target.noticeId;
+            document.getElementById("notice-msg-input").value = target.message;
+            document.getElementById("notice-form-title").innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-600"></i> Edit Notice Record`;
+            document.getElementById("notice-submit-btn-lbl").innerText = "Update Notice";
+            document.getElementById("notice-cancel-edit-btn").classList.remove("hidden");
+
+            document.getElementById("admin-notice-composer").scrollIntoView({ behavior: 'smooth' });
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.resetNoticeForm = function () {
+            document.getElementById("edit-notice-id").value = "";
+            document.getElementById("notice-msg-input").value = "";
+            document.getElementById("notice-form-title").innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-600"></i> Broadcast New Notice`;
+            document.getElementById("notice-submit-btn-lbl").innerText = "Publish Notice";
+            document.getElementById("notice-cancel-edit-btn").classList.add("hidden");
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.submitSystemNotice = async function () {
+            const idInput = document.getElementById("edit-notice-id").value.trim();
+            const msgInput = document.getElementById("notice-msg-input");
+            const msg = msgInput ? msgInput.value.trim() : "";
+
+            if (!msg) { alert("Please type a message before saving."); return; }
+
+            const isEdit = Boolean(idInput);
+            const actionName = isEdit ? "updateNotice" : "postNotice";
+
+            if (!confirm(isEdit ? "Confirm updates to this notice?" : "Broadcast this notice to all platform users?")) return;
+
+            let cleanDesignation = "";
+            if (typeof currentUser !== 'undefined' && currentUser.designation) {
+                cleanDesignation = String(currentUser.designation).trim();
+            }
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: actionName,
+                        noticeId: idInput,
+                        message: msg,
+                        postedBy: (typeof currentUser !== 'undefined' && currentUser.employeeName) ? currentUser.employeeName : "Admin",
+                        designation: cleanDesignation
+                    })
+                });
+                const result = await res.json();
+                if (result.status) {
+                    alert(isEdit ? "Notice updated successfully!" : "Notice published successfully!");
+                    window.resetNoticeForm();
+                    window.initNoticeBoardFeed();
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (e) {
+                alert("Network communication dropped.");
+            }
+        };
+
+        window.deleteSystemNotice = async function (noticeId) {
+            if (!confirm("Are you sure you want to delete this notice?")) return;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "deleteNotice",
+                        noticeId: noticeId
+                    })
+                });
+                const result = await res.json();
+                if (result.status) {
+                    alert("Notice deleted successfully!");
+                    window.initNoticeBoardFeed();
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (e) {
+                alert("Network communication dropped.");
+            }
+        };
+
+        setTimeout(() => { window.initNoticeBoardFeed(); }, 100);
+    })();
+</script>
