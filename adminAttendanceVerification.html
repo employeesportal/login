@@ -116,6 +116,35 @@
             return cleanStr;
         }
 
+        // 🎯 Utility: Convert raw time or date strings into Indian Standard format
+        function formatIndianDate(dateInput) {
+            if (!dateInput) return "--";
+            let iso = cleanToStandardISODate(dateInput);
+            if (!iso) return String(dateInput);
+            let parts = iso.split("-");
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return iso;
+        }
+
+        function formatIndianTime(timeInput) {
+            if (!timeInput || timeInput === "--:--:--" || timeInput === "--:--") return "--:--";
+            let tStr = String(timeInput).trim();
+            // If it's already an AM/PM string, return clean
+            if (tStr.toUpperCase().includes("AM") || tStr.toUpperCase().includes("PM")) return tStr;
+            
+            // Parse time strings like HH:mm:ss
+            let p = tStr.split(":");
+            if (p.length >= 2) {
+                let hours = parseInt(p[0], 10);
+                let minutes = p[1];
+                let ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // the hour '0' should be '12'
+                return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+            }
+            return tStr;
+        }
+
         function parseToTimestamp(dateStr) {
             const normalized = cleanToStandardISODate(dateStr);
             if (!normalized) return 0;
@@ -356,8 +385,8 @@
                     historyHtml = `
                         <div class="space-y-1 text-[11px] leading-normal font-medium text-slate-600">
                             <div class="grid grid-cols-2 gap-2">
-                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Date</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.date}</span></div>
-                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Logout</span><span class="font-mono text-slate-900 font-bold">${r.historyObj.logout}</span></div>
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Date</span><span class="font-mono text-slate-900 font-bold">${formatIndianDate(r.historyObj.date)}</span></div>
+                                <div><span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Logout</span><span class="font-mono text-slate-900 font-bold">${formatIndianTime(r.historyObj.logout)}</span></div>
                             </div>
                             <div class="border-t border-slate-200/60 pt-1 mt-1">
                                 <span class="font-black text-slate-400 text-[9px] uppercase tracking-wider block">Progress</span>
@@ -386,7 +415,7 @@
                         </td>
                         <td class="w-44 px-3 py-3 text-center align-middle">${locationLink}</td> 
                         <td class="w-60 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap text-[11px]">"${r.todaysPlan || 'None'}"</td>
-                        <td class="w-32 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
+                        <td class="w-32 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${formatIndianTime(r.loginTime)}</td>
                         <td class="px-4 py-3 bg-slate-50/50 rounded-lg border border-slate-100 shadow-inner m-1 block w-64">${historyHtml}</td>
                         <td class="px-3 py-3 whitespace-nowrap w-48">${deskCtrls.remarkSelect}</td>
                         <td class="px-3 py-3 w-96">${deskCtrls.commentArea}</td>
@@ -432,7 +461,7 @@
                                     <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 shadow-inner">${historyHtml}</div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3 text-[10px] font-mono mt-1 border-t border-slate-50 pt-3">
-                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Login</span> <span class="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">${r.loginTime || '--:--'}</span></div>
+                                    <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Login</span> <span class="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">${formatIndianTime(r.loginTime)}</span></div>
                                     <div><span class="text-slate-400 uppercase tracking-wider font-black text-[9px] block mb-0.5">Geo Tag</span> ${locationLink} <div class="text-[9px] text-slate-400 mt-1">Acc: ±${r.accuracy || '--'}m</div></div>
                                 </div>
                             </div>
@@ -499,14 +528,14 @@
             container.innerHTML = `
                 <div class="p-12 text-center text-slate-400 font-bold animate-pulse flex flex-col items-center justify-center gap-2">
                     <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-rose-600"></i>
-                    <span>Querying global employee records for ${targetDate}...</span>
+                    <span>Querying global employee records for ${formatIndianDate(targetDate)}...</span>
                 </div>
             `;
             if (window.lucide) window.lucide.createIcons();
 
             const parts = targetDate.split("-");
             const formattedDateLabel = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            document.getElementById("admin-display-date-header").innerText = `Audit Target Date: ${formattedDateLabel.replace(/-/g, '/')}`;
+            document.getElementById("admin-display-date-header").innerText = `Audit Target Date: ${formattedDateLabel}`;
             const targetTimestamp = parseToTimestamp(formattedDateLabel);
 
             try {
@@ -635,7 +664,7 @@
             if (targetDate) {
                 const parts = targetDate.split("-");
                 const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
-                formattedReportDate = dObj.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                formattedReportDate = dObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric' });
             }
 
             const adminExecutorName = currentUser.employeeName || "Master Administrator";
@@ -706,15 +735,15 @@
                                             <td class="py-4 px-3 font-medium break-words leading-tight">${r.currentProject || '-'}<br><span class="text-[9px] font-slate-500 block mt-1">${r.district || '-'}</span></td>
                                             <td class="py-4 px-3 text-slate-600 break-words leading-snug">
                                                 <div class="italic mb-1 text-[11px]">"${r.todaysPlan || '-'}"</div>
-                                                <div class="font-mono text-emerald-600 font-bold mb-1">In: ${r.loginTime || '--:--'}</div>
+                                                <div class="font-mono text-emerald-600 font-bold mb-1">In: ${formatIndianTime(r.loginTime)}</div>
                                                 ${locLink}
                                             </td>
                                             <td class="py-4 px-3 text-[10px] text-slate-600">
                                                 ${r.historyObj?.hasHistory ? `
                                                     <div class="bg-slate-50 p-2 rounded border border-slate-100 leading-tight">
-                                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${r.historyObj.date}<br>
+                                                        <b class="text-slate-400 uppercase text-[8px]">Date:</b> ${formatIndianDate(r.historyObj.date)}<br>
                                                         <b class="text-slate-400 uppercase text-[8px] block mt-1">Work Progress:</b>${r.historyObj.progress}<br>
-                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Logout:</b> ${r.historyObj.logout}
+                                                        <b class="text-slate-400 uppercase text-[8px] block mt-1">Logout:</b> ${formatIndianTime(r.historyObj.logout)}
                                                     </div>
                                                 ` : '<span class="italic text-slate-400">No history</span>'}
                                             </td>
