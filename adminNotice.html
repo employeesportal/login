@@ -22,7 +22,20 @@
         </div>
 
         <input type="hidden" id="edit-notice-id" value="">
-        <textarea id="notice-msg-input" rows="2" placeholder="Type official announcement message here..." class="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-amber-500 text-slate-900"></textarea>
+        
+        <!-- 🎯 Project Selection Dropdown -->
+        <div>
+            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1">Target Broadcast Audience / Project Scope</label>
+            <select id="notice-project-select" class="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-amber-500 text-slate-900">
+                <option value="GENERAL">🌐 General Broadcast (Visible To All Projects)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-wider mb-1">Announcement Content</label>
+            <textarea id="notice-msg-input" rows="3" placeholder="Type official announcement message here (supports newlines & paragraphs)..." class="w-full p-3 border border-slate-300 rounded-xl text-xs bg-white font-bold outline-none focus:ring-2 focus:ring-amber-500 text-slate-900"></textarea>
+        </div>
+
         <div class="flex justify-end gap-2">
             <button onclick="window.submitSystemNotice()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="send" class="w-3.5 h-3.5"></i> <span id="notice-submit-btn-lbl">Publish Notice</span>
@@ -34,6 +47,23 @@
 <script>
     (() => {
         let allNoticesCache = [];
+
+        // 🎯 Populate project selector dropdown based on currentUser appointed projects
+        window.populateNoticeProjectDropdown = function(selectedVal = "GENERAL") {
+            const selectEl = document.getElementById("notice-project-select");
+            if (!selectEl) return;
+
+            let html = `<option value="GENERAL">🌐 General Broadcast (Visible To All Projects)</option>`;
+            
+            if (typeof currentUser !== 'undefined' && currentUser.appointedProjects) {
+                const userProjects = String(currentUser.appointedProjects).split(",").map(p => p.trim()).filter(Boolean);
+                userProjects.forEach(proj => {
+                    html += `<option value="${proj}">📁 Project: ${proj}</option>`;
+                });
+            }
+            selectEl.innerHTML = html;
+            selectEl.value = selectedVal;
+        };
 
         window.initNoticeBoardFeed = async function () {
             const composer = document.getElementById("admin-notice-composer");
@@ -52,6 +82,7 @@
 
                 if (composer && canPost) {
                     composer.classList.remove("hidden");
+                    window.populateNoticeProjectDropdown();
                 }
             }
 
@@ -66,7 +97,34 @@
                     allNoticesCache = result.data;
                     let html = "";
 
+                    // Determine user's appointed projects for filtering
+                    let userProjects = [];
+                    if (typeof currentUser !== 'undefined' && currentUser.appointedProjects) {
+                        userProjects = String(currentUser.appointedProjects).split(",").map(p => p.trim().toUpperCase()).filter(Boolean);
+                    }
+                    const isSuperUser = isGlobalAdmin || (typeof currentUser !== 'undefined' && String(currentUser.role).toUpperCase().includes("ADMIN"));
+
                     result.data.forEach(n => {
+                        // 🎯 Parse stored message to extract Target Project and Clean Message Body
+                        let rawMsg = String(n.message || "");
+                        let targetProject = "GENERAL";
+                        let actualMessage = rawMsg;
+
+                        if (rawMsg.startsWith("[PROJECT:")) {
+                            let endIdx = rawMsg.indexOf("]");
+                            if (endIdx !== -1) {
+                                targetProject = rawMsg.substring(9, endIdx).trim();
+                                actualMessage = rawMsg.substring(endIdx + 1).trim();
+                            }
+                        }
+
+                        // 🎯 Restrict visibility: Only show if General, matches user project, or user is admin
+                        const isGeneral = targetProject.toUpperCase() === "GENERAL";
+                        const isProjectMatch = userProjects.includes(targetProject.toUpperCase());
+                        if (!isSuperUser && !isGeneral && !isProjectMatch) {
+                            return; // Skip rendering notices not meant for this user
+                        }
+
                         let actionButtons = "";
                         const posterName = String(n.postedBy || "").trim().toLowerCase();
                         const currentUserName = String(currentUser.employeeName || "").trim().toLowerCase();
@@ -85,7 +143,6 @@
                             `;
                         }
 
-                        // 🎯 Format Date & Time strictly into IST: "19, Aug 2026 at 03:12:05 PM"
                         let rawTime = String(n.timestamp || "").trim();
                         let noticeDateOnly = rawTime;
                         try {
@@ -97,7 +154,7 @@
                                 let formattedDate = new Intl.DateTimeFormat('en-US', optionsDate).format(dObj);
                                 let formattedTime = new Intl.DateTimeFormat('en-US', optionsTime).format(dObj);
                                 
-                                let parts = formattedDate.replace(',', '').split(' '); // ['Aug', '19', '2026']
+                                let parts = formattedDate.replace(',', '').split(' ');
                                 if (parts.length === 3) {
                                     noticeDateOnly = `${parts[1]}, ${parts[0]} ${parts[2]} at ${formattedTime}`;
                                 } else {
@@ -124,18 +181,24 @@
                             authorDisplay = "Admin";
                         }
 
+                        let scopeBadge = isGeneral 
+                            ? `<span class="text-[9px] font-mono font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded">🌐 General Broadcast</span>`
+                            : `<span class="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded">📁 Project: ${targetProject}</span>`;
+
                         html += `
-                            <div class="p-3 bg-amber-50/50 border border-amber-200/60 rounded-xl shadow-sm flex items-start justify-between gap-2 text-left">
+                            <div class="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-xl shadow-sm flex items-start justify-between gap-2 text-left">
                                 <div class="flex items-start gap-2.5 min-w-0 flex-1">
                                     <div class="p-1.5 bg-amber-100 text-amber-800 rounded-lg shrink-0 mt-0.5">
                                         <i data-lucide="bell" class="w-3.5 h-3.5"></i>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="text-[10px] font-mono font-black text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded">${noticeDateOnly}</span>
+                                        <div class="flex items-center justify-between mb-1.5 gap-2">
+                                            <span class="text-[10px] font-mono font-black text-amber-950 bg-amber-100/70 px-2 py-0.5 rounded">${noticeDateOnly}</span>
+                                            ${scopeBadge}
                                         </div>
-                                        <p class="text-xs text-slate-900 font-bold leading-relaxed break-words">${n.message}</p>
-                                        <div class="flex items-center gap-2 mt-1.5 text-[10px] text-slate-500 font-mono font-bold">
+                                        <!-- 🎯 white-space: pre-wrap preserves newlines and blank spaces -->
+                                        <p class="text-xs text-slate-900 font-bold leading-relaxed break-words" style="white-space: pre-wrap;">${actualMessage}</p>
+                                        <div class="flex items-center gap-2 mt-2 text-[10px] text-slate-500 font-mono font-bold">
                                             <span>By: <strong class="text-slate-700">${authorDisplay}</strong></span>
                                         </div>
                                     </div>
@@ -144,7 +207,7 @@
                             </div>
                         `;
                     });
-                    feed.innerHTML = html;
+                    feed.innerHTML = html || `<div class="p-4 text-center text-slate-400 font-medium text-xs bg-slate-50 rounded-xl border border-slate-100">No active system notices for your assigned projects at this moment.</div>`;
                 } else {
                     feed.innerHTML = `<div class="p-4 text-center text-slate-400 font-medium text-xs bg-slate-50 rounded-xl border border-slate-100">No active system notices broadcasted at this moment.</div>`;
                 }
@@ -158,36 +221,56 @@
             const target = allNoticesCache.find(n => String(n.noticeId) === String(noticeId));
             if (!target) return;
 
+            // Extract raw project prefix and clean message
+            let rawMsg = String(target.message || "");
+            let targetProject = "GENERAL";
+            let actualMessage = rawMsg;
+
+            if (rawMsg.startsWith("[PROJECT:")) {
+                let endIdx = rawMsg.indexOf("]");
+                if (endIdx !== -1) {
+                    targetProject = rawMsg.substring(9, endIdx).trim();
+                    actualMessage = rawMsg.substring(endIdx + 1).trim();
+                }
+            }
+
+            window.populateNoticeProjectDropdown(targetProject);
             document.getElementById("edit-notice-id").value = target.noticeId;
-            document.getElementById("notice-msg-input").value = target.message;
+            document.getElementById("notice-msg-input").value = actualMessage;
             document.getElementById("notice-form-title").innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-600"></i> Edit Notice Record`;
             document.getElementById("notice-submit-btn-lbl").innerText = "Update Notice";
             document.getElementById("notice-cancel-edit-btn").classList.remove("hidden");
 
             document.getElementById("admin-notice-composer").scrollIntoView({ behavior: 'smooth' });
-            if (window.lucide) lucide.createIcons();
+            if (window.lucide) window.lucide.createIcons();
         };
 
         window.resetNoticeForm = function () {
+            window.populateNoticeProjectDropdown("GENERAL");
             document.getElementById("edit-notice-id").value = "";
             document.getElementById("notice-msg-input").value = "";
             document.getElementById("notice-form-title").innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-600"></i> Broadcast New Notice`;
             document.getElementById("notice-submit-btn-lbl").innerText = "Publish Notice";
             document.getElementById("notice-cancel-edit-btn").classList.add("hidden");
-            if (window.lucide) lucide.createIcons();
+            if (window.lucide) window.lucide.createIcons();
         };
 
         window.submitSystemNotice = async function () {
             const idInput = document.getElementById("edit-notice-id").value.trim();
+            const projSelect = document.getElementById("notice-project-select");
+            const selectedProj = projSelect ? projSelect.value : "GENERAL";
             const msgInput = document.getElementById("notice-msg-input");
-            const msg = msgInput ? msgInput.value.trim() : "";
+            const msgBody = msgInput ? msgInput.value.trim() : "";
 
-            if (!msg) { alert("Please type a message before saving."); return; }
+            if (!msgBody) { alert("Please type a message before saving."); return; }
+
+            // 🎯 Encode project scope as prefix inside Message column (e.g. "[PROJECT: Project Alpha] Hello...")
+            const finalFormattedMessage = `[PROJECT: ${selectedProj}] ${msgBody}`;
 
             const isEdit = Boolean(idInput);
             const actionName = isEdit ? "updateNotice" : "postNotice";
 
-            if (!confirm(isEdit ? "Confirm updates to this notice?" : "Broadcast this notice to all platform users?")) return;
+            if (!confirm(isEdit ? "Confirm updates to this notice?" : "Broadcast this notice?")) return;
 
             let cleanDesignation = "";
             if (typeof currentUser !== 'undefined' && currentUser.designation) {
@@ -200,7 +283,7 @@
                     body: JSON.stringify({
                         action: actionName,
                         noticeId: idInput,
-                        message: msg,
+                        message: finalFormattedMessage,
                         postedBy: (typeof currentUser !== 'undefined' && currentUser.employeeName) ? currentUser.employeeName : "Admin",
                         designation: cleanDesignation
                     })
