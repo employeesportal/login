@@ -21,7 +21,7 @@
             </p>
         </div>
         
-        <!-- Interactive Status Filter (Expanded for split Coord statuses) -->
+        <!-- Interactive Status Filter -->
         <div class="w-full md:w-auto bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl border border-slate-200 md:border-none flex flex-col md:flex-row md:items-center gap-2">
             <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">Filter Status:</label>
             <select id="roster-status-filter" onchange="window.renderRosterTable(this.value)" class="w-full md:w-auto px-4 md:px-3 py-2.5 md:py-2 border border-slate-300 rounded-xl text-xs bg-white font-black focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none transition">
@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    <!-- Metrics Summary Grid (Expanded to 8 Cards) -->
+    <!-- Metrics Summary Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-6" id="stat-cards-wrapper">
         <!-- Injected dynamically via JS -->
     </div>
@@ -60,6 +60,40 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* 🎯 Draggable Column Divider Line & Container Rules */
+    .resizer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 10px;
+        cursor: col-resize;
+        user-select: none;
+        touch-action: none;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+    }
+    .resizer::after {
+        content: '';
+        display: block;
+        width: 2px;
+        height: 60%;
+        background-color: rgba(255, 255, 255, 0.3);
+        transition: background-color 0.2s, width 0.2s;
+    }
+    .resizer:hover::after, .resizer.resizing::after {
+        background-color: #6366f1; /* Indigo highlight */
+        width: 3px;
+        height: 90%;
+    }
+    th.resizable-th {
+        position: relative;
+    }
+</style>
 
 <script>
     (() => {
@@ -156,7 +190,6 @@
                 } else if (r.trackingState === "MARKED_UNVERIFIED" || r.trackingState === "MARKED_BY_COORDINATOR") {
                     empM++;
                 } else if (r.trackingState === "MARKED_BY_COORDINATOR_ONLY") {
-                    // Split coord marked categories based on coordinator remark
                     if (remarkUpper === "ABSENT" || remarkUpper === "REJECTED" || remarkUpper === "C-AB") {
                         coordAbs++;
                     } else if (remarkUpper === "ON LEAVE" || remarkUpper === "LEAVE APPLIED" || remarkUpper === "HALF-DAY") {
@@ -377,12 +410,12 @@
                             ${deskCtrls.distSelect}
                             <div class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 mt-1 rounded border border-slate-200 w-max" title="GPS Accuracy Delta">± ${r.accuracy || '--'} m</div>
                         </td>
-                        <td class="w-48 px-3 py-3 text-center align-middle">${locationLink}</td> 
-                        <td class="w-60 px-3 py-3 break-words font-medium text-slate-600 italic whitespace-nowrap text-[11px]">"${r.todaysPlan || 'None'}"</td>
-                        <td class="w-36 px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
-                        <td class="px-4 py-3 bg-slate-50/50 rounded-lg border border-slate-100 shadow-inner m-1 block">${historyHtml}</td>
-                        <td class="px-3 py-3 whitespace-nowrap w-48">${deskCtrls.remarkSelect}</td>
-                        <td class="px-3 py-3 w-56">${deskCtrls.commentArea}</td>
+                        <td class="px-3 py-3 text-center align-middle">${locationLink}</td> 
+                        <td class="px-3 py-3 break-words font-medium text-slate-600 italic text-[11px]" title="${r.todaysPlan || 'None'}">"${r.todaysPlan || 'None'}"</td>
+                        <td class="px-3 py-3 font-mono text-[11px] text-emerald-600 font-bold whitespace-nowrap">${r.loginTime || '--:--:--'}</td>
+                        <td class="px-3 py-3 bg-slate-50/50 rounded-lg border border-slate-100 shadow-inner m-1 block">${historyHtml}</td>
+                        <td class="px-3 py-3 whitespace-nowrap">${deskCtrls.remarkSelect}</td>
+                        <td class="px-3 py-3">${deskCtrls.commentArea}</td>
                         <td class="px-3 py-3 text-center whitespace-nowrap">${deskCtrls.saveBtn}</td>
                     </tr>
                 `;
@@ -453,20 +486,20 @@
             } else {
                 container.innerHTML = `
                     <div class="hidden lg:block overflow-x-auto w-full max-h-[600px]">
-                        <table class="w-full text-left border-collapse table-auto min-w-[1650px]">
+                        <table id="resizable-roster-table" class="text-left border-collapse" style="table-layout: fixed; width: max-content;">
                             <thead>
                                 <tr class="bg-slate-900 text-white border-b border-slate-800 text-[10px] font-black tracking-wider uppercase sticky top-0 z-20">
-                                    <th class="px-3 py-3.5 whitespace-nowrap">Employee Details</th>
-                                    <th class="px-3 py-3.5 whitespace-wrap">Status</th>
-                                    <th class="px-3 py-3.5 w-60">Project Sector</th>
-                                    <th class="px-3 py-3.5 w-50">Operating District</th>
-                                    <th class="px-3 py-3.5 w-48 text-center">Login Location</th>
-                                    <th class="px-3 py-3.5 w-60 text-white">Today's Plan</th>
-                                    <th class="px-3 py-3.5 w-36 whitespace-nowrap">Login Time</th>
-                                    <th class="px-4 py-3.5 w-60">Last Progress</th>
-                                    <th class="px-3 py-3.5 w-48 whitespace-nowrap">Audit Remark</th>
-                                    <th class="px-3 py-3.5 w-56">Comments</th>
-                                    <th class="px-3 py-3.5 text-center">Action</th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Employee Details <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Status <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Project Sector <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Operating District <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 text-center resizable-th" style="width: 40px;">Login Location <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Today's Plan <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Login Time <div class="resizer"></div></th>
+                                    <th class="px-4 py-3.5 resizable-th" style="width: 40px;">Last Progress <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Audit Remark <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 resizable-th" style="width: 40px;">Comments <div class="resizer"></div></th>
+                                    <th class="px-3 py-3.5 text-center resizable-th" style="width: 40px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-xs divide-y divide-slate-100 text-slate-700 font-bold bg-white">
@@ -478,8 +511,61 @@
                         ${mobileCardsHtml}
                     </div>
                 `;
+                
+                // Initialize Column Drag-to-Resize Logic
+                setTimeout(() => window.initTableColumnResizer(), 100);
             }
             if (window.lucide) window.lucide.createIcons();
+        };
+
+        // 🎯 DRAG-TO-RESIZE COLUMN ENGINE SET TO 40PX INITIAL WIDTH
+        window.initTableColumnResizer = function() {
+            const table = document.getElementById('resizable-roster-table');
+            if (!table) return;
+            const cols = table.querySelectorAll('th.resizable-th');
+
+            // Restore saved column widths from localStorage if available
+            const savedWidths = JSON.parse(localStorage.getItem('roster_table_col_widths') || '{}');
+            cols.forEach((col, idx) => {
+                if (savedWidths[idx]) {
+                    col.style.width = savedWidths[idx] + 'px';
+                }
+            });
+
+            cols.forEach((col, idx) => {
+                const resizer = col.querySelector('.resizer');
+                if (!resizer) return;
+
+                let x = 0, w = 0;
+
+                const mouseMoveHandler = function (e) {
+                    const dx = e.clientX - x;
+                    const newWidth = Math.max(35, w + dx); // Minimum width 35px
+                    col.style.width = `${newWidth}px`;
+                };
+
+                const mouseUpHandler = function () {
+                    resizer.classList.remove('resizing');
+                    document.removeEventListener('mousemove', mouseMoveHandler);
+                    document.removeEventListener('mouseup', mouseUpHandler);
+
+                    // Save current widths to localStorage
+                    let currentWidths = {};
+                    cols.forEach((c, i) => {
+                        currentWidths[i] = parseInt(c.style.width, 10) || c.offsetWidth;
+                    });
+                    localStorage.setItem('roster_table_col_widths', JSON.stringify(currentWidths));
+                };
+
+                resizer.addEventListener('mousedown', function (e) {
+                    x = e.clientX;
+                    w = col.offsetWidth;
+                    resizer.classList.add('resizing');
+                    document.addEventListener('mousemove', mouseMoveHandler);
+                    document.addEventListener('mouseup', mouseUpHandler);
+                    e.preventDefault();
+                });
+            });
         };
 
         window.fetchCoordinatorVerificationRoster = async () => {
