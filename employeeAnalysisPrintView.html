@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Attendance & Work Analysis Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6 sm:p-10 font-sans">
+    
+    <div class="max-w-5xl mx-auto bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8 space-y-6">
+        
+        <!-- Header Actions & Title -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-5 gap-4">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Employee Work & Attendance Report</h1>
+                <p id="print-meta-subtitle" class="text-xs font-bold text-slate-500 mt-1">Generating personnel ledger metrics...</p>
+            </div>
+            <div class="flex items-center gap-3 no-print">
+                <button onclick="window.print()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5">
+                    🖨️ Print / Save PDF
+                </button>
+                <button onclick="window.close()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black rounded-xl transition cursor-pointer">
+                    Close Tab
+                </button>
+            </div>
+        </div>
+
+        <!-- Employee Info Card -->
+        <div id="print-employee-info" class="bg-slate-100 border border-slate-200 p-4 rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-bold text-slate-700">
+            <div>
+                <span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Employee Name</span>
+                <strong id="p-emp-name" class="text-sm text-slate-900">-</strong>
+            </div>
+            <div>
+                <span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Employee ID</span>
+                <strong id="p-emp-id" class="text-sm font-mono text-indigo-700">-</strong>
+            </div>
+            <div>
+                <span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Assessment Period</span>
+                <strong id="p-emp-period" class="text-sm font-mono text-slate-900">-</strong>
+            </div>
+            <div>
+                <span class="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Report Generated On</span>
+                <strong id="p-gen-date" class="text-xs font-mono text-slate-600">-</strong>
+            </div>
+        </div>
+
+        <!-- Summary Metric Cards Grid -->
+        <div>
+            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Assessment Summary Breakdown</h3>
+            <div id="print-summary-grid" class="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+
+        <!-- Detailed Daily Logs Table -->
+        <div>
+            <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider mb-3">Daily Execution Logs & Work Progress</h3>
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider">
+                            <th class="p-3">Date</th>
+                            <th class="p-3">Duty Status</th>
+                            <th class="p-3">Project / District</th>
+                            <th class="p-3">Morning Strategy Plan & Login</th>
+                            <th class="p-3">EOD Work Progress & Logout</th>
+                            <th class="p-3">Audit Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="print-table-tbody" class="divide-y divide-slate-100 font-bold text-slate-800 bg-white">
+                        <tr><td colspan="6" class="p-8 text-center text-slate-400 italic">Loading record traces...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const rawData = localStorage.getItem('print_employee_attendance_payload');
+            if (!rawData) {
+                document.getElementById('print-table-tbody').innerHTML = `<tr><td colspan="6" class="p-8 text-center text-rose-600 font-bold">No data payload found. Please re-trigger print preview from your console.</td></tr>`;
+                return;
+            }
+
+            const payload = JSON.parse(rawData);
+            document.getElementById('p-emp-name').innerText = payload.employeeName || "All Personnel Ledger";
+            document.getElementById('p-emp-id').innerText = payload.employeeId || "GLOBAL-EXPORT";
+            document.getElementById('p-emp-period').innerText = payload.periodLabel || "-";
+            document.getElementById('p-gen-date').innerText = new Date().toLocaleString('en-GB');
+            document.getElementById('print-meta-subtitle').innerText = `Official Attendance Verification Statement — ${payload.periodLabel || ''}`;
+
+            // Render Summary Cards
+            const c = payload.counts || {};
+            const summaryBox = document.getElementById('print-summary-grid');
+            summaryBox.innerHTML = `
+                <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-emerald-600 block">Present</span><strong class="text-base font-mono font-black text-emerald-900">${(c.presentEmp || 0) + (c.presentCoord || 0)}</strong></div>
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-amber-600 block">Half-Day</span><strong class="text-base font-mono font-black text-amber-900">${c.halfDay || 0}</strong></div>
+                <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-indigo-600 block">Leaves</span><strong class="text-base font-mono font-black text-indigo-900">${(c.apprLeave || 0) + (c.applLeave || 0) + (c.coordLeave || 0)}</strong></div>
+                <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-rose-600 block">Absent</span><strong class="text-base font-mono font-black text-rose-900">${c.absent || 0}</strong></div>
+                <div class="bg-amber-100 border border-amber-300 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-amber-800 block">Holidays</span><strong class="text-base font-mono font-black text-amber-950">${c.holiday || 0}</strong></div>
+                <div class="bg-cyan-50 border border-cyan-200 p-3 rounded-xl text-center"><span class="text-[8px] font-black uppercase text-cyan-600 block">Sundays</span><strong class="text-base font-mono font-black text-cyan-900">${c.sunday || 0}</strong></div>
+            `;
+
+            // Render Table Rows
+            const rows = payload.rows || [];
+            const tbody = document.getElementById('print-table-tbody');
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">No daily execution logs registered for this range.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(r => `
+                <tr class="align-top">
+                    <td class="p-3 font-mono whitespace-nowrap">${r.date}</td>
+                    <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${r.badge}">${r.status}</span></td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900">${r.currentProject || '-'}</div>
+                        <div class="text-[10px] text-slate-500">${r.district || ''}</div>
+                    </td>
+                    <td class="p-3 space-y-1 max-w-xs">
+                        <div class="italic text-slate-600 font-medium">"${r.todaysPlan || '-'}"</div>
+                        <div class="text-[10px] font-mono text-emerald-700 font-bold">In: ${r.loginTime} (${r.lateDisplay})</div>
+                    </td>
+                    <td class="p-3 space-y-1 max-w-xs">
+                        <div class="italic text-slate-600 font-medium">"${r.todaysWorkProgress || '-'}"</div>
+                        <div class="text-[10px] font-mono text-orange-700 font-bold">Out: ${r.logoutTime}</div>
+                    </td>
+                    <td class="p-3 space-y-0.5 text-[11px]">
+                        <div class="text-indigo-700 font-black uppercase text-[10px]">${r.coordinatorRemark || 'Pending'}</div>
+                        <div class="text-slate-500 italic">"${r.coordinatorComment || 'No comments'}"</div>
+                    </td>
+                </tr>
+            `).join('');
+        });
+    </script>
+</body>
+</html>
