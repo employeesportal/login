@@ -1,0 +1,42 @@
+<div class="w-full max-w-7xl mx-auto px-3 py-4 sm:p-6 animate-fade-in">
+    <div class="mb-6 sm:mb-8 border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Material Testing & Calculation Portal</h1>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">Access engineering test calculators and standard compliance reports.</p>
+        </div>
+    </div>
+
+    <!-- Responsive Module Grid linking to respective portal modules via loadTabModule -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        
+        <!-- Power Transformer Module Link -->
+        <button onclick="loadTabModule('power_transformer.html', this)" class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-lg hover:border-indigo-500 transition-all text-left group cursor-pointer flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-black text-slate-900 text-base mb-1">Power Transformer Calculation</h3>
+                <p class="text-xs font-bold text-slate-400">Perform Winding Resistance, No-Load Losses, Load Losses, Impedance, and Stray Loss evaluations for Power Transformers</p>
+            </div>
+            <div class="mt-6 flex items-center gap-1.5 text-xs font-black text-indigo-600 group-hover:translate-x-1 transition-transform">
+                <span>Launch Module</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </div>
+        </button>
+
+        <!-- Distribution Transformer Module Link -->
+        <button onclick="loadTabModule('distribution_transformer.html', this)" class="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-lg hover:border-indigo-500 transition-all text-left group cursor-pointer flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <i data-lucide="battery-charging" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-black text-slate-900 text-base mb-1">Distribution Transformer Calculation</h3>
+                <p class="text-xs font-bold text-slate-400">Analyze Distribution Transformer losses, limit verifications, total losses summaries, and impedance thresholds</p>
+            </div>
+            <div class="mt-6 flex items-center gap-1.5 text-xs font-black text-indigo-600 group-hover:translate-x-1 transition-transform">
+                <span>Launch Module</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </div>
+        </button>
+
+    </div>
+</div>
+<script>if(window.lucide) window.lucide.createIcons();</script>
