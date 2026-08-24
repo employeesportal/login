@@ -21,23 +21,23 @@
     }
 </style>
 
-<div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-    <h3 class="text-sm font-black tracking-tight text-slate-900 flex items-center gap-2">
-        <i data-lucide="megaphone" class="text-amber-600 w-4 h-4"></i> Announcement & Notice Board
+<div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+    <h3 class="text-xs sm:text-sm font-black tracking-tight text-slate-900 flex items-center gap-1.5 truncate">
+        <i data-lucide="megaphone" class="text-amber-600 w-4 h-4 shrink-0"></i> Announcement & Notice Board
     </h3>
-    <span class="text-[9px] font-black bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full uppercase">Live Feed</span>
+    <span class="text-[9px] font-black bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full uppercase shrink-0">Live Feed</span>
 </div>
 
-<!-- Notice Feed Container with Native Mouse Scroll -->
-<div id="ticker-wrapper" class="ticker-container bg-slate-50/60 border border-slate-200 rounded-2xl p-3 mb-3 relative">
+<!-- Notice Feed Container with Native Mouse / Touch Scroll -->
+<div id="ticker-wrapper" class="ticker-container bg-slate-50/60 border border-slate-200 rounded-2xl p-2.5 sm:p-3 mb-3 relative">
     <div id="notice-board-feed" class="ticker-track">
-        <div class="p-6 text-center text-slate-400 font-bold animate-pulse text-xs">Synchronizing broadcasts...</div>
+        <div class="p-4 text-center text-slate-400 font-bold animate-pulse text-xs">Synchronizing broadcasts...</div>
     </div>
 </div>
-<p class="text-[10px] text-slate-400 text-center font-bold mb-4">💡 Tip: Scroll naturally with your mouse or touchpad, click any notice to read in full detail.</p>
+<p class="text-[10px] text-slate-400 text-center font-bold mb-3">💡 Tip: Scroll naturally or touch & drag to browse, click any notice to read in full detail.</p>
 
 <!-- Authorized Roles Post / Edit Box -->
-<div id="admin-notice-composer" class="hidden p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+<div id="admin-notice-composer" class="hidden p-3 sm:p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
     <div class="flex items-center justify-between border-b border-slate-200 pb-2">
         <h4 id="notice-form-title" class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
             <i data-lucide="edit-3" class="w-4 h-4 text-amber-600"></i> Broadcast New Notice
@@ -66,39 +66,19 @@
     </div>
 </div>
 
-<!-- Modal for Detailed Notice Viewing (Updated with Dynamic Delete Action) -->
-<div id="notice-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 relative border border-slate-200">
-        <button onclick="window.closeNoticeModal()" class="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition cursor-pointer">
-            <i data-lucide="x" class="w-4 h-4 text-slate-600"></i>
-        </button>
-        <div class="flex items-center gap-2 mb-3">
-            <span id="modal-notice-badge" class="text-[10px] font-mono font-black px-2 py-0.5 rounded"></span>
-            <span id="modal-notice-date" class="text-[10px] font-mono text-slate-400 font-bold"></span>
-        </div>
-        <h3 id="modal-notice-author" class="text-xs font-black uppercase tracking-wider text-indigo-700 mb-3"></h3>
-        <div class="max-h-64 overflow-y-auto pr-2 mb-4">
-            <p id="modal-notice-body" class="text-xs text-slate-900 font-bold leading-relaxed whitespace-pre-wrap break-words bg-slate-50 p-4 rounded-2xl border border-slate-100"></p>
-        </div>
-        
-        <!-- Optional Delete Button Container Inside Modal -->
-        <div id="modal-delete-action-container" class="mb-3 hidden">
-            <button id="modal-delete-btn" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs rounded-xl border border-rose-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete This Notice
-            </button>
-        </div>
-
-        <button onclick="window.closeNoticeModal()" class="w-full py-2.5 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer">Close Notice</button>
-    </div>
-</div>
-
 <script>
     if (typeof window.allNoticesCache === 'undefined') {
         window.allNoticesCache = [];
     }
 
-    let tickerInterval = null;
-    let isTickerPaused = false;
+    if (typeof window.tickerInterval !== 'undefined' && window.tickerInterval) {
+        clearInterval(window.tickerInterval);
+    }
+    window.tickerInterval = null;
+    
+    if (typeof window.isTickerPaused === 'undefined') {
+        window.isTickerPaused = false;
+    }
 
     window.populateNoticeProjectDropdown = function(selectedVal = "GENERAL") {
         const selectEl = document.getElementById("notice-project-select");
@@ -176,11 +156,11 @@
 
                     if (isGlobalAdmin || isAuthor) {
                         actionButtons = `
-                            <div class="flex items-center gap-1 shrink-0 ml-2" onclick="event.stopPropagation()">
-                                <button onclick="window.prepareEditNotice('${n.noticeId}')" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer" title="Edit Notice">
+                            <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+                                <button onclick="window.prepareEditNotice('${n.noticeId}')" class="p-1 sm:p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer" title="Edit Notice">
                                     <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                 </button>
-                                <button onclick="window.deleteSystemNotice('${n.noticeId}')" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition cursor-pointer" title="Delete Notice">
+                                <button onclick="window.deleteSystemNotice('${n.noticeId}')" class="p-1 sm:p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition cursor-pointer" title="Delete Notice">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
@@ -206,43 +186,55 @@
                     let authorDisplay = pName ? (designation && designation.toUpperCase() !== "ADMIN" ? `${pName} (${designation})` : pName) : "Admin";
 
                     let scopeBadge = isGeneral 
-                        ? `<span class="text-[9px] font-mono font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded">🌐 General Broadcast</span>`
-                        : `<span class="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded">📁 Project: ${targetProject}</span>`;
+                        ? `<span class="text-[9px] font-mono font-black text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded">🌐 General Broadcast</span>`
+                        : `<span class="text-[9px] font-mono font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded">📁 Project: ${targetProject}</span>`;
 
+                    // 🎯 4-ROW STACKED LAYOUT: 1. Project | 2. Date Time | 3. Notice | 4. By
                     html += `
-                        <div onclick="window.openNoticeModalByIndex(${index})" class="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-xl shadow-sm flex items-start justify-between gap-2 text-left cursor-pointer hover:bg-amber-100/40 transition shrink-0">
-                            <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                                <div class="p-1.5 bg-amber-100 text-amber-800 rounded-lg shrink-0 mt-0.5">
-                                    <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+                        <div onclick="window.openNoticeModalByIndex(${index})" class="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-xl shadow-sm flex flex-col gap-2.5 text-left cursor-pointer hover:bg-amber-100/40 transition shrink-0">
+                            <!-- 1st Row: Project -->
+                            <div class="w-full">
+                                ${scopeBadge}
+                            </div>
+
+                            <!-- 2nd Row: Date & Time -->
+                            <div class="w-full text-[10px] font-mono font-bold text-slate-500">
+                                ${noticeDateOnly}
+                            </div>
+
+                            <!-- 3rd Row: Notice Message Body -->
+                            <div class="w-full flex items-start justify-between gap-2 bg-amber-100/30 p-2.5 rounded-lg border border-amber-200/40">
+                                <div class="flex items-start gap-2 flex-1 min-w-0">
+                                    <div class="p-1 bg-amber-200 text-amber-900 rounded-md shrink-0 mt-0.5">
+                                        <i data-lucide="bell" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <p class="text-xs text-slate-900 font-bold leading-relaxed break-words line-clamp-3 w-full" style="white-space: pre-wrap;">${actualMessage}</p>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between mb-1.5 gap-2">
-                                        <span class="text-[10px] font-mono font-black text-amber-950 bg-amber-100/70 px-2 py-0.5 rounded">${noticeDateOnly}</span>
-                                        ${scopeBadge}
-                                    </div>
-                                    <p class="text-xs text-slate-900 font-bold leading-relaxed break-words line-clamp-2" style="white-space: pre-wrap;">${actualMessage}</p>
-                                    <div class="flex items-center gap-2 mt-2 text-[10px] text-slate-500 font-mono font-bold">
-                                        <span>By: <strong class="text-slate-700">${authorDisplay}</strong></span>
-                                    </div>
+                                <div class="shrink-0">
+                                    ${actionButtons}
                                 </div>
                             </div>
-                            ${actionButtons}
+
+                            <!-- 4th Row: By Author -->
+                            <div class="w-full text-[10px] text-slate-500 font-mono font-bold pt-0.5">
+                                By: <strong class="text-slate-700">${authorDisplay}</strong>
+                            </div>
                         </div>
                     `;
                 });
 
-                feed.innerHTML = html + html;
+                // 🎯 FIXED: Render items once without duplicating html string
+                feed.innerHTML = html;
 
                 const wrapper = document.getElementById("ticker-wrapper");
-                if (tickerInterval) clearInterval(tickerInterval);
+                if (window.tickerInterval) clearInterval(window.tickerInterval);
 
                 const startTicker = () => {
-                    if (isTickerPaused) return;
-                    tickerInterval = setInterval(() => {
-                        if (isTickerPaused) return;
+                    if (window.isTickerPaused) return;
+                    window.tickerInterval = setInterval(() => {
+                        if (window.isTickerPaused) return;
                         wrapper.scrollTop += 1;
-                        const maxScroll = wrapper.scrollHeight / 2;
-                        if (wrapper.scrollTop >= maxScroll) {
+                        if (wrapper.scrollTop >= (wrapper.scrollHeight - wrapper.clientHeight)) {
                             wrapper.scrollTop = 0;
                         }
                     }, 25);
@@ -250,9 +242,17 @@
 
                 startTicker();
 
-                wrapper.onmouseenter = () => { if (!isTickerPaused) clearInterval(tickerInterval); };
-                wrapper.onmouseleave = () => { if (!isTickerPaused) startTicker(); };
-                wrapper.onwheel = () => { if (!isTickerPaused) clearInterval(tickerInterval); };
+                wrapper.onmouseenter = () => { if (!window.isTickerPaused) clearInterval(window.tickerInterval); };
+                wrapper.onmouseleave = () => { if (!window.isTickerPaused) startTicker(); };
+                wrapper.onwheel = () => { if (!window.isTickerPaused) clearInterval(window.tickerInterval); };
+
+                // 🎯 Mobile Touch Pause & Resume
+                wrapper.ontouchstart = () => { if (!window.isTickerPaused) clearInterval(window.tickerInterval); };
+                wrapper.ontouchend = () => { 
+                    if (!window.isTickerPaused) {
+                        setTimeout(() => { startTicker(); }, 1500);
+                    } 
+                };
 
             } else {
                 feed.innerHTML = `<div class="p-4 text-center text-slate-400 font-medium text-xs bg-slate-50 rounded-xl border border-slate-100">No active system notices available at this moment.</div>`;
@@ -264,8 +264,8 @@
     };
 
     window.openNoticeModalByIndex = function(index) {
-        isTickerPaused = true;
-        if (tickerInterval) clearInterval(tickerInterval);
+        window.isTickerPaused = true;
+        if (window.tickerInterval) clearInterval(window.tickerInterval);
 
         const n = window.allNoticesCache[index];
         if (!n) return;
@@ -303,7 +303,6 @@
         let designation = String(n.designation || "").trim();
         let authorDisplay = pName ? (designation && designation.toUpperCase() !== "ADMIN" ? `${pName} (${designation})` : pName) : "Admin";
 
-        // 🎯 Check if user has permission to delete this specific notice inside modal
         const roles = typeof currentUser !== 'undefined' && currentUser.role ? String(currentUser.role).toUpperCase().split(",").map(r => r.trim()) : [];
         const isGlobalAdmin = roles.includes("ADMIN") || roles.includes("SUPER_ADMIN");
         const isAuthor = pName.toLowerCase() === (typeof currentUser !== 'undefined' && currentUser.employeeName ? currentUser.employeeName.trim().toLowerCase() : "");
@@ -329,7 +328,7 @@
     };
 
     window.resumeTicker = function() {
-        isTickerPaused = false;
+        window.isTickerPaused = false;
         window.initNoticeBoardFeed();
     };
 
