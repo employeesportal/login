@@ -116,17 +116,13 @@
 
             buildNavigationMenuByRole();
 
-            // Load topbar component into both desktop and mobile slots
             loadComponentToContainer("topbar.html", "topbar-mount-node");
             loadComponentToContainer("topbar.html", "mobile-topbar-mount-node");
 
             window.showWelcomeMessage();
-
-            // 🎯 START THE PERSISTENT SESSION TIMER
             window.startGlobalSessionManager();
         }
 
-        // 🎯 OPTIMIZED: Synchronous load without duplicate notice board code
         window.showWelcomeMessage = async function () {
             document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("nav-btn-active"));
             const view = document.getElementById("view-port");
@@ -138,80 +134,128 @@
             ` : '';
 
             view.innerHTML = `
-                <div class="text-center max-w-2xl p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl fade-in-up w-full">
-                    <div class="inline-flex p-4 bg-slate-100 text-slate-950 border border-slate-200 rounded-2xl mb-4">
-                        <i data-lucide="smile" class="w-10 h-10"></i>
-                    </div>
-                    <h2 class="text-2xl font-black text-slate-950 tracking-tight">Welcome Back!</h2>
-                    <p id="welcome-user-lbl" class="text-slate-900 font-black mt-1 text-sm">${currentUser.employeeName}</p>
-                    <div class="font-mono text-[11px] text-slate-700 mt-0.5 font-bold">ID: ${currentUser.employeeId}</div>
-                    
-                    ${designationBadge}
-                    
-                    <p class="text-slate-800 text-xs font-medium mt-4 leading-relaxed border-t border-slate-200 pt-3 mb-6">
-                        Select a module from the left bar layout panel to begin managing your day.
-                    </p>
-
-                    <!-- 🎯 DYNAMIC MOUNT CONTAINER FOR NOTICE BOARD (Loaded from adminNotice.html) -->
-                    <div id="notice-board-container" class="w-full">
-                        <div class="p-6 text-center text-slate-400 font-bold animate-pulse text-xs">Loading notice board...</div>
-                    </div>
-               
-                    <!-- STATIC REMINDER BANNER -->
-                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                        <div class="flex items-start gap-3">
-                            <span class="text-indigo-600 text-xl leading-none mt-0.5">🔔</span>
-                            <div class="w-full">
-                                <h4 class="text-sm font-black uppercase tracking-wider text-indigo-900 mb-2">Daily Reminders</h4>
-                                <ul class="text-[11px] font-bold text-indigo-950 leading-relaxed uppercase space-y-2">
-                                    <li>👉 <strong class="text-indigo-700">Update Contact Info:</strong> Ensure your Email and Phone Number are up to date in the "My Account Profile" tab.</li>
-                                    <li>👉 <strong class="text-indigo-700">Mark Attendance:</strong> Do not forget to submit your Log-In and Log-Out daily in the "Mark Attendance" module.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MANDATORY NOTICE BANNER -->
-                    <div class="bg-slate-50 border-l-4 border-slate-500 p-4 mb-6 rounded-r-xl shadow-sm text-left fade-in-up">
-                        <div class="flex items-start gap-3">
-                            <span class="text-slate-600 text-lg leading-none mt-0.5">ℹ️</span>
-                            <div>
-                                <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-1">Mandatory Notice</h4>
-                                <p class="text-[11px] font-bold text-slate-700 leading-relaxed mb-1.5">
-                                    All field activities, travel logs, and leave requests must be processed exclusively through this portal. 
-                                   <br> <strong class="bg-amber-200 px-1 rounded text-rose-700">Failure to mark your daily attendance (Log-In and Log-Out) will automatically result in being marked 'Absent' for the day.</strong>
-                                </p>
-                                <p class="text-[10px] font-black text-slate-500 italic border-t border-slate-200 pt-1.5 mt-1.5">
-                                    Coordinator: It is your responsibility to ensure these instructions are followed.
+                <div class="w-full max-w-7xl mx-auto p-4 sm:p-6 animate-fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- LEFT COLUMN: Profile & Reminders -->
+                        <div class="lg:col-span-6 space-y-6">
+                            <div class="text-center p-6 sm:p-8 bg-white border border-slate-300 rounded-3xl shadow-xl w-full">
+                                <div class="inline-flex p-4 bg-slate-100 text-slate-950 border border-slate-200 rounded-2xl mb-4">
+                                    <i data-lucide="smile" class="w-10 h-10"></i>
+                                </div>
+                                <h2 class="text-2xl font-black text-slate-950 tracking-tight">Welcome Back!</h2>
+                                <p id="welcome-user-lbl" class="text-slate-900 font-black mt-1 text-sm">${currentUser.employeeName}</p>
+                                <div class="font-mono text-[11px] text-slate-700 mt-0.5 font-bold">ID: ${currentUser.employeeId}</div>
+                                
+                                ${designationBadge}
+                                
+                                <p class="text-slate-800 text-xs font-medium mt-4 leading-relaxed border-t border-slate-200 pt-3 mb-2">
+                                    Select a module from the left bar layout panel to begin managing your day.
                                 </p>
                             </div>
+                       
+                            <!-- STATIC REMINDER BANNER -->
+                            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-xl shadow-sm text-left">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-indigo-600 text-xl leading-none mt-0.5">🔔</span>
+                                    <div class="w-full">
+                                        <h4 class="text-sm font-black uppercase tracking-wider text-indigo-900 mb-2">Daily Reminders</h4>
+                                        <ul class="text-[11px] font-bold text-indigo-950 leading-relaxed uppercase space-y-2">
+                                            <li>👉 <strong class="text-indigo-700">Update Contact Info:</strong> Ensure your Email and Phone Number are up to date in the "My Account Profile" tab.</li>
+                                            <li>👉 <strong class="text-indigo-700">Mark Attendance:</strong> Do not forget to submit your Log-In and Log-Out daily in the "Mark Attendance" module.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MANDATORY NOTICE BANNER -->
+                            <div class="bg-slate-50 border-l-4 border-slate-500 p-4 rounded-r-xl shadow-sm text-left">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-slate-600 text-lg leading-none mt-0.5">ℹ️</span>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 mb-1">Mandatory Notice</h4>
+                                        <p class="text-[11px] font-bold text-slate-700 leading-relaxed mb-1.5">
+                                            All field activities, travel logs, and leave requests must be processed exclusively through this portal. 
+                                           <br> <strong class="bg-amber-200 px-1 rounded text-rose-700">Failure to mark your daily attendance (Log-In and Log-Out) will automatically result in being marked 'Absent' for the day.</strong>
+                                        </p>
+                                        <p class="text-[10px] font-black text-slate-500 italic border-t border-slate-200 pt-1.5 mt-1.5">
+                                            Coordinator: It is your responsibility to ensure these instructions are followed.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- RIGHT COLUMN: Notice Board Container Card -->
+                        <div class="lg:col-span-6 space-y-6">
+                            <div class="bg-white border border-slate-300 rounded-3xl shadow-xl p-5 sm:p-6 flex flex-col h-full">
+                                <div id="notice-board-container" class="w-full">
+                                    <div class="p-6 text-center text-slate-400 font-bold animate-pulse text-xs">Loading notice board...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 🎯 GLOBAL MODAL FOR NOTICE DETAILS WITH PROPER CLOSE HANDLER -->
+                <div id="notice-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 relative border border-slate-200">
+                        <button onclick="window.closeNoticeModal()" class="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition cursor-pointer">
+                            <i data-lucide="x" class="w-4 h-4 text-slate-600"></i>
+                        </button>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span id="modal-notice-badge" class="text-[10px] font-mono font-black px-2 py-0.5 rounded"></span>
+                            <span id="modal-notice-date" class="text-[10px] font-mono text-slate-400 font-bold"></span>
+                        </div>
+                        <h3 id="modal-notice-author" class="text-xs font-black uppercase tracking-wider text-indigo-700 mb-3"></h3>
+                        <div class="max-h-64 overflow-y-auto pr-2 mb-4">
+                            <p id="modal-notice-body" class="text-xs text-slate-900 font-bold leading-relaxed whitespace-pre-wrap break-words bg-slate-50 p-4 rounded-2xl border border-slate-100"></p>
+                        </div>
+                        <button onclick="window.closeNoticeModal()" class="w-full py-2.5 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer">Close Notice</button>
                     </div>
                 </div>
             `;
 
-            // Fetch and mount adminNotice.html component cleanly
             try {
                 const res = await fetch("adminNotice.html");
                 const htmlText = await res.text();
                 const container = document.getElementById("notice-board-container");
                 if (container) {
                     container.innerHTML = htmlText;
+                    
+                    // Safely execute scripts extracted from adminNotice.html
                     const scripts = container.getElementsByTagName("script");
                     for (let s of scripts) {
                         const sc = document.createElement("script");
-                        sc.textContent = s.textContent;
-                        document.head.appendChild(sc);
-                        document.head.removeChild(sc);
+                        sc.text = s.innerText;
+                        document.body.appendChild(sc);
                     }
                 }
             } catch (e) {
                 const container = document.getElementById("notice-board-container");
-                if (container) container.innerHTML = `<div class="text-xs text-rose-500 p-2">Failed to load notice board component.</div>`;
+                if (container) container.innerHTML = `<div class="p-8 text-center text-rose-600 font-bold">Failed to load notice board component.</div>`;
             }
 
             if (window.lucide) lucide.createIcons();
         }
+
+        window.openNoticeDetailModal = function(badgeText, dateText, authorText, bodyText) {
+            document.getElementById("modal-notice-badge").innerText = badgeText;
+            document.getElementById("modal-notice-badge").className = badgeText.includes("General") ? "text-[10px] font-mono font-black text-blue-800 bg-blue-100 px-2 py-0.5 rounded" : "text-[10px] font-mono font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded";
+            document.getElementById("modal-notice-date").innerText = dateText;
+            document.getElementById("modal-notice-author").innerText = `Posted By: ${authorText}`;
+            document.getElementById("modal-notice-body").innerText = bodyText;
+            document.getElementById("notice-detail-modal").classList.remove("hidden");
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.closeNoticeModal = function() {
+            document.getElementById("notice-detail-modal").classList.add("hidden");
+            if (typeof window.resumeTicker === 'function') {
+                window.resumeTicker();
+            }
+        };
 
         function buildNavigationMenuByRole() {
             const nav = document.getElementById("dynamic-role-nav");
@@ -319,6 +363,13 @@
                 `;
             }
 
+            outputHtml += `
+              <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Engineering & Quality</span></div>
+                <button onclick="loadTabModule('materialTestingPortal2.html', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:bg-slate-800/50 hover:text-white transition rounded-r-lg text-left">
+                    <i data-lucide="calculator" class="w-4 h-4 text-amber-400 shrink-0"></i> Material Testing Portal
+                </button>
+            `;
+
             if (isGlobalAdmin) {
                 outputHtml += `
                     <div class="px-4 mb-2 mt-4 border-t border-slate-800 pt-4"><span class="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Administration</span></div>
@@ -393,9 +444,6 @@
             }
         }
 
-        // =====================================================================
-        // GLOBAL PERSISTENT SESSION MANAGER
-        // =====================================================================
         window.startGlobalSessionManager = function () {
             if (window.topbarSessionInterval) clearInterval(window.topbarSessionInterval);
 
@@ -487,19 +535,6 @@
             }
 
             loadApplicationFrame("login.html");
-        };
-
-        window.switchAdminLeaveTab = function (tabName) {
-            const tabBtn1 = document.getElementById("tab-btn-1");
-            const tabBtn2 = document.getElementById("tab-btn-2");
-            const tabContent1 = document.getElementById("tab-content-1");
-            const tabContent2 = document.getElementById("tab-content-2");
-
-            if (tabBtn1) tabBtn1.className = tabName === 'pending' ? 'active-tab-class' : 'inactive-tab-class';
-            if (tabBtn2) tabBtn2.className = tabName === 'history' ? 'active-tab-class' : 'inactive-tab-class';
-
-            if (tabContent1) tabContent1.style.display = tabName === 'pending' ? 'block' : 'none';
-            if (tabContent2) tabContent2.style.display = tabName === 'history' ? 'block' : 'none';
         };
 
         window.logout = window.performManualLogout;
