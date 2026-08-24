@@ -6,7 +6,7 @@
             <h3 class="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                 <i data-lucide="map" class="text-indigo-600 w-6 h-6"></i> Inspection Tracking
             </h3>
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">State ➔ District/Phase ➔ TKC ➔ Item ➔ Feeder Dashboard</p>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider mt-1">State ➔ District/Phase/Percent work Completed ➔ TKC ➔ Item ➔ Feeder Dashboard</p>
         </div>
         
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -75,7 +75,6 @@
                 <select id="t-item-unit" class="w-full p-2 border border-sky-200 rounded-lg bg-sky-50 text-sky-900">
                     <option value="Nos">Nos (Numbers)</option>
                     <option value="Kms">Kms (Kilometers)</option>
-                    <option value="Kms">CKms (Circuit-Kilometers)</option>
                     <option value="Mtrs">Mtrs (Meters)</option>
                     <option value="Sets">Sets</option>
                     <option value="Lot">Lot</option>
@@ -341,26 +340,29 @@
 
                 const dpKey = `${dist}_${phase}`;
                 
-                // 🎯 Grouping under State header, keeping Phase combined with District
                 if (!filteredHierarchy[state]) {
                     filteredHierarchy[state] = { stateName: state, districtsPhases: {} };
                 }
 
                 if (!filteredHierarchy[state].districtsPhases[dpKey]) {
-                    filteredHierarchy[state].districtsPhases[dpKey] = { district: dist, phase: phase, tkcs: {} };
+                    filteredHierarchy[state].districtsPhases[dpKey] = { district: dist, phase: phase, tkcs: {}, totalTargetSum: 0, totalInspectedSum: 0 };
                 }
 
-                if (!filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc]) {
-                    filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc] = { items: {} };
+                const dpNode = filteredHierarchy[state].districtsPhases[dpKey];
+                dpNode.totalTargetSum += Number(t.Target_Inspect_Qty || 0);
+                dpNode.totalInspectedSum += Number(t.totalInspected || 0);
+
+                if (!dpNode.tkcs[tkc]) {
+                    dpNode.tkcs[tkc] = { items: {} };
                 }
 
-                if (!filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc].items[item]) {
-                    filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc].items[item] = { targets: [], totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
+                if (!dpNode.tkcs[tkc].items[item]) {
+                    dpNode.tkcs[tkc].items[item] = { targets: [], totalTarget: 0, totalInspected: 0, unit: t.Item_Unit || "" };
                 }
                 
-                filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc].items[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
-                filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc].items[item].totalInspected += t.totalInspected;
-                filteredHierarchy[state].districtsPhases[dpKey].tkcs[tkc].items[item].targets.push(t);
+                dpNode.tkcs[tkc].items[item].totalTarget += Number(t.Target_Inspect_Qty || 0);
+                dpNode.tkcs[tkc].items[item].totalInspected += t.totalInspected;
+                dpNode.tkcs[tkc].items[item].targets.push(t);
             });
             
             if (Object.keys(filteredHierarchy).length === 0) {
@@ -395,16 +397,22 @@
                     const dpData = stateData.districtsPhases[dpKey];
                     const safeDpId = safeStateId + '_dp_' + dpKey.replace(/[^a-zA-Z0-9]/g, '_');
 
+                    // 🎯 Calculate District / Phase work completion percentage
+                    const dpPct = dpData.totalTargetSum > 0 ? Math.min(100, (dpData.totalInspectedSum / dpData.totalTargetSum) * 100) : 0;
+
                     html += `
-                        <!-- TIER 2: District & Phase Level -->
+                        <!-- TIER 2: District / Phase / Percent Complete Level -->
                         <div class="border border-slate-300 rounded-xl bg-white shadow-sm overflow-hidden mb-3">
                             <div class="px-4 py-3 bg-slate-900 text-white flex justify-between items-center cursor-pointer hover:bg-slate-800 transition" onclick="window.toggleAccordion('${safeDpId}')">
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-3 w-[90%]">
                                     <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 shrink-0"></i>
-                                    <h5 class="text-xs font-black uppercase tracking-wider flex flex-wrap items-center gap-2 m-0">
-                                        ${dpData.district} 
-                                        <span class="bg-rose-600 border border-rose-500 text-white px-1.5 py-0.5 rounded text-[9px] sm:text-[10px]">Phase: ${dpData.phase}</span>
-                                    </h5>
+                                    <div class="flex flex-wrap items-center gap-2 w-full pr-2">
+                                        <h5 class="text-xs font-black uppercase tracking-wider m-0">
+                                            ${dpData.district} 
+                                        </h5>
+                                        <span class="bg-rose-600 border border-rose-500 text-white px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-bold">Phase: ${dpData.phase}</span>
+                                        <span class="bg-indigo-600 text-white px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-black ml-auto sm:ml-2">Done: ${dpPct.toFixed(1)}%</span>
+                                    </div>
                                 </div>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0"></i>
                             </div>
