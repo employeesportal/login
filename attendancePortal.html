@@ -124,44 +124,81 @@
             return;
         }
 
-        const LOGIN_CUTOFF_HOUR = 11;
+        const TARGET_CUTOFF_HOUR = 10;
+        const TARGET_CUTOFF_MINUTE = 0;
+        const HARD_LOCKOUT_HOUR = 11;
+        const HARD_LOCKOUT_MINUTE = 0;
 
         const evaluateModuleWorkflowState = async function () {
             try {
                 const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
                 const state = await res.json();
 
-                document.getElementById("box-login-view").style.display = "none";
-                document.getElementById("box-logout-view").style.display = "none";
-                document.getElementById("box-locked-view").style.display = "none";
+                const loginView = document.getElementById("box-login-view");
+                const logoutView = document.getElementById("box-logout-view");
+                const lockedView = document.getElementById("box-locked-view");
+
+                if (loginView) loginView.style.display = "none";
+                if (logoutView) logoutView.style.display = "none";
+                if (lockedView) lockedView.style.display = "none";
 
                 if (state.status === "LOGGED_IN") {
                     activeRowIndexRef = state.rowIndex;
-                    document.getElementById("lbl-active-proj").innerText = state.project || "-";
-                    document.getElementById("lbl-active-dist").innerText = state.district || "-";
-                    document.getElementById("lbl-active-plan").innerText = state.plan || "";
-                    document.getElementById("lbl-active-login-time").innerText = state.loginTime || "Recorded Modulo System Epoch";
-                    document.getElementById("box-logout-view").style.display = "block";
+                    const projEl = document.getElementById("lbl-active-proj");
+                    const distEl = document.getElementById("lbl-active-dist");
+                    const planEl = document.getElementById("lbl-active-plan");
+                    const timeEl = document.getElementById("lbl-active-login-time");
+
+                    if (projEl) projEl.innerText = state.project || "-";
+                    if (distEl) distEl.innerText = state.district || "-";
+                    if (planEl) planEl.innerText = state.plan || "";
+                    if (timeEl) timeEl.innerText = state.loginTime || "Recorded Modulo System Epoch";
+                    if (logoutView) logoutView.style.display = "block";
                 }
                 else if (state.status === "COMPLETED") {
-                    document.getElementById("box-locked-view").style.display = "block";
+                    if (lockedView) lockedView.style.display = "block";
                 } 
                 else {
                     const now = new Date();
                     const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
 
-                    if (currentHour >= LOGIN_CUTOFF_HOUR) {
-                        document.getElementById("box-locked-view").innerHTML = `
-                            <div class="text-center py-6">
-                                <h3 class="text-base sm:text-lg font-black text-rose-600">Login Window Closed</h3>
-                                <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
-                                    Attendance log-in is only permitted before ${LOGIN_CUTOFF_HOUR > 12 ? LOGIN_CUTOFF_HOUR - 12 : LOGIN_CUTOFF_HOUR}:00 ${LOGIN_CUTOFF_HOUR >= 12 ? 'PM' : 'AM'}. 
-                                    Please contact your coordinator.
-                                </p>
-                            </div>`;
-                        document.getElementById("box-locked-view").style.display = "block";
+                    const currentTotalMinutes = (currentHour * 60) + currentMinute;
+                    const targetCutoffMinutes = (TARGET_CUTOFF_HOUR * 60) + TARGET_CUTOFF_MINUTE;
+                    const hardLockoutMinutes = (HARD_LOCKOUT_HOUR * 60) + HARD_LOCKOUT_MINUTE;
+
+                    if (currentTotalMinutes >= hardLockoutMinutes) {
+                        if (lockedView) {
+                            lockedView.innerHTML = `
+                                <div class="text-center py-6">
+                                    <h3 class="text-base sm:text-lg font-black text-rose-600">Login Window Closed</h3>
+                                    <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+                                        Attendance log-in is only permitted before 11:00 AM. 
+                                        Please contact your coordinator.
+                                    </p>
+                                </div>`;
+                            lockedView.style.display = "block";
+                        }
                     } else {
-                        document.getElementById("box-login-view").style.display = "block";
+                        if (currentTotalMinutes > targetCutoffMinutes) {
+                            const lateMinutes = currentTotalMinutes - targetCutoffMinutes;
+                            
+                            setTimeout(() => {
+                                const loginContainer = document.getElementById("box-login-view");
+                                if (loginContainer && !document.getElementById("dynamic-late-warning-banner")) {
+                                    const warningHtml = `
+                                        <div id="dynamic-late-warning-banner" class="p-3.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-950 font-bold text-xs leading-normal flex items-start gap-2.5 fade-in-up mb-3">
+                                            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-amber-600"></i>
+                                            <div>You are <strong class="text-amber-800 underline">${lateMinutes} minutes late</strong> past the 10:00 AM cutoff time.</div>
+                                        </div>
+                                    `;
+                                    loginContainer.insertAdjacentHTML('afterbegin', warningHtml);
+                                    if (window.lucide) lucide.createIcons();
+                                }
+                            }, 50);
+                        }
+
+                        if (loginView) loginView.style.display = "block";
                         if (typeof modInitProjects === "function") {
                             modInitProjects();
                         }
@@ -188,14 +225,17 @@
         };
 
         const modLoadDistricts = async function () {
-            const pName = document.getElementById("mod-proj").value;
+            const projEl = document.getElementById("mod-proj");
+            if (!projEl) return;
+            const pName = projEl.value;
             const dSel = document.getElementById("mod-dist");
             const noticeBox = document.getElementById("box-coordinator-notice");
             const noticeTxt = document.getElementById("lbl-coordinator-notice-text");
+            const customDistBox = document.getElementById("box-custom-district");
 
             if (!dSel) return;
             dSel.innerHTML = '<option value="">-- Choose Target District --</option>';
-            document.getElementById("box-custom-district").classList.add("hidden");
+            if (customDistBox) customDistBox.classList.add("hidden");
 
             if (noticeBox) noticeBox.classList.add("hidden");
 
@@ -238,9 +278,11 @@
         };
 
         const toggleCustomDistrictField = function () {
-            const distVal = document.getElementById("mod-dist").value;
+            const distEl = document.getElementById("mod-dist");
             const targetBox = document.getElementById("box-custom-district");
-            if (distVal === "OTHER") {
+            if (!distEl || !targetBox) return;
+            
+            if (distEl.value === "OTHER") {
                 targetBox.classList.remove("hidden");
             } else {
                 targetBox.classList.add("hidden");
@@ -248,10 +290,10 @@
         };
 
         const handlePunchInCycle = function () {
-            const proj = document.getElementById("mod-proj").value;
-            const dist = document.getElementById("mod-dist").value;
-            const customName = document.getElementById("mod-custom-dist-name").value.trim();
-            const plan = document.getElementById("mod-plan").value.trim();
+            const proj = document.getElementById("mod-proj")?.value;
+            const dist = document.getElementById("mod-dist")?.value;
+            const customName = document.getElementById("mod-custom-dist-name")?.value.trim();
+            const plan = document.getElementById("mod-plan")?.value.trim();
 
             if (!proj || !dist || !plan) { alert("Please input all required metrics tracking properties."); return; }
             if (dist === "OTHER" && !customName) { alert("Please fill dynamic sub-district text descriptions."); return; }
@@ -260,7 +302,10 @@
             if (!confirmAction) return;
 
             const inBtn = document.getElementById("mod-punch-in-btn");
-            inBtn.disabled = true; inBtn.innerText = "PROCESSING SUBMISSION...";
+            if (inBtn) {
+                inBtn.disabled = true; 
+                inBtn.innerText = "PROCESSING SUBMISSION...";
+            }
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
@@ -272,7 +317,7 @@
 
                     if (!fence.status) {
                         alert(`Boundary Lockout: ${fence.message}`);
-                        inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+                        if (inBtn) { inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In"; }
                         return;
                     }
 
@@ -295,30 +340,33 @@
                     const status = await postRes.json();
                     if (status.status) {
                         alert("Shift Check-In registered successfully.");
-                        window.showWelcomeMessage();
+                        if (typeof window.showWelcomeMessage === "function") window.showWelcomeMessage();
                     } else {
                         alert("Write Failure: " + status.message);
                     }
                 } catch (err) {
                     alert("Network tracking transaction dropped out.");
                 } finally {
-                    inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+                    if (inBtn) { inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In"; }
                 }
             }, () => {
                 alert("Positioning metrics mapping initialization error. Check browser settings.");
-                inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In";
+                if (inBtn) { inBtn.disabled = false; inBtn.innerText = "Verify Position & Mark Check-In"; }
             });
         };
 
         const handlePunchOutCycle = async function () {
-            const progress = document.getElementById("mod-progress").value.trim();
+            const progress = document.getElementById("mod-progress")?.value.trim();
             if (!progress) { alert("Objective descriptions work verification log cannot be blank."); return; }
 
             const confirmAction = confirm("Are you sure you want to complete your Shift Checkout (Logout)? Your work metrics logs cannot be changed after submission.");
             if (!confirmAction) return;
 
             const outBtn = document.getElementById("mod-punch-out-btn");
-            outBtn.disabled = true; outBtn.innerText = "SYNCHRONIZING REPOSITORY...";
+            if (outBtn) {
+                outBtn.disabled = true; 
+                outBtn.innerText = "SYNCHRONIZING REPOSITORY...";
+            }
 
             const payload = {
                 action: "markLogout",
@@ -331,21 +379,26 @@
                 const status = await postRes.json();
                 if (status.status) {
                     alert("Shift Clearance Checkout successfully logged.");
-                    window.showWelcomeMessage();
+                    if (typeof window.showWelcomeMessage === "function") window.showWelcomeMessage();
                 } else {
                     alert("System write execution alert: " + status.message);
                 }
             } catch (err) {
                 alert("Network boundary sync failed.");
             } finally {
-                outBtn.disabled = false; outBtn.innerText = "Submit Work Progress & Checkout";
+                if (outBtn) { outBtn.disabled = false; outBtn.innerText = "Submit Work Progress & Checkout"; }
             }
         };
 
-        document.getElementById("mod-proj").addEventListener("change", modLoadDistricts);
-        document.getElementById("mod-dist").addEventListener("change", toggleCustomDistrictField);
-        document.getElementById("mod-punch-in-btn").addEventListener("click", handlePunchInCycle);
-        document.getElementById("mod-punch-out-btn").addEventListener("click", handlePunchOutCycle);
+        const projEl = document.getElementById("mod-proj");
+        const distEl = document.getElementById("mod-dist");
+        const inBtnEl = document.getElementById("mod-punch-in-btn");
+        const outBtnEl = document.getElementById("mod-punch-out-btn");
+
+        if (projEl) projEl.addEventListener("change", modLoadDistricts);
+        if (distEl) distEl.addEventListener("change", toggleCustomDistrictField);
+        if (inBtnEl) inBtnEl.addEventListener("click", handlePunchInCycle);
+        if (outBtnEl) outBtnEl.addEventListener("click", handlePunchOutCycle);
 
         if (window.attendanceStateTimeout) clearTimeout(window.attendanceStateTimeout);
 
