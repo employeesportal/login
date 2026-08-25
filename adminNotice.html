@@ -233,9 +233,18 @@
                     if (window.isTickerPaused) return;
                     window.tickerInterval = setInterval(() => {
                         if (window.isTickerPaused) return;
-                        wrapper.scrollTop += 1;
-                        if (wrapper.scrollTop >= (wrapper.scrollHeight - wrapper.clientHeight)) {
-                            wrapper.scrollTop = 0;
+                        
+                        // 🎯 Safe check to prevent null property reads when switching modules
+                        const wrapEl = document.getElementById("ticker-wrapper");
+                        if (!wrapEl) {
+                            clearInterval(window.tickerInterval);
+                            return;
+                        }
+
+                        wrapEl.scrollTop += 1;
+                        const maxScroll = wrapEl.scrollHeight / 2;
+                        if (wrapEl.scrollTop >= maxScroll) {
+                            wrapEl.scrollTop = 0;
                         }
                     }, 25);
                 };
