@@ -32,7 +32,7 @@
                 </select>
             </div>
 
-            <!-- Dynamic Coordinator/Manager Assignment Notification Banner -->
+            <!-- Dynamic Coordinator Assignment Notification Banner -->
             <div id="box-coordinator-notice"
                 class="hidden p-3.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-950 font-bold text-xs leading-normal flex items-start gap-2.5 fade-in-up">
                 <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-blue-600"></i>
@@ -129,6 +129,13 @@
         const HARD_LOCKOUT_HOUR = 11;
         const HARD_LOCKOUT_MINUTE = 0;
 
+        const formatHourString = (hour, minute) => {
+            const h = hour % 12 === 0 ? 12 : hour % 12;
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const m = minute < 10 ? '0' + minute : minute;
+            return `${h}:${m} ${ampm}`;
+        };
+
         const evaluateModuleWorkflowState = async function () {
             try {
                 const res = await fetch(`${API_URL}?action=checkAttendanceStatus&employeeId=${currentUser.employeeId}`);
@@ -167,17 +174,36 @@
                     const targetCutoffMinutes = (TARGET_CUTOFF_HOUR * 60) + TARGET_CUTOFF_MINUTE;
                     const hardLockoutMinutes = (HARD_LOCKOUT_HOUR * 60) + HARD_LOCKOUT_MINUTE;
 
+                    const formattedLockoutTime = formatHourString(HARD_LOCKOUT_HOUR, HARD_LOCKOUT_MINUTE);
+
                     if (currentTotalMinutes >= hardLockoutMinutes) {
                         if (lockedView) {
+                            let lastCoordinatorName = "Unassigned";
+                            try {
+                                const lastCoordRes = await fetch(`${API_URL}?action=getLastCoordinator&employeeId=${currentUser.employeeId}`);
+                                const lastCoordData = await lastCoordRes.json();
+                                if (lastCoordData.status && lastCoordData.coordinatorName) {
+                                    lastCoordinatorName = lastCoordData.coordinatorName;
+                                }
+                            } catch (err) {
+                                console.error("Could not fetch last coordinator name from Column O", err);
+                            }
+
                             lockedView.innerHTML = `
-                                <div class="text-center py-6">
+                                <div class="text-center py-6 space-y-3">
+                                    <div class="inline-flex items-center justify-center w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl border border-rose-200 shadow-sm">
+                                        <i data-lucide="clock" class="w-7 h-7"></i>
+                                    </div>
                                     <h3 class="text-base sm:text-lg font-black text-rose-600">Login Window Closed</h3>
-                                    <p class="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
-                                        Attendance log-in is only permitted before 11:00 AM. 
-                                        Please contact your coordinator.
+                                    <p class="text-xs sm:text-sm text-slate-600 max-w-xs mx-auto leading-relaxed font-bold">
+                                        Attendance log-in is only permitted before ${formattedLockoutTime}. Contact your Coordinator for Marking Attendance.
+                                    </p>
+                                    <p class="text-xs text-slate-500 font-semibold bg-slate-50 p-2.5 rounded-xl border border-slate-200 inline-block">
+                                        Day's Assigned Coordinator: <strong class="text-slate-800">${lastCoordinatorName}</strong>
                                     </p>
                                 </div>`;
                             lockedView.style.display = "block";
+                            if (window.lucide) lucide.createIcons();
                         }
                     } else {
                         if (currentTotalMinutes > targetCutoffMinutes) {
@@ -271,7 +297,7 @@
 
                 if (noticeBox && noticeTxt) {
                     noticeTxt.innerHTML = `<strong>Unassigned</strong> is your today's coordinator/manager. He will verify your attendance and you will report your day's activity to him.`;
-                    noticeBox.classList.remove("hidden");
+                    noticeBox.classList.add("hidden");
                     if (window.lucide) lucide.createIcons();
                 }
             }
